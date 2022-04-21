@@ -1,0 +1,379 @@
+      /*********************************************************************/
+      /* Program name : INI3102C                                           */
+      /* Description  : Loan Close And Rebook eTP Upload            (CLLE) */
+      /* Date created : 15/04/2022                                         */
+      /* Author . . . : Rainier Letidjawa                                  */
+      /*********************************************************************/
+      /* Modification Logs:                                                */
+      /* Init  Ref#     Date    Description                                */
+      /* ----  ----   -------   -----------------------------------------  */
+      /*********************************************************************/
+             PGM        PARM(&FIID &P9REF &UID &APPRV &P9PARM)
+
+        /*‚eTP Passing Parameter              €                        */
+             DCL        VAR(&FIID) TYPE(*CHAR) LEN(20)       /*Identifier        €*/
+             DCL        VAR(&P9REF) TYPE(*CHAR) LEN(25)      /*Reference Number  €*/
+             DCL        VAR(&UID) TYPE(*CHAR) LEN(10)        /*User ID           €*/
+             DCL        VAR(&APPRV) TYPE(*CHAR) LEN(1)       /*Approver Indicator€*/
+             DCL        VAR(&P9PARM) TYPE(*CHAR) LEN(50)     /*Program Parameter €*/
+
+        /*‚Program Variable                             €              */
+             DCL        VAR(&FILENM) TYPE(*CHAR) LEN(50) VALUE(' ')
+             DCL        VAR(&NORCD) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&P9NORCD) TYPE(*Char) LEN(10)
+             DCL        VAR(&P9RCDC) TYPE(*DEC) LEN(10 0) VALUE(0)
+             DCL        VAR(&STS) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RCDID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DLMT) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&P9DRCD) TYPE(*DEC) LEN(10)
+             DCL        VAR(&P9TRCD) TYPE(*DEC) LEN(10)
+             DCL        VAR(&ERR) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SYSERR) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&P9ERRRMK) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&PREJECT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DINI3102C) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SBMSGQ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AREA) TYPE(*CHAR) LEN(1024)
+
+        /*‚Declare INT710 Variables €                                  */
+             DCL        VAR(&PARMA) TYPE(*CHAR) LEN(250)
+             DCL        VAR(&PARM1) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&PARM2) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&PARM3) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&PARM4) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&PARM5) TYPE(*CHAR) LEN(50)
+
+        /*‚Declare INT714 Variables€*/
+             DCL        VAR(&RFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RLIB) TYPE(*CHAR) LEN(10) VALUE('*LIBL')
+             DCL        VAR(&MBRNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BUSDAT) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&CLEAR) TYPE(*CHAR) LEN(1) VALUE('N')
+
+        /*‚Declare INI3020CX Variable€*/
+             DCL        VAR(&WFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&WFIELD) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&P9ERM) TYPE(*CHAR) LEN(50)
+
+        /*‚Open Incoming Database File */
+             DCLF       FILE(*LIBL/INI3102IX)
+
+        /*‚Get Parameter€*/
+             CHGVAR     VAR(&PARMA) VALUE(&P9PARM)
+             CALL       PGM(INT710) PARM(&PARMA &PARM1 &PARM2 &PARM3 &PARM4 &PARM5)
+             CHGVAR     VAR(&LIB) VALUE(&PARM1)
+             CHGVAR     VAR(&FILE) VALUE(&PARM2)
+
+        /*‚Check Data Area€*/
+CHKSTS:
+             RTVDTAARA  DTAARA(INI3102C *ALL) RTNVAR(&DINI3102C)
+             IF         COND(&DINI3102C *EQ 'INPROGRESS') THEN(DO)
+             DLYJOB     DLY(30)
+             GOTO       CMDLBL(CHKSTS)
+             ENDDO
+
+       /*‚Set INI3102C data area to In-progress€*/
+             CHGDTAARA  DTAARA(INI3102C (1 10)) VALUE('INPROGRESS')
+
+       /*‚Get Control Data€*/
+             RTVDTAARA  DTAARA(SSAPAR *ALL) RTNVAR(&AREA)
+
+       /*‚Get MSGQ€*/
+             CHGVAR     VAR(&SBMSGQ) VALUE(%SST(&AREA 761 10))
+             IF         COND(&SBMSGQ *EQ ' ') THEN(DO)
+             CHGVAR     VAR(&SBMSGQ) VALUE('*NONE')
+             ENDDO
+
+             CLRPFM     FILE(INI3102W)
+             CLRPFM     FILE(INI3102WI)
+
+        /*‚Create Member name                                      €   */
+             CHGVAR     VAR(&MBRNAME) VALUE('I' *TCAT (%SST(&P9REF 5 +
+                          4)) *TCAT (%SST(&P9REF 20 5)))
+
+        /*‚File Upload - Maker                                     €   */
+        /*‚Check the Number of record in QTEMP file (Downloaded File) €*/
+             IF         COND(&APPRV *NE 'A') THEN(DO)
+             RTVMBRD    FILE(&LIB/&FILE) NBRCURRCD(&NORCD)
+             MONMSG     MSGID(CPF9812) EXEC(GOTO CMDLBL(END))
+             IF         COND(&NORCD *EQ 0) THEN(DO)
+             CHGVAR     VAR(&SYSERR) VALUE('Y')
+             GOTO       CMDLBL(END)
+             ENDDO
+             CHGVAR     &P9DRCD (&NORCD - 2)
+             CHGVAR     &P9TRCD (&NORCD - 1)
+
+        /*‚Incoming Interface file backup (Original File) */
+             CHGVAR     VAR(&RFILE) VALUE('INI3102IH')
+             CHGVAR     VAR(&RLIB) VALUE(*LIBL)
+             ADDPFM     FILE(&RLIB/&RFILE) MBR(&MBRNAME) TEXT(&P9REF)
+             MONMSG     MSGID(CPF7306)  EXEC(DO)
+             CLRPFM     FILE(&RLIB/&RFILE) MBR(&MBRNAME)
+             CHGPFM     FILE(&RLIB/&RFILE) MBR(&MBRNAME) TEXT(&P9REF)
+             ENDDO
+             CPYF       FROMFILE(&LIB/&FILE) TOFILE(&RLIB/&RFILE) +
+                          TOMBR(&MBRNAME) MBROPT(*ADD) FMTOPT(*NOCHK)
+             MONMSG     MSGID(CPF2817)
+        /*‚Create duplicate for delimted€*/
+             CRTDUPOBJ  OBJ(INI3102IX) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP)
+             MONMSG     MSGID(CPF2130)
+             CLRPFM     FILE(QTEMP/INI3102IX)
+             CPYF       FROMFILE(&LIB/&FILE) TOFILE(QTEMP/INI3102IX) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)
+
+
+        /*‚Create duplicate object in QTEMP€*/
+          /*‚Header€*/
+             CRTDUPOBJ  OBJ(INI3102H) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP)
+             MONMSG     MSGID(CPF2130)
+             CLRPFM     FILE(QTEMP/INI3102H)
+
+          /*‚Detail€*/
+             CRTDUPOBJ  OBJ(INI3102D) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP)
+             MONMSG     MSGID(CPF2130)
+             CLRPFM     FILE(QTEMP/INI3102D)
+
+          /*‚Trailer€*/
+             CRTDUPOBJ  OBJ(INI3102T) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP)
+             MONMSG     MSGID(CPF2130)
+             CLRPFM     FILE(QTEMP/INI3102T)
+
+          /*‚Interface€*/
+             CRTDUPOBJ  OBJ(INI3102I) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(INI3102I)
+             MONMSG     MSGID(CPF2130)
+             CLRPFM     FILE(QTEMP/INI3102I)
+
+      /*‚Check record if using delimited pipeline */
+ READ:
+             RCVF       RCDFMT(RINI3102I)
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ENDRD))
+             CHGVAR     VAR(&P9RCDC) VALUE(&P9RCDC + 1)
+             CHGVAR     VAR(&RCDID) VALUE(&INDATA)
+
+             IF         COND(&RCDID *EQ '00' *OR &RCDID *EQ '01' *OR +
+                          &RCDID *EQ '99') THEN(DO)
+             CHGVAR     VAR(&DLMT) VALUE(%SST(&INDATA 3 1))
+             EndDo
+
+             IF         COND(&DLMT *EQ ']' *OR &DLMT *EQ '|') THEN(DO)
+
+             /*‚Header€*/
+             IF         COND(&RCDID *EQ '00') THEN(DO)
+             CPYFRMIMPF FROMFILE(&LIB/&FILE) TOFILE(*LIBL/INI3102H) +
+                          STRDLM(*NONE) RMVBLANK(*NONE) FLDDLM(|) +
+                          FROMRCD(&P9RCDC 1) RPLNULLVAL(*FLDDFT)
+             ENDDO
+
+             /*‚Detail€*/
+             IF         COND(&RCDID *EQ '01') THEN(DO)
+             CPYFRMIMPF FROMFILE(&LIB/&FILE) TOFILE(*LIBL/INI3102D) +
+                          STRDLM(*NONE) RMVBLANK(*NONE) FLDDLM(|) +
+                          FROMRCD(&P9RCDC 1) RPLNULLVAL(*FLDDFT)
+             ENDDO
+
+             /*‚Tail   */
+             IF         COND(&RCDID *EQ '99') THEN(DO)
+             CPYFRMIMPF FROMFILE(&LIB/&FILE) TOFILE(*LIBL/INI3102T) +
+                          STRDLM(*NONE) RMVBLANK(*NONE) FLDDLM(|) +
+                          FROMRCD(&P9RCDC 1) RPLNULLVAL(*FLDDFT)
+             ENDDO
+
+             ENDDO
+
+             GOTO       CMDLBL(READ)
+ ENDRD:
+
+      /*‚Remove delimited to Interface file‚*/
+        /*‚Map Delimited record from Interface file‚*/
+
+             IF         COND(&DLMT *NE ']' *AND &DLMT *NE '|') THEN(DO)
+
+           /*‚Header€*/
+             CPYF       FROMFILE(&LIB/&FILE) TOFILE(INI3102H) +
+                          MBROPT(*ADD) FROMRCD(1) NBRRCDS(1) +
+                          FMTOPT(*NOCHK)
+             MONMSG     MSGID(CPF2817) EXEC(DO)
+             CHGVAR     VAR(&PREJECT) VALUE('Y')
+             CHGVAR     VAR(&P9ERRRMK) VALUE('Incoming File Header structure Error.')
+             GOTO       CMDLBL(UPSTS)
+             ENDDO
+
+           /*‚Detail€*/
+             CPYF       FROMFILE(&LIB/&FILE) TOFILE(INI3102D) +
+                          MBROPT(*ADD) FROMRCD(2) NBRRCDS(&P9DRCD) +
+                          FMTOPT(*NOCHK)
+             MONMSG     MSGID(CPF2817) EXEC(DO)
+             CHGVAR     VAR(&PREJECT) VALUE('Y')
+             CHGVAR     VAR(&P9ERRRMK) VALUE('Incoming File Detail structure Error.')
+             GOTO       CMDLBL(UPSTS)
+             ENDDO
+
+           /*‚Trailer€*/
+             CPYF       FROMFILE(&LIB/&FILE) TOFILE(INI3102T) +
+                          MBROPT(*ADD) FROMRCD(&NORCD) +
+                          NBRRCDS(*END) FMTOPT(*NOCHK)
+             MONMSG     MSGID(CPF2817) EXEC(DO)
+             CHGVAR     VAR(&PREJECT) VALUE('Y')
+             CHGVAR     VAR(&P9ERRRMK) VALUE('Incoming File Trailer structure Error.')
+             GOTO       CMDLBL(UPSTS)
+             ENDDO
+
+             ENDDO
+
+        /*‚Map Record file to Interface file€*/
+           /*‚Header€*/
+             CPYF       FROMFILE(*LIBL/INI3102H) +
+                          TOFILE(*LIBL/INI3102I) MBROPT(*ADD) +
+                          FMTOPT(*NOCHK)
+             MONMSG     MSGID(CPF2817)
+           /*‚Detail€*/
+             CPYF       FROMFILE(*LIBL/INI3102D) +
+                          TOFILE(*LIBL/INI3102I) MBROPT(*ADD) +
+                          FMTOPT(*NOCHK)
+             MONMSG     MSGID(CPF2817)
+           /*‚Trailer€*/
+             CPYF       FROMFILE(*LIBL/INI3102T) +
+                          TOFILE(*LIBL/INI3102I) MBROPT(*ADD) +
+                          FMTOPT(*NOCHK)
+             MONMSG     MSGID(CPF2817)
+
+        /*‚Pre-Processing Backup into Member (Without Delimited)€*/
+             ADDPFM     FILE(*LIBL/INI3102IXH) MBR(&MBRNAME) +
+                          TEXT(&P9REF)
+             MONMSG     MSGID(CPF7306)  EXEC(DO)
+             CLRPFM     FILE(*LIBL/INI3102IXH) MBR(&MBRNAME)
+             CHGPFM     FILE(*LIBL/INI3102IXH) MBR(&MBRNAME) TEXT(&P9REF)
+             ENDDO
+             CPYF       FROMFILE(*LIBL/INI3102I) TOFILE(*LIBL/INI3102IXH) +
+                          TOMBR(&MBRNAME) MBROPT(*ADD) FMTOPT(*NOCHK)
+             MONMSG     MSGID(CPF2817)
+
+        /*‚Start Commitment Controlš*/
+             STRCMTCTL *CHG
+             MONMSG CPF8351
+
+        /*‚Call Processing Program€*/
+             CHGVAR     VAR(&ERR) VALUE(' ')
+             CALL       PGM(INI3102) PARM(&FIID &P9REF &UID &MBRNAME &ERR &APPRV)
+             ROLLBACK
+             ENDCMTCTL
+
+        /*‚Call Core Program€*/
+         /*  CALL       PGM(LNI792C) PARM(&FIID &P9REF &APPRV)  */
+
+        /*‚Recon the Apps error                 €*/
+             Call       PGM(INI3102A)  PARM(&FIID &P9REF)
+
+        /*‚Generate upload status report */
+        /*   CALL       PGM(INI4102C) PARM('U' &FIID &P9REF)    */
+
+        /*‚INI3020CX - Summary display for application status€      */
+             CHGVAR     VAR(&WFILE) VALUE('INI3102W')
+             CHGVAR     VAR(&WFIELD) VALUE('PRCSTS')
+             CALL       PGM(INI3020CX) PARM(&WFILE &WFIELD &P9ERM)
+
+        /*‚Pre-Processing Interface Backup Into Member File                €*/
+             ADDPFM     FILE(*LIBL/INI3102WH) MBR(&MBRNAME) +
+                          TEXT(&P9REF)
+             MONMSG     MSGID(CPF7306)  EXEC(DO)
+             CLRPFM     FILE(*LIBL/INI3102WH) MBR(&MBRNAME)
+             MONMSG     MSGID(CPF3141) EXEC(GOTO CMDLBL(D_WH))
+             CHGPFM     FILE(*LIBL/INI3102WH) MBR(&MBRNAME) TEXT(&P9REF)
+             ENDDO
+ D_WH:       CPYF       FROMFILE(*LIBL/INI3102W) +
+                          TOFILE(*LIBL/INI3102WH) TOMBR(&MBRNAME) +
+                          MBROPT(*ADD) FMTOPT(*NOCHK)
+             MONMSG     MSGID(CPF2817)
+
+        /*‚Update INTFILE for Incoming File Status€*/
+UPSTS:       IF (&PREJECT *NE 'Y') DO
+             IF (&ERR = 'N') THEN(CHGVAR &STS '3')
+             IF (&ERR *NE 'N') DO
+             CHGVAR &STS '2'
+             CHGVAR     VAR(&P9ERRRMK) VALUE('Reject File If Header/Trailer Error')
+             ENDDO
+             IF         COND(&P9ERRRMK *EQ ' ') THEN(DO)
+             CHGVAR     VAR(&P9ERRRMK) VALUE(&P9ERM)
+             ENDDO
+             CALL       PGM(INT740) PARM(&FIID &P9REF &P9ERRRMK &STS &FILENM)
+             ENDDO
+             ELSE DO
+             CHGVAR     VAR(&STS) VALUE('2')
+             IF         COND(&P9ERRRMK *EQ ' ') THEN(DO)
+             CHGVAR     VAR(&P9ERRRMK) VALUE('Incoming File Structure Error.')
+             ENDDO
+             CALL       PGM(INT740) PARM(&FIID &P9REF &P9ERRRMK &STS &FILENM)
+             ENDDO
+
+             ENDDO
+
+        /*‚File Approver - Approver                                €   */
+             IF         COND(&APPRV *EQ 'A') THEN(DO)
+
+             OVRDBF     FILE(INI3102W) TOFILE(*LIBL/INI3102WI) +
+                          OVRSCOPE(*JOB) SHARE(*YES)
+
+             OVRDBF     FILE(INI3102WL1) TOFILE(*LIBL/INI3102WIL) +
+                          OVRSCOPE(*JOB) SHARE(*YES)
+
+             STRCMTCTL *CHG
+             MONMSG CPF8351
+             CHGVAR     VAR(&ERR) VALUE(' ')
+             CALL       PGM(INI3102) PARM(&FIID &P9REF &UID &MBRNAME &ERR &APPRV)
+             ROLLBACK
+             ENDCMTCTL
+
+        /*‚Call Core Program€*/
+           /*  CALL       PGM(LNI792C) PARM(&FIID &P9REF &APPRV)  */
+
+        /*‚Recon the Apps error                 €*/
+             Call       PGM(INI3102A)  PARM(&FIID &P9REF)
+
+        /*‚Generate upload status report */
+             CALL       PGM(INI4102C) PARM('A' &FIID &P9REF)
+
+             DLTOVR     FILE(*ALL) LVL(*JOB)
+
+        /*‚INI3020CX - Summary display for application status€      */
+             CHGVAR     VAR(&WFILE) VALUE('INI3102WI')
+             CHGVAR     VAR(&WFIELD) VALUE('PRCSTS')
+             CALL       PGM(INI3020CX) PARM(&WFILE &WFIELD &P9ERM)
+
+        /*‚Post-Processing Interface Backup Into Member File                €*/
+             CHGVAR     VAR(&RFILE) VALUE('INI3102WIH')
+             CHGVAR     VAR(&RLIB) VALUE(*LIBL)
+             ADDPFM     FILE(&RLIB/&RFILE) MBR(&MBRNAME) TEXT(&P9REF)
+             MONMSG     MSGID(CPF7306)  EXEC(DO)
+             CLRPFM     FILE(&RLIB/&RFILE) MBR(&MBRNAME)
+             MONMSG     MSGID(CPF3141) EXEC(GOTO CMDLBL(D_WIH))
+             CHGPFM     FILE(&RLIB/&RFILE) MBR(&MBRNAME) TEXT(&P9REF)
+             ENDDO
+ D_WIH:      CPYF       FROMFILE(*LIBL/INI3102WI) +
+                          TOFILE(&RLIB/&RFILE) TOMBR(&MBRNAME) +
+                          MBROPT(*ADD) FMTOPT(*NOCHK)
+             MONMSG     MSGID(CPF2817)
+
+
+        /*‚Log INTFILE Status                                        €   */
+             IF         COND(&ERR *EQ 'N') THEN(CHGVAR VAR(&STS) +
+                          VALUE('7'))
+             IF         COND(&ERR *NE 'N') THEN(CHGVAR VAR(&STS) +
+                          VALUE('8'))
+             CALL       PGM(INT722) PARM(&FIID &P9REF &P9NORCD &STS &P9ERM)
+
+
+             Enddo
+
+END:
+        /* Set INI3102C data area to Completed  */
+             CHGDTAARA  DTAARA(INI3102C (1 10)) VALUE(COMPLETED)
+             RCLRSC     LVL(*CALLER)
+
+             ENDPGM
