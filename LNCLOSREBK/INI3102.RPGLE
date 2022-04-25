@@ -457,16 +457,27 @@
             W_APRVID      = *blanks ;                          //�Checker User ID
             W_INSEQ       = wINRSEQN;                          //�Sequence Number
           Endif;
+          W_INRCDID     = " ";                                 //�Record Identifier
 
           W_INTRNTYP    = D_INTRNTYP;                          //�Transaction Type
           W_INACCTNO    = %Dec(D_INACCTNO:19:0);               //�Loan Accont Number
-          W_INLNACNM    = D_INLNACNM;                          //�Transaction Type
+          W_INLNACTP    = wLNACTYPE;                           //�Loan Account Type 
+          W_INLNACNM    = D_INLNACNM;                          //�Loan Account Name
           W_INDDACCT    = %Dec(D_INDDACCT:19:0);               //�CASA Account Number
+          W_INDDACTP    = wDDACTYPE;                           //�CASA Account Type
           W_INDDACNM    = D_INDDACNM;                          //�CASA Account Name
           W_INTRNAMT    = %Dec(D_INTRNAMT:17:0)/100;           //�Transaction Amount
-          W_INMDRMRK    = D_INMDRMRK;                          //�Remarks
-          
+          W_INCURTYP    = wDDCURTYP;                           //� CASA Currency Type
 
+          If W_INCURTYP = 'IDR';
+            W_INCURFLG = 'L';                                  //� Transaction Currency flag local
+          Else;
+            W_INCURFLG = 'F';                                  //� Transaction Currency flag foreign
+          Endif
+          
+          W_INMDRMRK    = D_INMDRMRK;                          //�Remarks
+          W_INSBUCDE    = wLNSBUCOD;                           //�SBU Code
+          W_INSUBCDE    = wLNSUBCOD;                           //�SUB Code
 
           wChkSum += W_INTRNAMT;                               //�Sum all the Trans amount
 
