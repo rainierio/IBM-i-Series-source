@@ -9,7 +9,7 @@
       * Modification Logs:                                                       *
       * Init  Ref#     Date    Description                                       *
       ****************************************************************************
-     **‚Input/Output/Update file€
+     **ï¿½Input/Output/Update fileï¿½
      FSSPAR1    IF   E             DISK
      FINTFILEL5 UF   E           K DISK
      FINTHDR    UF A E           K DISK
@@ -24,18 +24,19 @@
      FINPPAR    IF   E           K DISK
      FLNMAST    IF   E           K DISK
      FLNTNEW    IF   E           K DISK    RENAME(RLNMAST:RLNTNEW)
-     FDDMAST    IF   E           K DISK
+     FDDMAST    IF   E           K DISK    Prefix(DD_)
      FDDTNEW    IF   E           K DISK    RENAME(RDDMAST:RDDTNEW)
+     F                                     Prefix(DD_)
      FLNPARX    IF   E           K DISK
      FLNINFM    IF   E           K DISK
      FCLCOLD    IF   E           K DISK
      D**************************************************************************
-     D*‚External input data structure
+     D*ï¿½External input data structure
      D HEADER        E DS                  EXTNAME(INI3102H) PREFIX(H_)
      D DETAILS       E DS                  EXTNAME(INI3102D) PREFIX(D_)
      D TRAILER       E DS                  EXTNAME(INI3102T) PREFIX(T_)
-     D*‚Prototypes
-     D INI3102Pr       PR                  Extpgm('INI3102')                    ˜Incoming Parameter
+     D*ï¿½Prototypes
+     D INI3102Pr       PR                  Extpgm('INI3102')                    ï¿½Incoming Parameter
      D P9FIID                        20A
      D P9REF                         25A
      D P9UID                         10A
@@ -69,18 +70,18 @@
      D PSUSRN                254    263
      D PSJBNO                264    269  0
       *
-     D*‚Working variables
+     D*ï¿½Working variables
      D WCDATE          S                   LIKE(INDATE)
      D WCTIME          S              6  0
-     D WKCHKSTS        S              2S 0                                      ˜Var for check sts
-     D WDTLCOUNT       S              9S 0                                      ˜Var for DTL Seq No˜
-     D wChkSum         S             26S 2                                      ˜Var for Check Sum
+     D WKCHKSTS        S              2S 0                                      ï¿½Var for check sts
+     D WDTLCOUNT       S              9S 0                                      ï¿½Var for DTL Seq Noï¿½
+     D wChkSum         S             26S 2                                      ï¿½Var for Check Sum
      D WHDRSEQ         S              9S 0
      D WTSEQNO         S              9S 0
-     D WTRLSEQ         S              9S 0                                      ˜Var for TRL Seq No
-     D WRCDTYP         S              2A                                        ˜Var for Record Type
-     D WFLG            S              2A   INZ('00')                            ˜Error Flag Number
-     D WNUMCHK         C                   '0123456789'                         ˜Numeric Checking
+     D WTRLSEQ         S              9S 0                                      ï¿½Var for TRL Seq No
+     D WRCDTYP         S              2A                                        ï¿½Var for Record Type
+     D WFLG            S              2A   INZ('00')                            ï¿½Error Flag Number
+     D WNUMCHK         C                   '0123456789'                         ï¿½Numeric Checking
      D wEndFile        S              1A   Inz('N')
      D wINERCD         S                   Like(E_INERCD ) Inz(*blank)
      D wINERVAL        S                   Like(E_INERVAL) Inz(*blank)
@@ -99,12 +100,12 @@
      D wData_wLen                     5U 0 OVERLAY(INDATA:1)
      D WDATA                       3000    OVERLAY(INDATA:3)
 
-     D*‚Storing the Error Code
+     D*ï¿½Storing the Error Code
      D V9Index         S              3  0 INZ(0)
-     D V9ERCD          S                   Dim(999) Like(INERR)                 ˜Var for Error Code
-     D V9ERDESC        S                   Dim(999) Like(INERRD)                ˜Var for Error Code
-     D V9CRITICAL      S              1    Dim(999)                             ˜Var for Crtcl.Flag
-     D V9CRTI          S              1                                         ˜Var for Crtcl.Flag
+     D V9ERCD          S                   Dim(999) Like(INERR)                 ï¿½Var for Error Code
+     D V9ERDESC        S                   Dim(999) Like(INERRD)                ï¿½Var for Error Code
+     D V9CRITICAL      S              1    Dim(999)                             ï¿½Var for Crtcl.Flag
+     D V9CRTI          S              1                                         ï¿½Var for Crtcl.Flag
 
      D xNum03          S              3S 0
      D xNum05          S              5S 0
@@ -114,9 +115,24 @@
      D xNum17          S             17S 0
      D xNum19          S             19S 0
      D xNum26          S             26S 0
+
+     // Local working variables
+     D wLNSTATUS       S              1S 0 
+     D wLNACTYPE       S              1A
+     D wLNCURTYP       S              4A
+     D wLNCIFNO        S             19S 0
+     D wLNSBUCOD       S              4A
+     D wLNSUBCOD       S              4A
+     
+     // Local working variables
+     D wDDSTATUS       S              1S 0 
+     D wDDACTYPE       S              1A
+     D wDDCURTYP       S              4A
+     D wDDCIFNO        S             19S 0
+     
       /Free
        //*******************************************************************************************
-       // ‚Main Proccesing
+       // ï¿½Main Proccesing
        //*******************************************************************************************
 
            If p9APPRV = 'A';
@@ -144,15 +160,15 @@
 
            *Inlr = *On;
        //***********************************************************************
-       //‚Subroutine : SrCommit;
-       //‚Description:
+       //ï¿½Subroutine : SrCommit;
+       //ï¿½Description:
        //***********************************************************************
          Begsr srCommit;
 
          If %Eof(INI3102I) and wRCDTYP<>'99';
            wINERCD  = 'INI008';
            Exsr srINTDTE;
-           //ˆP9ERR     = 'Y';
+           //ï¿½P9ERR     = 'Y';
          Endif;
 
          If P9ERR = 'Y';
@@ -164,32 +180,32 @@
 
          Endsr;
        //***********************************************************************
-       //‚Subroutine: SrVALIDATE
-       //‚Description: Validate records
+       //ï¿½Subroutine: SrVALIDATE
+       //ï¿½Description: Validate records
        //***********************************************************************
          Begsr SrVALIDATE;
 
            CLEAR RINTDTE;
            WDATA  = I_INDATA;
 
-           //‚Check the record type for write the HEADER , DETAILS & TRAILER
+           //ï¿½Check the record type for write the HEADER , DETAILS & TRAILER
            WRCDTYP = %subst(I_INDATA:1:2);
 
            If wINRSEQN=1 and wRCDTYP<>'00';
              wINERCD  = 'INI013';
              Exsr srINTDTE;
-             //ˆP9ERR     = 'Y';
+             //ï¿½P9ERR     = 'Y';
            Else;
              Select;
 
-             //‚Header Record
+             //ï¿½Header Record
              When WRCDTYP ='00';
                Clear HEADER;
                HEADER = I_INDATA;
                WHDRSEQ += 1;
                Exsr SRCHKHDR;
                Exsr SrWriteHdr;
-             //‚Detail Record
+             //ï¿½Detail Record
              When WRCDTYP = '01';
                Clear DETAILS;
                DETAILS = I_INDATA;
@@ -198,7 +214,7 @@
                wData = DETAILS;
                Exsr SrMOVFLD;
 
-             //‚If Trailer and already have detail records
+             //ï¿½If Trailer and already have detail records
              When WRCDTYP = '99' AND WDTLCOUNT <> 0;
                Clear TRAILER;
                TRAILER = I_INDATA;
@@ -206,7 +222,7 @@
                Exsr SRCHKTRL;
                wdata = TRAILER;
 
-             //‚If Trailer but still no detail records
+             //ï¿½If Trailer but still no detail records
              when WRCDTYP = '99' AND WDTLCOUNT = 0;
                wINERCD = 'INI010';
                INRMK1  = 'Detail rcd not found';
@@ -219,200 +235,258 @@
 
              Endsl;
 
-           //‚Write into INTDTL
+           //ï¿½Write into INTDTL
            Exsr srINTDTL;
            Endif;
 
          Endsr;
        //***********************************************************************
-       //šSubroutine  : SrCHKHDR
-       //šDescription : Check Header Record
+       //ï¿½Subroutine  : SrCHKHDR
+       //ï¿½Description : Check Header Record
        //***********************************************************************
          Begsr SrCHKHDR;
 
-         //‚If error record happen other than record 1
+         //ï¿½If error record happen other than record 1
          If wHdrSeq <> 1;
           wINERCD    = 'INI001';
           wINERVAL   = 'HeaderID:'+I_INDATA;
-          //ˆP9ERR = 'Y';
+          //ï¿½P9ERR = 'Y';
           Exsr srINTDTE;
           Leavesr;
          Endif;
 
 
-         //‚Check date format
+         //ï¿½Check date format
          Test(DE) *ISO0 H_INPRDT;
          If %Error;
           wINERCD    = 'INI002';
           wINERVAL   = 'ProcessDt:'+H_INPRDT;
-          //ˆP9ERR = 'Y';
+          //ï¿½P9ERR = 'Y';
           Exsr srINTDTE;
          Endif;
 
-         //‚Check date
+         //ï¿½Check date
          If H_INPRDT <> %CHAR(SP1NB8);
           wINERCD    = 'INI003';
           wINERVAL   = 'ProcessDt:'+H_INPRDT;
-          //ˆP9ERR = 'Y';
+          //ï¿½P9ERR = 'Y';
           Exsr srINTDTE;
          Endif;
 
-         //‚Check agreed system source
+         //ï¿½Check agreed system source
            If H_INSRCS <> 'INLNR1';
             wINERCD    = 'INI005';
             wINERVAL   = 'SourceSys:'+H_INSRCS;
-         // ˆP9ERR = 'Y';
+         // ï¿½P9ERR = 'Y';
             Exsr srINTDTE;
            Endif;
 
          Endsr;
        //***********************************************************************
-       //šSubroutine  : SrCHKDTL
-       //šDescription : Check Detail Record
+       //ï¿½Subroutine  : SrCHKDTL
+       //ï¿½Description : Check Detail Record
        //***********************************************************************
-         Begsr SrCHKDTL;
+          Begsr SrCHKDTL;
 
-         Clear RINI3102W;
-         Reset RINI3102W;
+          Clear RINI3102W;
+          Reset RINI3102W;
 
-         //šInitialize all Variable
-         Exsr srReset;
+          //ï¿½Initialize all Variable
+          Exsr srReset;
 
-         //‚Validate Transaction Type
-            If D_INRCDID = *blank;
-             wINERCD  = 'INID001';
-             wINERVAL = 'Transaction Type is blank';
-             Exsr srINTDTE;
-            Else;
-             if D_INRCDID <> 'S' AND D_INRCDID <> 'D';
-              wINERCD  = 'INID002';
-              wINERVAL = 'Wrong Trans Type, Must S or D';
-              Exsr srINTDTE;
-             Endif;
+          //ï¿½Validate Transaction Type
+          If D_INRCDID = *blank;
+            wINERCD  = 'INI011';
+            wINERVAL = 'Transaction Type is mandatory'+D_INRCDID;
+            Exsr srINTDTE;
+          Else;
+            if D_INRCDID <> 'S' AND D_INRCDID <> 'D';
+            wINERCD  = 'INI012';
+            wINERVAL = 'Only S or D are allowed'+D_INRCDID;
+            Exsr srINTDTE;
+            Endif;
+          Endif;
+
+
+          //ï¿½Validate Loan account number
+          If D_INACCTNO <> *blank;
+            WKCHKSTS = %CHECK(WNUMCHK:%Trim(D_INACCTNO):1);
+          Else;
+            D_INACCTNO = *all'0';
+            WKCHKSTS = %CHECK(WNUMCHK:D_INACCTNO:1);
+          Endif;
+
+          If WKCHKSTS > 0;
+            wINERCD  = 'INI004';
+            wINERVAL = 'Loan Acc No: '+D_INACCTNO;
+            Exsr srINTDTE;
+            D_INACCTNO = *all'0';
+          Else;
+            xNum19 = %Dec(%Trim(D_INACCTNO):19:0);
+            D_INACCTNO = %EditC(xNum19:'X');
+            
+            // Loan account check
+            Chain D_INACCTNO LNMAST;
+            If Not %found(LNMAST);                    
+              Chain D_INACCTNO LNTNEW;                
+              If Not %found(LNTNEW);                  
+                wINERCD  = 'INI015'; 
+                wINERVAL = 'Loan Acc No: '+D_INLFACCT;
+                Exsr srINTDTE;                        
+              Endif;                                  
+            Endif;                                      
+
+            If %found(LNMAST) Or %found(LNTNEW);
+              wLNSTATUS = STATUS;
+              wLNACTYPE = ACTYPE; 
+              wLNCURTYP = CURTYP;
+              wLNCIFNO  = CIFNO; 
+              wLNSBUCOD = SBUCOD;
+              wLNSUBCOD = SUBCOD;
             Endif;
 
+          Endif;
 
-         //‚Validate Loan account number
-            If D_INACCTNO <> *blank;
-              WKCHKSTS = %CHECK(WNUMCHK:%Trim(D_INACCTNO):1);
-            Else;
-              D_INACCTNO = *all'0';
-              WKCHKSTS = %CHECK(WNUMCHK:D_INACCTNO:1);
-            Endif;
-            If WKCHKSTS > 0;
-              wINERCD  = 'INID003';
-              wINERVAL = 'Loan Acc No: '+D_INACCTNO;
-              Exsr srINTDTE;
-              D_INACCTNO = *all'0';
-            Else;
-              xNum19 = %Dec(%Trim(D_INACCTNO):19:0);
-              D_INACCTNO = %EditC(xNum19:'X');
-            Endif;
+          //ï¿½Loan account number is mandatory
+          If D_INACCTNO = *all'0';
+            wINERCD  = 'INI011 ';
+            wINERVAL = 'Loan Acc No: '+ D_INACCTNO;
+            Exsr srINTDTE;
+          Endif;
 
-           //šLoan account number is mandatory
-              If D_INACCTNO = *all'0';
-               wINERCD  = 'INID004 ';
-               wINERVAL = 'Loan Acc No: '+ D_INACCTNO;
-               Exsr srINTDTE;
-              Endif;
+          //ï¿½Validate CASA account number
+          If D_INDDACCT <> *blank;
+            WKCHKSTS = %CHECK(WNUMCHK:%Trim(D_INDDACCT):1);
+          Else;
+            D_INDDACCT = *all'0';
+            WKCHKSTS = %CHECK(WNUMCHK:D_INDDACCT:1);
+          Endif;
 
-         //‚Validate CASA account number
-            If D_INDDACCT <> *blank;
-              WKCHKSTS = %CHECK(WNUMCHK:%Trim(D_INDDACCT):1);
-            Else;
-              D_INDDACCT = *all'0';
-              WKCHKSTS = %CHECK(WNUMCHK:D_INDDACCT:1);
-            Endif;
-            If WKCHKSTS > 0;
-              wINERCD  = 'INID005';
-              wINERVAL = 'CASA Acc No: '+D_INDDACCT;
-              Exsr srINTDTE;
-              D_INACCTNO = *all'0';
-            Else;
-              xNum19 = %Dec(%Trim(D_INDDACCT):19:0);
-              D_INACCTNO = %EditC(xNum19:'X');
-            Endif;
+          If WKCHKSTS > 0;
+            wINERCD  = 'INI004';
+            wINERVAL = 'CASA Acc No: '+D_INDDACCT;
+            Exsr srINTDTE;
+            D_INACCTNO = *all'0';
+          Else;
+            xNum19 = %Dec(%Trim(D_INDDACCT):19:0);
+            D_INDDACCT = %EditC(xNum19:'X');
 
-           //šCASA number is mandatory
-              If D_INACCTNO = *all'0';
-               wINERCD  = 'INID006 ';
-               wINERVAL = 'CASA Acc No: '+ D_INACCTNO;
-               Exsr srINTDTE;
-              Endif;
+            // CASA account check
+            Chain D_INDDACCT DDMAST;
+            If Not %found(DDMAST);                    
+              Chain D_INDDACCT DDTNEW;                
+              If Not %found(DDTNEW);                  
+                wINERCD  = 'INI015';
+                wINERVAL = 'CASA Acc No: '+D_INDDACCT;
+                Exsr srINTDTE;                        
+              Endif;                                  
+            Endif;                                      
 
-         //‚Validate Transactions amount
-            If D_INTRNAMT <> *blank;
-              WKCHKSTS = %CHECK(WNUMCHK:%Trim(D_INTRNAMT):1);
-            Else;
-              D_INTRNAMT = *all'0';
-              WKCHKSTS = %CHECK(WNUMCHK:D_INTRNAMT:1);
+            If %found(DDMAST) Or %found(DDTNEW);
+              wDDSTATUS = DD_STATUS;
+              wDDACTYPE = DD_ACTYPE;
+              wDDCURTYP = DD_CURTYP;
+              wDDCIFNO = DD_CIFNO;
             Endif;
-            If WKCHKSTS > 0;
-              wINERCD  = 'INID007';
-              wINERVAL = 'Transaction amount: '+D_INTRNAMT;
-              Exsr srINTDTE;
-              D_INTRNAMT = *all'0';
-            Else;
-              xNum17 = %Dec(%Trim(D_INTRNAMT):17:0);
-              D_INTRNAMT = %EditC(xNum17:'X');
-            Endif;
+                          
+          Endif;
 
-           //šTransaction Amount is mandatory
-              If D_INTRNAMT = *all'0';
-               wINERCD  = 'INID008 ';
-               wINERVAL = 'Transaction amnt: '+ D_INTRNAMT;
-               Exsr srINTDTE;
-              Endif;
+          //ï¿½CASA account is mandatory
+          If D_INDDACCT = *all'0';
+            wINERCD  = 'INI011 ';
+            wINERVAL = 'CASA Acc No: '+ D_INDDACCT;
+            Exsr srINTDTE;
+          Endif;
+
+          //ï¿½Validate Transactions amount
+          If D_INTRNAMT <> *blank;
+            WKCHKSTS = %CHECK(WNUMCHK:%Trim(D_INTRNAMT):1);
+          Else;
+            D_INTRNAMT = *all'0';
+            WKCHKSTS = %CHECK(WNUMCHK:D_INTRNAMT:1);
+          Endif;
+
+          If WKCHKSTS > 0;
+            wINERCD  = 'INI004';
+            wINERVAL = 'Transaction amount: '+D_INTRNAMT;
+            Exsr srINTDTE;
+            D_INTRNAMT = *all'0';
+          Else;
+            xNum17 = %Dec(%Trim(D_INTRNAMT):17:0);
+            D_INTRNAMT = %EditC(xNum17:'X');
+          Endif;
+
+          //ï¿½Transaction Amount is mandatory
+          If D_INTRNAMT = *all'0';
+            wINERCD  = 'INI011 ';  
+            wINERVAL = 'Transaction amnt: '+ D_INTRNAMT;
+            Exsr srINTDTE;
+          Endif;
+
+          // Loan and CASA CIF checking
+          If wLNCIFNO <> wDDCIFNO;
+            wINERCD = 'INI012';
+            wINERVAL = 'Account must be under the same CIF'+wLNCIFNO+' '+wDDCIFNO;
+            Exsr srINTDTE;
+          Endif
+
+          // Currency type checking
+          If wLNCURTYP <> wDDCURTYP;
+            wINERCD = 'INI012';
+            wINERVAL = 'Account currency type must be the same'+wLNCURTYP+' '+wDDCURTYP;
+            Exsr srINTDTE;
+          Endif
 
          Endsr;
 
        //***********************************************************************
-       //‚Subroutine  : SrMovFld
-       //‚Description : Write into working file
+       //ï¿½Subroutine  : SrMovFld
+       //ï¿½Description : Write into working file
        //***********************************************************************
-         Begsr SrMovFld;
+        Begsr SrMovFld;
 
-           W_INFIID      = INFIID    ;                          //˜Interface Identifier
-           W_INREFN      = INREFN    ;                          //šReference  NUmberier
-           W_INFNAM      = INFNAM    ;                          //šFilename
-           W_UPLDID      = INUPUSR   ;                          //šMaker User ID
+          W_INFIID      = INFIID    ;                          //ï¿½Interface Identifier
+          W_INREFN      = INREFN    ;                          //ï¿½Reference  NUmberier
+          W_INFNAM      = INFNAM    ;                          //ï¿½Filename
+          W_UPLDID      = INUPUSR   ;                          //ï¿½Maker User ID
 
-           If p9APPRV = 'A';
-             W_APRVID      = P9UID   ;                          //šChecker User ID
-             W_INSEQ       = INRSEQN ;                          //šSequence Number
-           Else;
-             W_APRVID      = *blanks ;                          //šChecker User ID
-             W_INSEQ       = wINRSEQN;                          //šSequence Number
-           Endif;
+          If p9APPRV = 'A';
+            W_APRVID      = P9UID   ;                          //ï¿½Checker User ID
+            W_INSEQ       = INRSEQN ;                          //ï¿½Sequence Number
+          Else;
+            W_APRVID      = *blanks ;                          //ï¿½Checker User ID
+            W_INSEQ       = wINRSEQN;                          //ï¿½Sequence Number
+          Endif;
 
-           W_INTRNTYP    = D_INTRNTYP;                          //šTransaction Type
-           W_INACCTNO    = %Dec(D_INACCTNO:19:0);               //šLoan Accont Number
-           W_INLNACNM    = D_INLNACNM;                          //šTransaction Type
-           W_INDDACCT    = %Dec(D_INDDACCT:19:0);               //šCASA Account Number
-           W_INDDACNM    = D_INDDACNM;                          //šCASA Account Name
-           W_INTRNAMT    = %Dec(D_INTRNAMT:17:0)/100;           //šTransaction Amount
-           W_INMDRMRK    = D_INMDRMRK;                          //šRemarks
-
-
-           wChkSum += W_INTRNAMT;                               //ˆSum all the Trans amount
+          W_INTRNTYP    = D_INTRNTYP;                          //ï¿½Transaction Type
+          W_INACCTNO    = %Dec(D_INACCTNO:19:0);               //ï¿½Loan Accont Number
+          W_INLNACNM    = D_INLNACNM;                          //ï¿½Transaction Type
+          W_INDDACCT    = %Dec(D_INDDACCT:19:0);               //ï¿½CASA Account Number
+          W_INDDACNM    = D_INDDACNM;                          //ï¿½CASA Account Name
+          W_INTRNAMT    = %Dec(D_INTRNAMT:17:0)/100;           //ï¿½Transaction Amount
+          W_INMDRMRK    = D_INMDRMRK;                          //ï¿½Remarks
+          
 
 
-           W_INPRDT      = INDATE;                              //šInterface Processing Date
-         //  W_INFCDT      = %dec(%date());                       //šFile Processing Date
-         //ˆW_INTIME      = %dec(%TIME());                       //šInterface Timestamp
-         //W_INTIME      = INTIME;                              //šInterface Timestamp
-         //W_INTIMESTMP  = %TIMESTAMP();                        //šInterface Timestamp
+          wChkSum += W_INTRNAMT;                               //ï¿½Sum all the Trans amount
+
+
+          W_INPRDT        = INDATE;                              //ï¿½Interface Processing Date
+          //W_INFCDT      = %dec(%date());                       //ï¿½File Processing Date
+          //ï¿½W_INTIME     = %dec(%TIME());                       //ï¿½Interface Timestamp
+          //W_INTIME      = INTIME;                              //ï¿½Interface Timestamp
+          //W_INTIMESTMP  = %TIMESTAMP();                        //ï¿½Interface Timestamp
 
            Write RINI3102W;
 
          Endsr;
        //***********************************************************************
-       //‚Subroutine  : SRCHKTRL
-       //‚Description : Check Trailer record
+       //ï¿½Subroutine  : SRCHKTRL
+       //ï¿½Description : Check Trailer record
        //***********************************************************************
          Begsr SRCHKTRL;
 
-          //‚Total Records
+          //ï¿½Total Records
           If T_INDTL <> *blank;
             WKCHKSTS = %CHECK(WNUMCHK:%Trim(T_INDTL):1);
             If WKCHKSTS = 0;
@@ -423,17 +497,17 @@
                 wINERCD    = 'INI006';
                 wINERVAL   = 'InvalidDetailCount: '+%TrimL(T_INDTL:'0')+
                 ' <> '+ %triml(%EditC((wDtlCount):'X'):'0');
-                //ˆP9Err = 'Y';
+                //ï¿½P9Err = 'Y';
                 Exsr srINTDTE;
               Endif;
             Else;
               wINERCD    = 'INI006';
               wINERVAL   = 'InvalidDetailCount:'+T_INDTL;
-              //ˆP9Err = 'Y';
+              //ï¿½P9Err = 'Y';
             Endif;
           Endif;
 
-          //‚Total Check Sum Amount  - Temporary disabled
+          //ï¿½Total Check Sum Amount  - Temporary disabled
        // If T_INCHKSUM <> *blank;
        //   WKCHKSTS = %CHECK(WNUMCHK:%Trim(T_INCHKSUM):1);
        //   If WKCHKSTS = 0;
@@ -445,13 +519,13 @@
        //       wINERVAL   = 'InvalidDetailChksum: '+
        //       %Triml(T_INCHKSUM:'0')+' <> '
        //       +%Triml( %EditC((wChkSum):'X'):'0');
-                //ˆP9Err = 'Y';
+                //ï¿½P9Err = 'Y';
        //       Exsr srINTDTE;
        //     Endif;
        //   Else;
        //     wINERCD    = 'INI007';
        //     wINERVAL   = 'InvalidDetailChksum: '+%Triml(T_INCHKSUM:'0');
-              //ˆP9Err = 'Y';
+              //ï¿½P9Err = 'Y';
        //     Exsr srINTDTE;
             //Leavesr;
        //   Endif;
@@ -460,8 +534,8 @@
 
          Endsr;
        //****************************************************************
-       //šSubroutine: SrReset
-       //šDescription: Reset variable
+       //ï¿½Subroutine: SrReset
+       //ï¿½Description: Reset variable
        //****************************************************************
          Begsr srReset;
            W_INSTS = 'S';
@@ -472,16 +546,16 @@
            Clear tempDate;
          Endsr;
        //****************************************************************
-       //‚Subroutine: SrWriteHdr
-       //‚Description:
+       //ï¿½Subroutine: SrWriteHdr
+       //ï¿½Description:
        //****************************************************************
          Begsr SrWriteHdr;
            INSEQN = 1;
            Write RINTHDR;
          Endsr;
        //****************************************************************
-       //‚Subroutine: SrINTHDR
-       //‚Description:
+       //ï¿½Subroutine: SrINTHDR
+       //ï¿½Description:
        //****************************************************************
          Begsr srINTHDR;
 
@@ -509,8 +583,8 @@
 
          Endsr;
        //****************************************************************
-       //‚Subroutine  : SrINTDTL
-       //‚Description : Keep Track every record into INTDTL file
+       //ï¿½Subroutine  : SrINTDTL
+       //ï¿½Description : Keep Track every record into INTDTL file
        //****************************************************************
          Begsr srINTDTL;
            INSEQN     = 1;
@@ -519,8 +593,8 @@
            WRite RINTDTL;
          Endsr;
        //****************************************************************
-       //‚Subroutine: SrINTDTE
-       //‚Description:
+       //ï¿½Subroutine: SrINTDTE
+       //ï¿½Description:
        //****************************************************************
          Begsr srINTDTE;
 
@@ -529,7 +603,7 @@
 
            V9Index = *zero;
            V9Index = %LookUp(wINERCD:V9ErCd);
-           //šV9CRTI = V9CRITICAL(V9Index);
+           //ï¿½V9CRTI = V9CRITICAL(V9Index);
            Monitor;
            P9ERR = V9CRITICAL(V9Index);
            On-Error;
@@ -561,8 +635,8 @@
 
          Endsr;
        //****************************************************************
-       //‚Subroutine : srINTFILE
-       //‚Description:
+       //ï¿½Subroutine : srINTFILE
+       //ï¿½Description:
        //****************************************************************
          Begsr srINTFILE;
 
@@ -582,8 +656,8 @@
 
          Endsr;
        //***********************************************************************
-       //‚Subroutine: SrApprove
-       //‚Description:
+       //ï¿½Subroutine: SrApprove
+       //ï¿½Description:
        //***********************************************************************
           Begsr srApprove;
 
@@ -603,13 +677,13 @@
 
           Endsr;
        //***********************************************************************
-       //‚Subroutine: *INZSR
-       //‚Description: Initialization
+       //ï¿½Subroutine: *INZSR
+       //ï¿½Description: Initialization
        //***********************************************************************
          Begsr *INZSR;
 
               READ SSPAR1;
-              INFIID = P9FIID;                                 //šINTFILE's keys value
+              INFIID = P9FIID;                                 //ï¿½INTFILE's keys value
               INREFN = P9REF;
 
               Setll (INFIID:INREFN) IntfileL5;
@@ -620,7 +694,7 @@
               WCDATE = %INT(%CHAR(%DATE():*ISO0));
               WCTIME = %INT(%CHAR(%TIME():*HMS0));
 
-              //šLoad error codes into table
+              //ï¿½Load error codes into table
               Setll (INFIID) RINPDWE;
               Reade (INFIID) RINPDWE;
               DOW INFIID = INDWNC And Not %Eof(INPDWE);
