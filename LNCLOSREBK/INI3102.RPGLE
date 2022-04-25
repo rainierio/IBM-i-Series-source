@@ -27,9 +27,6 @@
      FDDMAST    IF   E           K DISK    Prefix(DD_)
      FDDTNEW    IF   E           K DISK    RENAME(RDDMAST:RDDTNEW)
      F                                     Prefix(DD_)
-     FLNPARX    IF   E           K DISK
-     FLNINFM    IF   E           K DISK
-     FCLCOLD    IF   E           K DISK
      D**************************************************************************
      D* External input data structure
      D HEADER        E DS                  EXTNAME(INI3102H) PREFIX(H_)
@@ -116,16 +113,18 @@
      D xNum19          S             19S 0
      D xNum26          S             26S 0
 
-     // Local working variables
-     D wLNSTATUS       S              1S 0 
+     D* LNMAST LNTNEW working variables
+     D wLNACCTNO       S             19S 0 
+     D wLNSTATUS       S              1S 0
      D wLNACTYPE       S              1A
      D wLNCURTYP       S              4A
      D wLNCIFNO        S             19S 0
      D wLNSBUCOD       S              4A
      D wLNSUBCOD       S              4A
      
-     // Local working variables
-     D wDDSTATUS       S              1S 0 
+     D* DDMAST DDTNEW Local working variables
+     D wINDDACCT       S             19S 0 
+     D wDDSTATUS       S              1S 0
      D wDDACTYPE       S              1A
      D wDDCURTYP       S              4A
      D wDDCIFNO        S             19S 0
@@ -232,7 +231,6 @@
                wINERCD  = 'INI007';
                wINERVAL = 'RcdTyp:'+wRCDTYP;
                Exsr srINTDTE;
-
              Endsl;
 
            // Write into INTDTL
@@ -322,29 +320,33 @@
             Exsr srINTDTE;
             D_INACCTNO = *all'0';
           Else;
-            xNum19 = %Dec(%Trim(D_INACCTNO):19:0);
-            D_INACCTNO = %EditC(xNum19:'X');
+            wLNACCTNO = %Dec(%Trim(D_INACCTNO):19:0);
             
             // Loan account check
-            Chain D_INACCTNO LNMAST;
+            Chain wLNACCTNO RLNMAST;
             If Not %found(LNMAST);                    
-              Chain D_INACCTNO LNTNEW;                
+              Chain wLNACCTNO RLNTNEW;                
               If Not %found(LNTNEW);                  
                 wINERCD  = 'INI015'; 
-                wINERVAL = 'Loan Acc No: '+D_INLFACCT;
+                wINERVAL = 'Loan Acc No: '+D_INACCTNO;
                 Exsr srINTDTE;                        
               Endif;                                  
             Endif;                                      
 
             If %found(LNMAST) Or %found(LNTNEW);
-              wLNSTATUS = STATUS;
-              wLNACTYPE = ACTYPE; 
-              wLNCURTYP = CURTYP;
-              wLNCIFNO  = CIFNO; 
-              wLNSBUCOD = SBUCOD;
-              wLNSUBCOD = SUBCOD;
+              If STATUS <> 1 or STATUS <> 4;
+                wINERCD  = 'INI016';
+                wINERVAL = 'Loan Acc No: '+D_INACCTNO;
+                Exsr srINTDTE;
+              Else;
+                wLNSTATUS = STATUS;
+                wLNACTYPE = ACTYPE; 
+                wLNCURTYP = CURTYP;
+                wLNCIFNO  = CIFNO; 
+                wLNSBUCOD = SBUCOD;
+                wLNSUBCOD = SUBCOD;
+              Endif;
             Endif;
-
           Endif;
 
           // Loan account number is mandatory
@@ -368,13 +370,12 @@
             Exsr srINTDTE;
             D_INACCTNO = *all'0';
           Else;
-            xNum19 = %Dec(%Trim(D_INDDACCT):19:0);
-            D_INDDACCT = %EditC(xNum19:'X');
+            wINDDACCT = %Dec(%Trim(D_INDDACCT):19:0);
 
             // CASA account check
-            Chain D_INDDACCT DDMAST;
+            Chain wINDDACCT RDDMAST;
             If Not %found(DDMAST);                    
-              Chain D_INDDACCT DDTNEW;                
+              Chain wINDDACCT RDDTNEW;                
               If Not %found(DDTNEW);                  
                 wINERCD  = 'INI015';
                 wINERVAL = 'CASA Acc No: '+D_INDDACCT;
@@ -383,10 +384,16 @@
             Endif;                                      
 
             If %found(DDMAST) Or %found(DDTNEW);
-              wDDSTATUS = DD_STATUS;
-              wDDACTYPE = DD_ACTYPE;
-              wDDCURTYP = DD_CURTYP;
-              wDDCIFNO = DD_CIFNO;
+              If DD_STATUS <> 1 or DD_STATUS <> 4;
+                wINERCD  = 'INI016';
+                wINERVAL = 'CASA Acc No: '+D_INDDACCT;
+                Exsr srINTDTE;
+              Else;
+                wDDSTATUS = DD_STATUS;
+                wDDACTYPE = DD_ACTYPE;
+                wDDCURTYP = DD_DDCTYP;
+                wDDCIFNO  = DD_CIFNO;
+              Endif;
             Endif;
                           
           Endif;
@@ -413,7 +420,7 @@
             D_INTRNAMT = *all'0';
           Else;
             xNum17 = %Dec(%Trim(D_INTRNAMT):17:0);
-            D_INTRNAMT = %EditC(xNum17:'X');
+            D_INTRNAMT = %Editc(xNum17:'X');
           Endif;
 
           // Transaction Amount is mandatory
@@ -426,19 +433,18 @@
           // Loan and CASA CIF checking
           If wLNCIFNO <> wDDCIFNO;
             wINERCD = 'INI012';
-            wINERVAL = 'Account must be under the same CIF'+wLNCIFNO+' '+wDDCIFNO;
+            wINERVAL = 'Account must be under the same CIF';
             Exsr srINTDTE;
-          Endif
+          Endif;
 
           // Currency type checking
           If wLNCURTYP <> wDDCURTYP;
             wINERCD = 'INI012';
-            wINERVAL = 'Account currency type must be the same'+wLNCURTYP+' '+wDDCURTYP;
+            wINERVAL = 'Account currency type must be the same';
             Exsr srINTDTE;
-          Endif
+          Endif;
 
          Endsr;
-
        //***********************************************************************
        // Subroutine  : SrMovFld
        // Description : Write into working file
@@ -457,7 +463,7 @@
             W_APRVID      = *blanks ;                          // Checker User ID
             W_INSEQ       = wINRSEQN;                          // Sequence Number
           Endif;
-          W_INRCDID     = " ";                                 // Record Identifier
+          W_INRCDID     = *blanks;                             // Record Identifier
 
           W_INTRNTYP    = D_INTRNTYP;                          // Transaction Type
           W_INACCTNO    = %Dec(D_INACCTNO:19:0);               // Loan Accont Number
@@ -473,7 +479,7 @@
             W_INCURFLG = 'L';                                  //  Transaction Currency flag local
           Else;
             W_INCURFLG = 'F';                                  //  Transaction Currency flag foreign
-          Endif
+          Endif;
           
           W_INMDRMRK    = D_INMDRMRK;                          // Remarks
           W_INSBUCDE    = wLNSBUCOD;                           // SBU Code
