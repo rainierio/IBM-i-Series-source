@@ -1,9 +1,9 @@
-/* ---------------------------------------------------------------- */
+      /* ---------------------------------------------------------------- */
       /* Program to copy AS4000 source file members to IFS                */
       /* ---------------------------------------------------------------- */
       /* If you don't have file that lists all your source file members,  */
       /* you can list all objects to an outfile with command              */
-      /* DSPOBJD OBJ(S104120X/*ALL) OBJTYPE(*FILE) OUTPUT(*OUTFILE)          */
+      /* DSPOBJD OBJ(S104120X/MISC) OBJTYPE(*ALL) OUTPUT(*OUTFILE)       */
       /* OUTFILE(QTEMP/MYFILE)                                            */
       /* then use values ODSRCL, ODSRCF, and ODSRCM in program below      */
       /* ---------------------------------------------------------------  */
