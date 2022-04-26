@@ -19,8 +19,6 @@
      FINI3102W  IF A E             DISK    Commit
      F                                     Prefix(W_)
      FINI3102I  IF   E             DISK    Prefix(I_)
-     FINI3102WL1IF   E           K DISK    RENAME(RINI3102W:RINI3102W1)
-     F                                     Prefix(V_)
      FINLNCLRBF IF A E           K DISK    Prefix(B_)
      FINPPAR    IF   E           K DISK
      FLNMAST    IF   E           K DISK
@@ -490,12 +488,10 @@
           W_INSBUCDE    = wLNSBUCOD;                           // SBU Code
           W_INSUBCDE    = wLNSUBCOD;                           // SUB Code
 
-          wChkSum += W_INTRNAMT;                               // Sum all the Trans amount
-
-
+          wChkSum       += W_INTRNAMT;                               // Sum all the Trans amount
           W_INPRDT      = INDATE;                              // Interface Processing Date
         
-           Write RINI3102W;
+           Write RINLNCLRBF;
 
          Endsr;
        //***********************************************************************
