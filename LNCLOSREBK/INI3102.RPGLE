@@ -472,11 +472,11 @@
           W_INACCTNO    = %Dec(D_INACCTNO:19:0);               // Loan Accont Number
           W_INLNACTP    = wLNACTYPE;                           // Loan Account Type 
           W_INLNACNM    = D_INLNACNM;                          // Loan Account Name
-          W_INLNSTAT    = %Dec(wLNSTATUS:1:0);                 // Loan Account Status
+          W_INLNSTAT    = wLNSTATUS;                           // Loan Account Status
           W_INDDACCT    = %Dec(D_INDDACCT:19:0);               // CASA Account Number
           W_INDDACTP    = wDDACTYPE;                           // CASA Account Type
           W_INDDACNM    = D_INDDACNM;                          // CASA Account Name
-          W_INDDSTAT    = %Dec(wDDSTATUS:1:0);                 // CASA Account Status
+          W_INDDSTAT    = wDDSTATUS;                           // CASA Account Status
           W_INTRNAMT    = %Dec(D_INTRNAMT:17:0);               // Transaction Amount
           W_INCURTYP    = wDDCURTYP;                           //  CASA Currency Type
 
@@ -504,7 +504,7 @@
        //***********************************************************************
         Begsr SrLogfile;
           
-          Setll *loval INI3102W;
+          Setll *START INI3102W;
           Read RINI3102W;
           Dow Not %Eof(INI3102W);
             B_INFIID      = W_INFIID;                            // Interface Identifier
