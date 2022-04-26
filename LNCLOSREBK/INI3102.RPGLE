@@ -135,28 +135,26 @@
        //  Main Proccesing
        //*******************************************************************************************
 
-           If p9APPRV = 'A';
+          If p9APPRV = 'A';
              Exsr srApprove;
              P9ERR = 'N';
              Commit;
-           Else;
-
-           If wParaSet = YES;
-           Read RINI3102I;
-           Dow Not %Eof(INI3102I) and P9Err <> 'Y' and wEndFile = 'N';
-            wINRSEQN += 1;
-            Exsr srValidate;
-            If wRCDTYP = '99' and wTRLSEQ = 1;             // Ignore line (N+1) after trailer (N)
-             wEndFile = 'Y';
+          Else;
+            If wParaSet = YES;
+              Read RINI3102I;
+              Dow Not %Eof(INI3102I) and P9Err <> 'Y' and wEndFile = 'N';
+                wINRSEQN += 1;
+                Exsr srValidate;
+                If wRCDTYP = '99' and wTRLSEQ = 1;             // Ignore line (N+1) after trailer (N)
+                  wEndFile = 'Y';
+                Endif;
+              Read RINI3102I;
+              Enddo;
+              Exsr srINTHDR;
+              Exsr srCommit;
             Endif;
-           Read RINI3102I;
-           Enddo;
-           Exsr srINTHDR;
-           Exsr srCommit;
-           Endif;
-           Exsr srINTFILE;
-
-           Endif;
+            Exsr srINTFILE;
+          Endif;
 
            *Inlr = *On;
        //***********************************************************************
@@ -176,6 +174,10 @@
          Else;
            P9ERR = 'N';
            Commit;
+           
+          // Write to the log file
+          Exsr SrLogfile;
+
          Endif;
 
          Endsr;
@@ -470,9 +472,11 @@
           W_INACCTNO    = %Dec(D_INACCTNO:19:0);               // Loan Accont Number
           W_INLNACTP    = wLNACTYPE;                           // Loan Account Type 
           W_INLNACNM    = D_INLNACNM;                          // Loan Account Name
+          W_INLNSTAT    = %Dec(wLNSTATUS:1:0);                 // Loan Account Status
           W_INDDACCT    = %Dec(D_INDDACCT:19:0);               // CASA Account Number
           W_INDDACTP    = wDDACTYPE;                           // CASA Account Type
           W_INDDACNM    = D_INDDACNM;                          // CASA Account Name
+          W_INDDSTAT    = %Dec(wDDSTATUS:1:0);                 // CASA Account Status
           W_INTRNAMT    = %Dec(D_INTRNAMT:17:0);               // Transaction Amount
           W_INCURTYP    = wDDCURTYP;                           //  CASA Currency Type
 
@@ -489,15 +493,58 @@
           wChkSum += W_INTRNAMT;                               // Sum all the Trans amount
 
 
-          W_INPRDT        = INDATE;                              // Interface Processing Date
-          //W_INFCDT      = %dec(%date());                       // File Processing Date
-          // W_INTIME     = %dec(%TIME());                       // Interface Timestamp
-          //W_INTIME      = INTIME;                              // Interface Timestamp
-          //W_INTIMESTMP  = %TIMESTAMP();                        // Interface Timestamp
-
+          W_INPRDT      = INDATE;                              // Interface Processing Date
+        
            Write RINI3102W;
 
          Endsr;
+       //***********************************************************************
+       // Subroutine  : SrLogfile
+       // Description : Write into log file - INLNCLRBF
+       //***********************************************************************
+        Begsr SrLogfile;
+          
+          Setll *loval INI3102W;
+          Read RINI3102W;
+          Dow Not %Eof(INI3102W);
+            B_INFIID      = W_INFIID;                            // Interface Identifier
+            B_INREFN      = W_INREFN;                            // Reference  Number
+            B_INFNAM      = W_INFNAM;                            // Filename
+            B_INSEQ       = W_INSEQ;                             // Sequence Number
+            B_UPLDID      = W_UPLDID;                            // Maker User ID
+            B_APRVID      = W_APRVID;                            // Checker User ID
+            B_INRCDID     = W_INRCDID;                           // Record Identifier
+            B_INTRNTYP    = W_INTRNTYP;                          // Transaction Type
+            B_INACCTNO    = W_INACCTNO;                          // Loan Accont Number
+            B_INLNACTP    = W_INLNACTP;                          // Loan Account Type 
+            B_INLNACNM    = W_INLNACNM;                          // Loan Account Name
+            B_INLNSTAT    = W_INLNSTAT;                          // Loan Account Status
+            B_INDDACCT    = W_INDDACCT;                          // CASA Account Number
+            B_INDDACTP    = W_INDDACTP;                          // CASA Account Type
+            B_INDDACNM    = W_INDDACNM;                          // CASA Account Name
+            B_INDDSTAT    = W_INDDSTAT;                          // CASA Account Status
+            B_INCFCIFN    = W_INCFCIFN;                          // CIF Number
+            B_INTRNAMT    = W_INTRNAMT;                          // Transaction Amount
+            B_INCURTYP    = W_INCURTYP;                          // CASA Currency Type
+            B_INCURFLG    = W_INCURFLG;                          // Transaction Currency flag
+            B_INMDRMRK    = W_INMDRMRK;                          // Remarks
+            B_INSBUCDE    = W_INSBUCDE;                          // SBU Code
+            B_INSUBCDE    = W_INSUBCDE;                          // SUB Code
+            B_INPRDT      = W_INPRDT;                            // Interface Processing Date
+            B_INERDCD     = W_INERDCD;                           // IFC Error Code     
+            B_INERDSC     = W_INERDSC;                           // IFC Error Description
+            B_INERRDT     = W_INERRDT;                           // IFC Error Date
+            B_INPRDT      = W_INPRDT;                            // Interface Processing Date
+            B_INPRTM      = W_INPRTM;                            // Interface Processing Time    
+            B_PRCSTS      = W_PRCSTS;                            // Application Status AA/AB
+            B_PRCTIM      = W_PRCTIM;                            // Application Time
+            B_ERRCDE      = W_ERRCDE;                            // Error Code
+            B_ERRDSC      = W_ERRDSC;                            // Error Description
+
+            Write RINI3102W;
+          Read RINI3102W;
+          Enddo;            
+        Endsr;
        //***********************************************************************
        // Subroutine  : SRCHKTRL
        // Description : Check Trailer record
