@@ -21,6 +21,7 @@
      FINI3102I  IF   E             DISK    Prefix(I_)
      FINI3102WL1IF   E           K DISK    RENAME(RINI3102W:RINI3102W1)
      F                                     Prefix(V_)
+     FINLNCLRBF IF A E           K DISK    Prefix(B_)
      FINPPAR    IF   E           K DISK
      FLNMAST    IF   E           K DISK
      FLNTNEW    IF   E           K DISK    RENAME(RLNMAST:RLNTNEW)
