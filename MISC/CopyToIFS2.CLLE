@@ -1,0 +1,42 @@
+      /* ---------------------------------------------------------------- */
+      /* Program to copy AS4000 source file members to IFS                */
+      /* ---------------------------------------------------------------- */
+      /*                                                                  */
+      /*                                                                  */
+      /*                                                                  */
+      /*                                                                  */
+      /*                                                                  */
+      /* ---------------------------------------------------------------  */
+      PGM        PARM(&file &library)
+            dcl        &file       *char 10
+            dcl        &library    *char 12
+            dcl        &docname    *char 12
+            DCLF       FILE(QTEMP/MEMBERS)
+
+            monmsg     cpf0000
+
+            DSPFD      FILE(&library/&file) TYPE(*MBRLIST) +
+                       OUTPUT(*OUTFILE) OUTFILE(QTEMP/MEMBERS)
+
+            /* Create starting directory in IFS */
+            CRTDIR     DIR('/home/S104120X/' *TCAT &file *TCAT +
+                           '/')
+            MONMSG     MSGID(CPF0000)
+
+ Loop:       Rcvf
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EXIT))
+
+
+             CPYTOIMPF  FROMFILE(&LIBRARY/&FILE &MLNAME) +
+                          TOSTMF('/Home/S104120X/'  +
+                          *TCAT &FILE *TCAT '/' *TCAT +
+                          &MLNAME *TCAT '.' *TCAT &MLSEU +
+                          MBROPT(*REPLACE) STMFCODPAG(*PCASCII) +
+                          RCDDLM(*CRLF) DTAFMT(*FIXED)
+
+             goto       loop
+
+
+     Exit:
+             RCLRSC
+             ENDPGM                     
