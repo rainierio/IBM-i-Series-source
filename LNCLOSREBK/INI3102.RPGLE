@@ -272,7 +272,7 @@
          Endif;
 
          // Check agreed system source
-           If H_INSRCS <> 'INLNR1';
+           If H_INSRCS <> 'INLNCLRB';
             wINERCD    = 'INI005';
             wINERVAL   = 'SourceSys:'+H_INSRCS;
          //  P9ERR = 'Y';
@@ -298,9 +298,9 @@
             wINERVAL = 'Transaction Type is mandatory'+D_INRCDID;
             Exsr srINTDTE;
           Else;
-            if D_INRCDID <> 'S' AND D_INRCDID <> 'D';
+            if D_INTRNTYP <> 'S' AND D_INTRNTYP <> 'D';
             wINERCD  = 'INI012';
-            wINERVAL = 'Only S or D are allowed'+D_INRCDID;
+            wINERVAL = 'Only S or D are allowed'+D_INTRNTYP;
             Exsr srINTDTE;
             Endif;
           Endif;
@@ -334,17 +334,17 @@
             Endif;                                      
 
             If %found(LNMAST) Or %found(LNTNEW);
-              If STATUS <> 1 or STATUS <> 4;
-                wINERCD  = 'INI016';
-                wINERVAL = 'Loan Acc No: '+D_INACCTNO;
-                Exsr srINTDTE;
-              Else;
+              If STATUS = 1 or STATUS = 4;
                 wLNSTATUS = STATUS;
                 wLNACTYPE = ACTYPE; 
                 wLNCURTYP = CURTYP;
                 wLNCIFNO  = CIFNO; 
                 wLNSBUCOD = SBUCOD;
                 wLNSUBCOD = SUBCOD;
+              Else;
+                wINERCD  = 'INI016';
+                wINERVAL = 'Loan Acc No: '+D_INACCTNO;
+                Exsr srINTDTE;
               Endif;
             Endif;
           Endif;
@@ -384,15 +384,15 @@
             Endif;                                      
 
             If %found(DDMAST) Or %found(DDTNEW);
-              If DD_STATUS <> 1 or DD_STATUS <> 4;
-                wINERCD  = 'INI016';
-                wINERVAL = 'CASA Acc No: '+D_INDDACCT;
-                Exsr srINTDTE;
-              Else;
+              If DD_STATUS = 1 or DD_STATUS = 4;
                 wDDSTATUS = DD_STATUS;
                 wDDACTYPE = DD_ACTYPE;
                 wDDCURTYP = DD_DDCTYP;
                 wDDCIFNO  = DD_CIFNO;
+              Else;
+                wINERCD  = 'INI016';
+                wINERVAL = 'CASA Acc No: '+D_INDDACCT;
+                Exsr srINTDTE;              
               Endif;
             Endif;
                           
@@ -472,7 +472,7 @@
           W_INDDACCT    = %Dec(D_INDDACCT:19:0);               // CASA Account Number
           W_INDDACTP    = wDDACTYPE;                           // CASA Account Type
           W_INDDACNM    = D_INDDACNM;                          // CASA Account Name
-          W_INTRNAMT    = %Dec(D_INTRNAMT:17:0)/100;           // Transaction Amount
+          W_INTRNAMT    = %Dec(D_INTRNAMT:17:0);               // Transaction Amount
           W_INCURTYP    = wDDCURTYP;                           //  CASA Currency Type
 
           If W_INCURTYP = 'IDR';
