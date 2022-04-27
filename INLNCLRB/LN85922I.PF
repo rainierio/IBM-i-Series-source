@@ -1,0 +1,31 @@
+      ****************************************************************
+      * IF - Input Output Interface File Subfile listing - Input     *
+      ****************************************************************
+      *  IFS95005I  IS A PART OF SILVERLAKE SYSTEM (R)               *
+      *  (C) COPYRIGHT 2002, 2004                                    *
+      *    BY: SILVERLAKE SYSTEM SDN. BHD.                           *
+      *        LEVEL 2A,KPMG TOWER,                                  *
+      *        FIRST AVENUE, BANDAR UTAMA,                           *
+      *        47800 PETALING JAYA,                                  *
+      *        SELANGOR, MALAYSIA                                    *
+      *        TEL: +603-77216000                                    *
+      ****************************************************************
+      *  CREATED BY: Chia Ji Shon                                    *
+      *  DATE      : 25 May 2011                                     *
+      ****************************************************************
+      *  MODIFICATION LOGS:                                          *
+      *  NAME  INIT   DATE      REMARKS                              *
+      *  ----  -----  --------  -----------------------------------  *
+      ****************************************************************
+     A                                      REF(INTFILE)
+     A          R RIFS95005I
+     A***         INUSRID   R
+     A            INFIID    R
+     A            INFNAM    R
+     A            INFSEQ    R     S
+     A            INDATE    R     S
+     A            INREFN    R               REFFLD(INREFN INTFILE)
+     A                                      COLHDG('Reference Number')
+     A
+     A          K INREFN
+     **

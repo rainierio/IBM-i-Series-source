@@ -75,7 +75,7 @@
        //  Return error indicator if one of the record has error
        //*******************************************************************************************
 
-          Begsr SrProcess;
+          Begsr srUpdatErr;
             Setll (P9FIID:P9REF) INI3102W;
             If %equal (INI3102W);
               Reade (P9FIID:P9REF) INI3102W;
