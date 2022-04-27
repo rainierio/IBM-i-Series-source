@@ -6,7 +6,7 @@
      F* Author........: Rainier Letidjawa                             *
      F* Ref no........:                                               *
      F*****************************************************************
-     F* LN85922      is part of Silverlake Integrated Banking System *
+     F* LN85922 is part of Silverlake Integrated Banking System       *
      F* Copyright 1996 by Silverlake System Sdn Bhd Kuala Lumpur,     *
      F* Malaysia.                                                     *
      F*****************************************************************
