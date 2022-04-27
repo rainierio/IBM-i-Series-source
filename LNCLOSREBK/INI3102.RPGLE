@@ -490,7 +490,8 @@
 
           wChkSum       += W_INTRNAMT;                         // Sum all the Trans amount
           W_INPRDT      = INDATE;                              // Interface Processing Date
-        
+          W_INPRTM      = INTIME;
+
            Write RINI3102W;
 
          Endsr;
@@ -540,6 +541,28 @@
             Write RINLNCLRBF;
           Read RINI3102W;
           Enddo;            
+        Endsr;
+
+       //***********************************************************************
+       // Subroutine  : srApproveLog
+       // Description : Update into log file when approve
+       //***********************************************************************
+        Begsr srApproveLog;
+          Chain (INFIID:INREFN:INFSEQ) RINLNCLRBF;
+          If %found (INLNCLRB)
+            B_APRVID = W_APRVID;                                  // Checker User ID
+            B_INSTS  = W_INSTS;                                   // Interface Status
+            B_PRCSTS = W_PRCSTS;                                  // Application Status AA/AB
+            B_INERDCD = W_INERDCD;                                // IFC Error Code
+            B_INERDSC = W_INERDSC;                                // IFC Error Description
+            B_INERRDT = W_INERRDT;                                // IFC Error Data
+            B_INPRDT  = W_INPRDT;                                 // Interface Processing Date
+            B_INPRTM  = W_INPRTM;                                 // Interface Processing Time
+
+            // Initial simulation data are not updated here ini INILNCLRBF
+
+            update RINLNCLRBF %fields(APRVID:INSTS:RCSTS:INERDCD:INERDSC:INERRDT:INPRDT:INPRTM);
+          Endif
         Endsr;
        //***********************************************************************
        // Subroutine  : SRCHKTRL
@@ -731,6 +754,7 @@
               DETAILS = wdata;
               Exsr srChkDtl;
               Exsr srMovFld;
+              Exsr srApproveLog;
           // Endif;
             Endif;
            Reade (INFIID:INFNAM:INDATE:INFSEQ) RINTDTL;
