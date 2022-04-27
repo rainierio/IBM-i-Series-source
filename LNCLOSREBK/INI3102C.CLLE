@@ -318,7 +318,7 @@ UPSTS:       IF (&PREJECT *NE 'Y') DO
              IF         COND(&APPRV *EQ 'A') THEN(DO)
 
              OVRDBF     FILE(INI3102W) TOFILE(*LIBL/INI3102WI) +
-                          OVRSCOPE(*JOB) SHARE(*YES)
+                          OVRSCOPE(*JOB) SHARE(*YES)            
 
              STRCMTCTL *CHG
              MONMSG CPF8351

@@ -19,7 +19,7 @@
      FINI3102W  IF A E             DISK    Commit
      F                                     Prefix(W_)
      FINI3102I  IF   E             DISK    Prefix(I_)
-     FINLNCLRBF IF A E           K DISK    Prefix(B_)
+     FINLNCLRBF UF A E           K DISK    Prefix(B_)
      FINPPAR    IF   E           K DISK
      FLNMAST    IF   E           K DISK
      FLNTNEW    IF   E           K DISK    RENAME(RLNMAST:RLNTNEW)
@@ -467,15 +467,15 @@
           W_INRCDID     = *blanks;                             // Record Identifier
 
           W_INTRNTYP    = D_INTRNTYP;                          // Transaction Type
-          W_INACCTNO    = %Dec(D_INACCTNO:19:0);               // Loan Accont Number
+          W_INACCTNO    = %Int(D_INACCTNO);                    // Loan Accont Number
           W_INLNACTP    = wLNACTYPE;                           // Loan Account Type 
           W_INLNACNM    = D_INLNACNM;                          // Loan Account Name
           W_INLNSTAT    = wLNSTATUS;                           // Loan Account Status
-          W_INDDACCT    = %Dec(D_INDDACCT:19:0);               // CASA Account Number
+          W_INDDACCT    = %Int(D_INDDACCT);                    // CASA Account Number
           W_INDDACTP    = wDDACTYPE;                           // CASA Account Type
           W_INDDACNM    = D_INDDACNM;                          // CASA Account Name
           W_INDDSTAT    = wDDSTATUS;                           // CASA Account Status
-          W_INTRNAMT    = %Dec(D_INTRNAMT:17:0);               // Transaction Amount
+          W_INTRNAMT    = %Dec(D_INTRNAMT:17:2)/100;           // Transaction Amount
           W_INCURTYP    = wDDCURTYP;                           //  CASA Currency Type
 
           If W_INCURTYP = 'IDR';
@@ -488,10 +488,10 @@
           W_INSBUCDE    = wLNSBUCOD;                           // SBU Code
           W_INSUBCDE    = wLNSUBCOD;                           // SUB Code
 
-          wChkSum       += W_INTRNAMT;                               // Sum all the Trans amount
+          wChkSum       += W_INTRNAMT;                         // Sum all the Trans amount
           W_INPRDT      = INDATE;                              // Interface Processing Date
         
-           Write RINLNCLRBF;
+           Write RINI3102W;
 
          Endsr;
        //***********************************************************************
@@ -537,7 +537,7 @@
             B_ERRCDE      = W_ERRCDE;                            // Error Code
             B_ERRDSC      = W_ERRDSC;                            // Error Description
 
-            Write RINI3102W;
+            Write RINLNCLRBF;
           Read RINI3102W;
           Enddo;            
         Endsr;
