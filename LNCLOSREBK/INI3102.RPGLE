@@ -549,7 +549,7 @@
        //***********************************************************************
         Begsr srApproveLog;
           Chain (INFIID:INREFN:INFSEQ) RINLNCLRBF;
-          If %found (INLNCLRB)
+          If %found(INLNCLRB)
             B_APRVID = W_APRVID;                                  // Checker User ID
             B_INSTS  = W_INSTS;                                   // Interface Status
             B_PRCSTS = W_PRCSTS;                                  // Application Status AA/AB
@@ -561,7 +561,8 @@
 
             // Initial simulation data are not updated here ini INILNCLRBF
 
-            update RINLNCLRBF %fields(APRVID:INSTS:RCSTS:INERDCD:INERDSC:INERRDT:INPRDT:INPRTM);
+            update RINLNCLRBF %fields(B_APRVID:B_INSTS:B_RCSTS: +
+            B_INERDCD:B_INERDSC:B_INERRDT:B_INPRDT:B_INPRTM);
           Endif
         Endsr;
        //***********************************************************************
