@@ -28,6 +28,7 @@
              DCL        VAR(&P9DRCD) TYPE(*DEC) LEN(10)
              DCL        VAR(&P9TRCD) TYPE(*DEC) LEN(10)
              DCL        VAR(&ERR) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RCNERR) TYPE(*CHAR) LEN(1)    /* Reconciliation Error Indicator*/
              DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
              DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&SYSERR) TYPE(*CHAR) LEN(1)
@@ -269,7 +270,8 @@ CHKSTS:
          /*  CALL       PGM(LNI792C) PARM(&FIID &P9REF &APPRV)  */
 
         /* Recon the Apps error                  */
-             Call       PGM(INI3102A)  PARM(&FIID &P9REF)
+             CHGVAR     VAR(&RCNERR) VALUE(' ')
+             Call       PGM(INI3102A)  PARM(&FIID &P9REF &RCNERR)
 
         /* Generate upload status report */
         /*   CALL       PGM(INI4102C) PARM('U' &FIID &P9REF)    */
@@ -298,6 +300,10 @@ UPSTS:       IF (&PREJECT *NE 'Y') DO
              IF (&ERR *NE 'N') DO
              CHGVAR &STS '2'
              CHGVAR     VAR(&P9ERRRMK) VALUE('Reject File If Header/Trailer Error')
+             ENDDO
+             IF (&RCNERR *EQ 'Y') DO
+             CHGVAR &STS '2'
+             CHGVAR     VAR(&P9ERRRMK) VALUE('Error found, Rejected by system')
              ENDDO
              IF         COND(&P9ERRRMK *EQ ' ') THEN(DO)
              CHGVAR     VAR(&P9ERRRMK) VALUE(&P9ERM)
@@ -331,7 +337,8 @@ UPSTS:       IF (&PREJECT *NE 'Y') DO
            /*  CALL       PGM(LNI792C) PARM(&FIID &P9REF &APPRV)  */
 
         /* Recon the Apps error                  */
-             Call       PGM(INI3102A)  PARM(&FIID &P9REF)
+             CHGVAR     VAR(&RCNERR) VALUE(' ')
+             Call       PGM(INI3102A)  PARM(&FIID &P9REF &RCNERR)
 
         /* Generate upload status report */
           /*  CALL       PGM(INI4102C) PARM('A' &FIID &P9REF) */
@@ -363,6 +370,8 @@ UPSTS:       IF (&PREJECT *NE 'Y') DO
                           VALUE('7'))
              IF         COND(&ERR *NE 'N') THEN(CHGVAR VAR(&STS) +
                           VALUE('8'))
+             IF         COND(&RCNERR *EQ 'Y') THEN(CHGVAR VAR(&STS) +
+                        VALUE('8'))
              CALL       PGM(INT722) PARM(&FIID &P9REF &P9NORCD &STS &P9ERM)
 
              Enddo

@@ -350,13 +350,6 @@
             Endif;
           Endif;
 
-          // Loan account number is mandatory
-          If D_INACCTNO = *all'0';
-            wINERCD  = 'INI011 ';
-            wINERVAL = 'Loan Acc No: '+ D_INACCTNO;
-            Exsr srINTDTE;
-          Endif;
-
           // Validate CASA account number
           If D_INDDACCT <> *blank;
             WKCHKSTS = %CHECK(WNUMCHK:%Trim(D_INDDACCT):1);
@@ -399,13 +392,6 @@
                           
           Endif;
 
-          // CASA account is mandatory
-          If D_INDDACCT = *all'0';
-            wINERCD  = 'INI011 ';
-            wINERVAL = 'CASA Acc No: '+ D_INDDACCT;
-            Exsr srINTDTE;
-          Endif;
-
           // Validate Transactions amount
           If D_INTRNAMT <> *blank;
             WKCHKSTS = %CHECK(WNUMCHK:%Trim(D_INTRNAMT):1);
@@ -424,13 +410,6 @@
             D_INTRNAMT = %Editc(xNum17:'X');
           Endif;
 
-          // Transaction Amount is mandatory
-          If D_INTRNAMT = *all'0';
-            wINERCD  = 'INI011 ';  
-            wINERVAL = 'Transaction amnt: '+ D_INTRNAMT;
-            Exsr srINTDTE;
-          Endif;
-
           // Loan and CASA CIF checking
           If wLNCIFNO <> wDDCIFNO;
             wINERCD = 'INI012';
@@ -444,6 +423,12 @@
             wINERVAL = 'Account currency type must be the same';
             Exsr srINTDTE;
           Endif;
+
+          If wINERCD <> *blank;
+            wFailRcd += 1;      
+          Else;                
+            wSuccRcd += 1;      
+          Endif;               
 
          Endsr;
        //***********************************************************************
@@ -474,7 +459,8 @@
           W_INDDACCT    = %Int(D_INDDACCT);                    // CASA Account Number
           W_INDDACTP    = wDDACTYPE;                           // CASA Account Type
           W_INDDACNM    = D_INDDACNM;                          // CASA Account Name
-          W_INDDSTAT    = wDDSTATUS;                           // CASA Account Status
+          W_INDDSTAT    = wDDSTATUS;
+          W_INCFCIFN    = wLNCIFNO;                            // Loan CIF number
           W_INTRNAMT    = %Dec(D_INTRNAMT:17:2)/100;           // Transaction Amount
           W_INCURTYP    = wDDCURTYP;                           //  CASA Currency Type
 
@@ -528,6 +514,7 @@
             B_INSBUCDE    = W_INSBUCDE;                          // SBU Code
             B_INSUBCDE    = W_INSUBCDE;                          // SUB Code
             B_INPRDT      = W_INPRDT;                            // Interface Processing Date
+            B_INSTS       = W_INSTS;                             // Interface Status
             B_INERDCD     = W_INERDCD;                           // IFC Error Code     
             B_INERDSC     = W_INERDSC;                           // IFC Error Description
             B_INERRDT     = W_INERRDT;                           // IFC Error Date
@@ -548,8 +535,8 @@
        // Description : Update into log file when approve
        //***********************************************************************
         Begsr srApproveLog;
-          Chain (INFIID:INREFN:INFSEQ) RINLNCLRBF;
-          If %found(INLNCLRB)
+          Chain (INFIID:INREFN:INRSEQN) RINLNCLRBF;
+          If %found(INLNCLRBF);
             B_APRVID = W_APRVID;                                  // Checker User ID
             B_INSTS  = W_INSTS;                                   // Interface Status
             B_PRCSTS = W_PRCSTS;                                  // Application Status AA/AB
@@ -561,9 +548,9 @@
 
             // Initial simulation data are not updated here ini INILNCLRBF
 
-            update RINLNCLRBF %fields(B_APRVID:B_INSTS:B_RCSTS: +
+            update RINLNCLRBF %fields(B_APRVID:B_INSTS:B_PRCSTS:
             B_INERDCD:B_INERDSC:B_INERRDT:B_INPRDT:B_INPRTM);
-          Endif
+          Endif;
         Endsr;
        //***********************************************************************
        // Subroutine  : SRCHKTRL

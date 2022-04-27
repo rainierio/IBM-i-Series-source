@@ -16,10 +16,12 @@
      D INI3102Pr       PR                  Extpgm('INI3102A')                    
      D P9FIID                        20A
      D P9REF                         25A
+     D P9RCNERR                       1A
      D*
      D INI3102Pr       PI
      D P9FIID                        20A
      D P9REF                         25A
+     D P9RCNERR                       1A
      D* Additional Field
      D Counter         S              9S 0
       *
@@ -33,6 +35,7 @@
         Reade (P9FIID:P9REF) INTFILEL5;
           Dow not %eof(INTFILEL5);
             Exsr srProcess;
+            Exsr srUpdatErr;                 // return error indicator
             Reade (P9FIID:P9REF) INTFILEL5;
           Enddo;
         Endif;
@@ -41,6 +44,7 @@
 
        //*******************************************************************************************
        //  srProcess;
+       //  Update error from core apps
        //*******************************************************************************************
 
           Begsr SrProcess;
@@ -66,4 +70,23 @@
               Enddo;
             Endif;
           Endsr;
+       //*******************************************************************************************
+       //  srUpdatErr;
+       //  Return error indicator if one of the record has error
+       //*******************************************************************************************
+
+          Begsr SrProcess;
+            Setll (P9FIID:P9REF) INI3102W;
+            If %equal (INI3102W);
+              Reade (P9FIID:P9REF) INI3102W;
+              Dow not %eof (INI3102W);
+                If INSTS = 'R' OR PRCSTS = 'AB';
+                  P9RCNERR = 'Y';
+                  Leave;
+                Endif;
+                Reade (P9FIID:P9REF) INI3102W;
+              Enddo;
+            Endif;
+          Endsr;
+
       /End-Free
