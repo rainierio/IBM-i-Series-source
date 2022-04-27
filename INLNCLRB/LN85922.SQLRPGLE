@@ -1,13 +1,12 @@
      H/COPY QSYSREFRLE,COPYRIGHTH
      F*****************************************************************
-     F* Program Name..: IFS95005                                      *
-     F* Description...: IF I/O Interface Subfile Listing              *
-     F* Date Created..: 25 May 2011                                   *
-     F* Author........: Chia Ji Shon                                  *
-     F* 2nd Author....: Johnson Lim                                   *
+     F* Program Name..: LN85922                                       *
+     F* Description...: Loan Close and Rebook Inquiry                 *
+     F* Date Created..: 28 April 2022                                 *
+     F* Author........: Rainier Letidjawa                             *
      F* Ref no........:                                               *
      F*****************************************************************
-     F* IFS95005      is part of Silverlake Integrated Banking System *
+     F* LN85922      is part of Silverlake Integrated Banking System *
      F* Copyright 1996 by Silverlake System Sdn Bhd Kuala Lumpur,     *
      F* Malaysia.                                                     *
      F*****************************************************************
@@ -16,15 +15,15 @@
      F* ----  ----     ----    -----------                            *
      F*                                                               *
       *****************************************************************
-     FINTFILEL5 IF   E           K DISK    prefix(M_)
+     FINTFILEL9 IF   E           K DISK    prefix(M_)
      ** MBASE-Common D-Spec for Maint File Handler
-OS01 D/COPY QMBSREFRLE,MBQTXHD
+     D/COPY QMBSREFRLE,MBQTXHD
      ** I/R struc
-     D DS95005I      E DS                  EXTNAME(IFS95005I) PREFIX(PR)
-     D DS95005R      E DS                  EXTNAME(IFS95005R)
+     D DS85922I      E DS                  EXTNAME(LN85922I) PREFIX(PR)
+     D DS85922R      E DS                  EXTNAME(LN85922R)
      **
-     D DSIROW        E DS                  EXTNAME(IFS95005I) PREFIX(PI)
-     D DSWROW        E DS                  EXTNAME(IFS95005R)
+     D DSIROW        E DS                  EXTNAME(LN85922I) PREFIX(PI)
+     D DSWROW        E DS                  EXTNAME(LN85922R)
      D                                     OCCURS(999) PREFIX(PW)
      **
      DDSINFIID         DS
@@ -45,10 +44,10 @@ OS01 D/COPY QMBSREFRLE,MBQTXHD
      **===========================================
      **
      ** initialise, map header,
-OS01 C                   EXSR      SRINIT
+     C                   EXSR      SRINIT
      C
-     C                   CLEAR                   DS95005I
-     C                   CLEAR                   DS95005R
+     C                   CLEAR                   DS85922I
+     C                   CLEAR                   DS85922R
      C                   CLEAR                   OTSTRS
      C                   eval      *in42='0'
      C
@@ -57,7 +56,7 @@ OS01 C                   EXSR      SRINIT
      ** main
      C                   SELECT
      ** action inquiry
-OS01 C                   WHEN      HDACCD      = 'I'
+     C                   WHEN      HDACCD      = 'I'
      C                   EXSR      SRINQ
      C                   OTHER
      ** error
@@ -67,7 +66,7 @@ OS01 C                   WHEN      HDACCD      = 'I'
      **
      C                   ENDSL
      ** re-map header output
-OS01 C                   EXSR      SREXIT
+     C                   EXSR      SREXIT
      **
      **===========================================
      ** sr - inq record
@@ -76,9 +75,9 @@ OS01 C                   EXSR      SREXIT
      **
      ** map input response
      C                   EVAL      wCont = *ZEROS
-     C                   EVAL      DS95005I   = INSTRS
-     C*                  EVAL      DS95005R   = DS95005I
-     C                   EVAL      WLEN        = %SIZE(DS95005R)
+     C                   EVAL      DS85922I   = INSTRS
+     C*                  EVAL      DS85922R   = DS85922I
+     C                   EVAL      WLEN        = %SIZE(DS85922R)
      C                   EVAL      WSTRLEN     = 0
      C                   EVAL      WHDNREC     = HDNREC + 1
      C                   FOR       WX          = 1 to %ELEM(DSWROW)
@@ -86,23 +85,23 @@ OS01 C                   EXSR      SREXIT
      C                   RESET                   DSWROW
      C                   ENDFOR
      **
-OS01 C                   EXSR      SRCVTIN
+     C                   EXSR      SRCVTIN
      C                   IF        WERROR      = 'Y'
-OS01 C                   EXSR      SRSENDERR
+     C                   EXSR      SRSENDERR
      C                   LEAVESR
      C                   ENDIF
      **
      ** start validation
      C                   EXSR      SRVALIDATE
      C                   IF        WERROR      = 'Y'
-OS01 C                   EXSR      SRSENDERR
+     C                   EXSR      SRSENDERR
      C                   LEAVESR
      C                   ENDIF
      **
      ** process history file
      C                   EXSR      SRPROC1
      C                   IF        WERROR      = 'Y'
-OS01 C                   EXSR      SRSENDERR
+     C                   EXSR      SRSENDERR
      C                   LEAVESR
      C                   ENDIF
      **
@@ -113,11 +112,11 @@ OS01 C                   EXSR      SRSENDERR
      C     SRVALIDATE    BEGSR
      **
      ** default error "Y"
-OS01 C                   EVAL      WERROR      = 'Y'
+     C                   EVAL      WERROR      = 'Y'
      **
      **
-OS01 ** If no error reset flag to "N"
-OS01 C                   EVAL      WERROR      = 'N'
+     ** If no error reset flag to "N"
+     C                   EVAL      WERROR      = 'N'
      **
      C                   ENDSR
      **============================================
@@ -127,20 +126,20 @@ OS01 C                   EVAL      WERROR      = 'N'
      **
      C                   EVAL      WERROR      = 'N'
      **
-OS01 C                   EXSR      SRSQLPREP
+     C                   EXSR      SRSQLPREP
      **
-OS01 C                   EXSR      SRSQLSTMT
+     C                   EXSR      SRSQLSTMT
      **
-OS01 C                   EXSR      SRSQLOPEN
+     C                   EXSR      SRSQLOPEN
      **
-OS01 C                   EXSR      SRSQLFETCH
+     C                   EXSR      SRSQLFETCH
      C                   IF        WERROR      = 'Y'
      C                   LEAVESR
      C                   ENDIF
       **
      C                   EXSR      SROUTDATA
      **
-OS01 C                   EXSR      SRSQLCLOSE
+     C                   EXSR      SRSQLCLOSE
      **
      C                   IF        HDNREC      = 0
      C                   EVAL      ERCODE      = 'MBM2001'
@@ -151,29 +150,29 @@ OS01 C                   EXSR      SRSQLCLOSE
      **
      C     ERPROC1       ENDSR
      **============================================
-OS01 ** sr -
+     ** sr -
      **============================================
      C     SRCVTIN       BEGSR
      **
      ** default error "Y"
-OS01 C                   EVAL      WERROR      = 'Y'
-OS01 ** If no error reset flag to "N"
-OS01 C                   EVAL      WERROR      = 'N'
+     C                   EVAL      WERROR      = 'Y'
+     ** If no error reset flag to "N"
+     C                   EVAL      WERROR      = 'N'
      **
      C     ERCVTIN       ENDSR
      **============================================
-OS01 ** sr -
+     ** sr -
      **============================================
      C     SRCVTOUT      BEGSR
      **
      ** return search key
-     C*                  EVAL      DS95005I   = DS95005R
-     C*                  EVAL      WHDVFMT_KEY = DS95005I
+     C*                  EVAL      DS85922I   = DS85922R
+     C*                  EVAL      WHDVFMT_KEY = DS85922I
      C*                  EVAL      HDVFMT      = WHDVFMT
      **
      C     ERCVTOUT      ENDSR
      **============================================
-OS01 ** sr -
+     ** sr -
      **============================================
      C     SRSQLPREP     BEGSR
       *
@@ -191,32 +190,26 @@ OS01 ** sr -
      C                                   'INUPUSR, ' +
 Jon1 C                                   'INERM1'
      C
-     C                   EVAL      WFROM = ' FROM INTFILEL5 '
+     C                   EVAL      WFROM = ' FROM INTFILEL9 '
       *
      C                   EVAL      WHERE  =  ' WHERE '
      C
       /FREE
-                    IF PRINFIID = ' ' AND PRINREFN = '';
+                    IF PRINFIID <> ' ' AND PRINDATE <> ' ';
                        WHERE = %TRIMR(WHERE) +
-                               ' INFIID = '+WAPOS+WAPOS+ 'AND' +
-                               ' INREFN = '+WAPOS+WAPOS+ 'AND' +
-                               ' INSRC = '+WAPOS+WAPOS;
+                               ' INFIID = '+WAPOS+ PRINFIID +WAPOS+
+                               ' AND INDATE = '+WAPOS+ PRINDATE +WAPOS;
                        wDone = '1';
 
-                    ELSEIF PRINFIID <> ' ' AND PRINREFN = '';
+                    ELSEIF PRINFIID <> ' ' AND PRINDATE = ' ';
                        WHERE = %TRIMR(WHERE) +
-                               ' INFIID =' + WAPOS + PRINFIID +WAPOS   +
-                               ' AND INSRC LIKE '+WAPOS+ 'ETP%' +WAPOS +
-                               ' AND (INREFN <>' + WAPOS+WAPOS + ')';
+                               ' INFIID =' + WAPOS + PRINFIID +WAPOS;
                        wDone = '1';
 
                     ELSE;
                        WHERE = %TRIMR(WHERE) +
-                               ' INREFN='
-                               +WAPOS+%TRIM(PRINREFN)       +WAPOS
-                               +' OR  (INREFN='
-                               +WAPOS+%TRIM(PRINREFN)       +WAPOS
-                               + ')';
+                               ' INFIID =' + WAPOS + PRINFIID +WAPOS;
+                       wDone = '1';
                     ENDIF;
       /END-FREE
      C
@@ -226,7 +219,7 @@ Jon1 C                                   'INERM1'
       *
      C                   ENDSR
      **============================================
-OS01 ** sr -
+     ** sr -
      **============================================
      C     SRSQLSTMT     BEGSR
      **
@@ -291,11 +284,11 @@ OS01 ** sr -
      C*    ERSQL         ENDSR
      **==========================================
      C****************************************************************
-OS01 C/COPY QMBSREFRLE,MBQTXHC
+     C/COPY QMBSREFRLE,MBQTXHC
      ** LOANS-Common C-Spec for Maint File Handler
-OS01 C*/COPY QBWCREFRLE,CFQTXHC
+     C*/COPY QBWCREFRLE,CFQTXHC
      ** LOANS-Common C-Spec for Maint File Handler
-OS01 C*/COPY QBWCREFRLE,CFQRTVPC
+     C*/COPY QBWCREFRLE,CFQRTVPC
      C/COPY QSYSREFRLE,SSQTXSSQL
      **===========================================
      **
@@ -323,21 +316,19 @@ OS01 C*/COPY QBWCREFRLE,CFQRTVPC
      C
      C     KYRtn1Rec     klist
      C                   kfld                    PRINFIID
-     C                   kfld                    PRINREFN
+     C                   kfld                    PRINDATE
      C
      C     KYRtn1Rec     chain     rintfile                           41
      C*                  eval      WX        = 0
      C                   eval      wCont =  1
-     C                   if        *in41 = '0'  and PRINREFN <> *BLANK and
+     C                   if        *in41 = '0'  and PRINDATE <> *BLANK and
      C                                     wCont = 1
      C
      C                   eval      WX        = 1
      C                   eval      HDNREC    = 1
      C
      C                   eval      PRINFIID  =   M_INFIID
-     C                   eval      PRINREFN  =   M_INREFN
-     C                   eval      PRINFNAM  =   M_INFNAM
-     C                   eval      PRINFSEQ  =   M_INFSEQ
+     C                   eval      PRINDATE  =   M_INDATE
      C
      C                   eval      *in42 = '1'
      C                   eval      wCont = 2

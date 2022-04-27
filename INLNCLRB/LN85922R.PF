@@ -1,7 +1,7 @@
       ****************************************************************
       * IF - Input Output Interface File Subfile listing - Response  *
       ****************************************************************
-      *  IFS95005R  IS A PART OF SILVERLAKE SYSTEM (R)               *
+      *  LN85922R  IS A PART OF SILVERLAKE SYSTEM (R)               *
       *  (C) COPYRIGHT 2002, 2004                                    *
       *    BY: SILVERLAKE SYSTEM SDN. BHD.                           *
       *        LEVEL 2A,KPMG TOWER,                                  *
@@ -10,15 +10,15 @@
       *        SELANGOR, MALAYSIA                                    *
       *        TEL: +603-77216000                                    *
       ****************************************************************
-      *  CREATED BY: Chia Ji Shon                                    *
-      *  DATE      : 25 May 2011                                     *
+      *  CREATED BY: Rainier Letidjawa                               *
+      *  DATE      : 27 Apr 2022                                     *
       ****************************************************************
       *  MODIFICATION LOGS:                                          *
       *  NAME  INIT   DATE      REMARKS                              *
       *  ----  -----  --------  -----------------------------------  *
       ****************************************************************
      A                                      REF(INTFILEL5)
-     A          R RIFS95005R
+     A          R RLN85922R
      A            INFIID    R
      A            INREFN    R
      A            INFNAM    R
@@ -31,5 +31,5 @@
      A            INUSRID   R
      A            INPGM     R
      A            INUPUSR   R
-Jon1 A            INERM1    R
+     A            INERM1    R
      **
