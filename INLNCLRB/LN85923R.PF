@@ -1,0 +1,35 @@
+      ****************************************************************
+      * IF - Input Output Interface File Subfile listing - Response  *
+      ****************************************************************
+      *  LN85922R  IS A PART OF SILVERLAKE SYSTEM (R)               *
+      *  (C) COPYRIGHT 2002, 2004                                    *
+      *    BY: SILVERLAKE SYSTEM SDN. BHD.                           *
+      *        LEVEL 2A,KPMG TOWER,                                  *
+      *        FIRST AVENUE, BANDAR UTAMA,                           *
+      *        47800 PETALING JAYA,                                  *
+      *        SELANGOR, MALAYSIA                                    *
+      *        TEL: +603-77216000                                    *
+      ****************************************************************
+      *  CREATED BY: Rainier Letidjawa                               *
+      *  DATE      : 27 Apr 2022                                     *
+      ****************************************************************
+      *  MODIFICATION LOGS:                                          *
+      *  NAME  INIT   DATE      REMARKS                              *
+      *  ----  -----  --------  -----------------------------------  *
+      ****************************************************************
+     A                                      REF(INTFILEL5)
+     A          R RLN85922R
+     A            INFIID    R
+     A            INREFN    R
+     A            INFNAM    R
+     A            INFSEQ    R     S
+     A            INSTS     R
+     A            INTOTR    R     S
+     A            INTTHD    R     S
+     A            INDATE    R     S
+     A            INTIME    R     S
+     A            INUSRID   R
+     A            INPGM     R
+     A            INUPUSR   R
+     A            INERM1    R
+     **
