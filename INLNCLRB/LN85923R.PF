@@ -1,8 +1,9 @@
       ****************************************************************
-      * IF - Input Output Interface File Subfile listing - Response  *
+      *   INLNCLRBF  subfile inquiry by INDATE                       *
+      *                                 INREFN                       *
       ****************************************************************
-      *  LN85922R  IS A PART OF SILVERLAKE SYSTEM (R)               *
-      *  (C) COPYRIGHT 2002, 2004                                    *
+      *  LN85923I IS A PART OF SILVERLAKE SYSTEM (R)                 *
+      *  (C) COPYRIGHT 2002, 2022                                    *
       *    BY: SILVERLAKE SYSTEM SDN. BHD.                           *
       *        LEVEL 2A,KPMG TOWER,                                  *
       *        FIRST AVENUE, BANDAR UTAMA,                           *
@@ -11,25 +12,52 @@
       *        TEL: +603-77216000                                    *
       ****************************************************************
       *  CREATED BY: Rainier Letidjawa                               *
-      *  DATE      : 27 Apr 2022                                     *
+      *  DATE      : 28 April 2022                                   *
       ****************************************************************
       *  MODIFICATION LOGS:                                          *
       *  NAME  INIT   DATE      REMARKS                              *
       *  ----  -----  --------  -----------------------------------  *
       ****************************************************************
-     A                                      REF(INTFILEL5)
-     A          R RLN85922R
-     A            INFIID    R
-     A            INREFN    R
+     A                                      REF(INLNCLRBF)
+     A          R RIFS95010R
+     A            INFIID    R    
+     A            INREFN    R     
      A            INFNAM    R
-     A            INFSEQ    R     S
+     A            INSEQ     R     S
+     A            UPLDID    R
+     A            APRVID    R    
+     A            INRCDID   R
+     A            INTRNTYP  R
+     A            INACCTNO  R     S
+     A            INLNACTP  R
+     A            INLNACNM  R
+     A            INLNSTAT  R     S
+     A            INDDACCT  R     S
+     A            INDDACTP  R     
+     A            INDDACNM  R
+     A            INDDSTAT  R     S
+     A            INCFCIFN  R     S
+     A            INTRNAMT  R     S
+     A            INCURFLG  R
+     A            INCURTYP  R
+     A            INMDRMRK  R
+     A            INSBUCDE  R
+     A            INSUBCDE  R
+     A            INDDCBAL  R     S
+     A            INLNCBAL  R     S
+     A            INACCINT  R     S
+     A            INOTHCRG  R     S
+     A            INUNTAMT  R     S
+     A            INFCLTID  R     S
+     A            INORSQNO  R     S
      A            INSTS     R
-     A            INTOTR    R     S
-     A            INTTHD    R     S
-     A            INDATE    R     S
-     A            INTIME    R     S
-     A            INUSRID   R
-     A            INPGM     R
-     A            INUPUSR   R
-     A            INERM1    R
-     **
+     A            INERDCD   R
+     A            INERDSC   R
+     A            INERRDT   R     
+     A            INPRDT    R     S
+     A            INPRTM    R     S
+     A            PRCSTS    R
+     A            PRCTIM    R     S
+     A            ERRCDE    R
+     A            ERRDSC    R
+    

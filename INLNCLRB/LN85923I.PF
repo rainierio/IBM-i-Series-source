@@ -1,14 +1,9 @@
       ****************************************************************
-      * IF - INTDTL  subfile inquiry by INFIID                       *
-      *                                 INFNAM                       *
-      *                                 INDATE                       *
-      *                                 INFSEQ                       *
-      *                                 INSEQN                       *
-      *                                 INRSEQN                      *
-      *                                                              *
+      *   INLNCLRBF  subfile inquiry by INDATE                       *
+      *                                 INREFN                       *
       ****************************************************************
-      *  IFS95008I  IS A PART OF SILVERLAKE SYSTEM (R)               *
-      *  (C) COPYRIGHT 2002, 2004                                    *
+      *  LN85923I IS A PART OF SILVERLAKE SYSTEM (R)                 *
+      *  (C) COPYRIGHT 2002, 2022                                    *
       *    BY: SILVERLAKE SYSTEM SDN. BHD.                           *
       *        LEVEL 2A,KPMG TOWER,                                  *
       *        FIRST AVENUE, BANDAR UTAMA,                           *
@@ -16,18 +11,14 @@
       *        SELANGOR, MALAYSIA                                    *
       *        TEL: +603-77216000                                    *
       ****************************************************************
-      *  CREATED BY: Khtan                                           *
-      *  DATE      : 31 August 2011                                  *
+      *  CREATED BY: Rainier Letidjawa                               *
+      *  DATE      : 28 April 2022                                   *
       ****************************************************************
       *  MODIFICATION LOGS:                                          *
       *  NAME  INIT   DATE      REMARKS                              *
       *  ----  -----  --------  -----------------------------------  *
       ****************************************************************
-     A                                      REF(INTDTL)
-     A          R RIFS95010I
-     A            INFIID    R
-     A            INFNAM    R
+     A                                      REF(INLNCLRBF)
+     A          R RLN85923I
      A            INDATE    R     S
-     A            INFSEQ    R     S
-     A            INSEQN    R     S
-     A            INRSEQN   R     S
+     A            INREFN    R     S

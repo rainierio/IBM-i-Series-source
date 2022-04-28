@@ -1,30 +1,29 @@
      H/COPY QSYSREFRLE,COPYRIGHTH
      H/COPY QMBSREFRLE,MBQTXHH
       **==============================================================
-      *  Progran Name: IFS95010          REF.NO:
-      *  DESCRIPTION.: Subfile - Intfile inquiry by download code and reference
-      *  DATE CREATED: 30/08/2011
-      *  AUTHOR......:
+      *  Progran Name: LN85923          REF.NO:
+      *  DESCRIPTION.: Subfile - Loan Close and Rebook Uploaded
+      *  DATE CREATED: 28/04/2022
+      *  AUTHOR......: Rainier Letidjawa
       **==============================================================
-      * IFS95010  IS A PART OF SILVERLAKE SYSTEM (R)
-      *    (C) COPYRIGHT 1996-2009
+      * LN85923 IS A PART OF SILVERLAKE SYSTEM (R)
+      *    (C) COPYRIGHT 1996-2022
       **==============================================================
       *  MODIFICATION LOGS
       *  NAME  INIT   DATE      REMARKS
       *  ----  -----  --------  -----------------------------------
       **==============================================================
      **
-     FINTDTE    IF   E           K DISK    PREFIX(N_)
-     FINTDTL    IF   E           K DISK    PREFIX(N_)
+     FINLNCLRBF IF   E           K DISK    PREFIX(BF_)
      ** MBASE-Common D-Spec for Maint File Handler
      D/COPY QMBSREFRLE,MBQTXHD
      **
      ** I/R struc
-     D DSIFS95010I   E DS                  EXTNAME(IFS95010I) PREFIX(PR)
-     D DSIFS95010R   E DS                  EXTNAME(IFS95010R) PREFIX(PW)
+     D DSLN85923I    E DS                  EXTNAME(LN85923I) PREFIX(PR)
+     D DSLN85923R    E DS                  EXTNAME(LN85923R) PREFIX(PW)
      **
      **
-     D DSWROW        E DS                  EXTNAME(IFS95010R)
+     D DSWROW        E DS                  EXTNAME(LN85923R)
      D                                     OCCURS(999)
      **
      ** def constant
@@ -63,8 +62,8 @@
      C     SRINQ         BEGSR
      **
      ** map input response
-     C                   EVAL      DSIFS95010I = INSTRS
-     C                   EVAL      WLEN        = %SIZE(DSIFS95010R)
+     C                   EVAL      DSLN85923I = INSTRS
+     C                   EVAL      WLEN        = %SIZE(DSLN85923R)
      C                   EVAL      WSTRLEN     = 0
      ** reset dswrow
      C                   FOR       WX          = 1 to %ELEM(DSWROW)
@@ -79,23 +78,23 @@
      C                   ENDIF
      **
      **
-OS01 C                   EXSR      SRCVTIN
+     C                   EXSR      SRCVTIN
      C                   IF        WERROR      = 'Y'
-OS01 C                   EXSR      SRSENDERR
+     C                   EXSR      SRSENDERR
      C                   LEAVESR
      C                   ENDIF
      **
      ** start validation
      C                   EXSR      SRVALIDATE
      C                   IF        WERROR      = 'Y'
-OS01 C                   EXSR      SRSENDERR
+     C                   EXSR      SRSENDERR
      C                   LEAVESR
      C                   ENDIF
      **
      ** process history file
      C                   EXSR      SRPROC1
      C                   IF        WERROR      = 'Y'
-OS01 C                   EXSR      SRSENDERR
+     C                   EXSR      SRSENDERR
      C                   LEAVESR
      C                   ENDIF
      **
@@ -106,24 +105,22 @@ OS01 C                   EXSR      SRSENDERR
      C     SRVALIDATE    BEGSR
      **
      ** default error "Y"
-OS01 C                   EVAL      WERROR      = 'Y'
+     C                   EVAL      WERROR      = 'Y'
      **
-     C                   IF        PRINFIID    = *Blanks
-     C                   EVAL      ERCODE      = 'IFS0003'
-     C                   EVAL      ERFLDN      = 'INFIID'
+     C                   IF        PRINDATE    = *Blanks
+     C                   EVAL      ERCODE      = 'IFS0001'
+     C                   EVAL      ERFLDN      = 'INDATE'
      C                   LEAVESR
      C                   ENDIF
-     **
-     C                   IF        PRINFNAM    = *Blanks
-     C                   EVAL      ERCODE      = 'IFS0006'
-     C                   EVAL      ERFLDN      = 'INFNAM'
+     C
+     C                   IF        PRINREFN    = *Blanks
+     C                   EVAL      ERCODE      = 'IFS0002'
+     C                   EVAL      ERFLDN      = 'INREFN'
      C                   LEAVESR
-     C                   ENDIF
+     C                   ENDIF     
      **
-     **
-     **
-OS01 ** If no error reset flag to "N"
-OS01 C                   EVAL      WERROR      = 'N'
+     ** If no error reset flag to "N"
+     C                   EVAL      WERROR      = 'N'
      **
      C                   ENDSR
      **============================================
@@ -153,7 +150,7 @@ OS01 C                   EVAL      WERROR      = 'N'
      **
      C     ERPROC1       ENDSR
      **============================================
-OS01 ** sr -
+     ** sr -
      **============================================
      C     SRCVTIN       BEGSR
      **
@@ -164,44 +161,36 @@ OS01 ** sr -
      **
      C     ERCVTIN       ENDSR
      **============================================
-OS01 ** sr -
+     ** sr -
      **============================================
      C     SRCVTOUT      BEGSR
      **
      **
      C     ERCVTOUT      ENDSR
      **============================================
-OS01 ** sr -
+     ** sr -
      **============================================
      C     SRSQLPREP     BEGSR
       *
      C
-     C                   EVAL      WFLDN = 'INFIID,' +
-     C                                     'INFNAM, INDATE,' +
-     C                                     'INFSEQ, INSEQN,' +
-     C                                     'INRSEQN'
+     C                   EVAL      WFLDN = '*'
      C
-     C                   EVAL      WFROM = ' FROM INTDTL'
+     C                   EVAL      WFROM = ' FROM INLNCLRBF'
       *
      C                   EVAL      WCONDN = ' = '
       *
-     C                   EVAL      WHERE = ' WHERE INFIID'+ WCONDN +
-     C                                       wapos+PRINFIID+wapos+
+     C                   EVAL      WHERE = ' WHERE INDATE'+ WCONDN +
+     C                                       wapos+%CHAR(PRINDATE)+wapos
      C
-     C                                     'AND INFNAM'+ WCONDN +
-     C                                      wapos+PRINFNAM+wapos+
+     C                                     'AND INREFN'+ WCONDN +
+     C                                      wapos+PRINREFN+wapos+
      C
-     C                                     'AND INFSEQ'+ WCONDN +
-     C                                      wapos+%CHAR(PRINFSEQ)+wapos+
-     C
-     C                                      'AND INDATE' + WCONDN +
-     C                                      wapos+%CHAR(PRINDATE)+wapos
       *
-     C                   EVAL      WORDER = ' ORDER BY INDATE DESC'
+     C                   EVAL      WORDER = ' ORDER BY INSEQ DESC'
       *
      C                   ENDSR
      **============================================
-OS01 ** sr -
+     ** sr -
      **============================================
      C     SRSQLSTMT     BEGSR
      **
@@ -233,7 +222,6 @@ OS01 ** sr -
      C                   IF        DSWROW      <> *allx'00' AND
      C                             DSWROW      <> *Blanks
      C                   EXSR      SREXTOTH
-‚lsl1C                   EXSR      RTVappNm
      C                   EVAL      %SUBST(OTSTRS:WSTRLEN+1:WLEN)
      C                             = DSWROW
      C                   EVAL      WSTRLEN = WSTRLEN + WLEN
@@ -257,7 +245,7 @@ OS01 ** sr -
      C     ERSQL         ENDSR
      **==========================================
      C****************************************************************
-OS01 C/COPY QMBSREFRLE,MBQTXHC
+     C/COPY QMBSREFRLE,MBQTXHC
      ** REM-Common C-Spec for SFL
      C/COPY QREMREFRLE,RMQTXSSQL
      **===========================================
@@ -272,37 +260,7 @@ OS01 C/COPY QMBSREFRLE,MBQTXHC
      C     SREXITAPP     BEGSR
      **
      C     EREXITAPP     ENDSR
-‚lsl1 ****************************************************************
-      * SUBROUTINE: RTVappNM
-      * PURPOSE   : Retrieve Any fields
-      ****************************************************************
- ‚   C     RTVappNM      BEGSR
-     C
-‚sl1 C                   ENDsr
      **===========================================
      C     SREXTOTH      BEGSR
-     **
-     C                   EVAL      N_INFIID  =  PRINFIID
-     C                   EVAL      N_INFNAM  =  PRINFNAM
-     C                   EVAL      N_INDATE  =  PRINDATE
-     C                   EVAL      N_INFSEQ  =  PRINFSEQ
-     C                   EVAL      N_INSEQN  =  INSEQN
-     C                   EVAL      N_INRSEQN =  INRSEQN
-     **
-     C     KYINTDTE      KLIST
-     C                   KFLD                    N_INFIID
-     C                   KFLD                    N_INFNAM
-     C                   KFLD                    N_INDATE
-     C                   KFLD                    N_INFSEQ
-     C                   KFLD                    N_INSEQN
-     C                   KFLD                    N_INRSEQN
-     **
-     C     KYINTDTE      CHAIN     INTDTE                             40
-      *
-     C                   IF        *IN40 = '0'
-     C                   EVAL      INERROR = 'Y'
-     C                   ELSE
-     C                   EVAL      INERROR = 'N'
-     C                   ENDIF
-      *
+     C* Validate to other file here if needed
      C                   ENDSR
