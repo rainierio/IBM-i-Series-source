@@ -15,7 +15,7 @@
      F* ----  ----     ----    -----------                            *
      F*                                                               *
       *****************************************************************
-     FINTFILEL9 IF   E           K DISK    prefix(M_)
+     FINTFILEL6 IF   E           K DISK    prefix(M_)
      ** MBASE-Common D-Spec for Maint File Handler
      D/COPY QMBSREFRLE,MBQTXHD
      ** I/R struc
@@ -188,41 +188,41 @@
      C                                   'INUSRID,' +
      C                                   'INPGM,' +
      C                                   'INUPUSR, ' +
-     C                                   'INERM1'
+     C                                   'INERM1' 
      C
-     C                   EVAL      WFROM = ' FROM INTFILEL9 '
+     C                   EVAL      WFROM = ' FROM INTFILEL6 '
       *
      C                   EVAL      WHERE  =  ' WHERE '
      C
       /FREE         
-                    // Filter by : Interface ID, From Date.  
-                    IF PRINFIID <> ' ' AND PRINDATE <> *ZEROS AND + 
-                    PRTODATE = *ZEROS;
+                    // Add Filter : Interface ID  
+                    IF PRINFIID <> ' '; 
                        WHERE = %TRIMR(WHERE) +
-                               ' INFIID = '+WAPOS+ PRINFIID +WAPOS+
-                               ' AND INDATE = '+WAPOS+ %CHAR(PRINDATE) +WAPOS;
-                       wDone = '1';
-
-                    // Filter by : Interface ID, From Date, To Date.  
-                    ELSEIF PRINFIID <> ' ' AND PRINDATE <> *ZEROS AND + 
-                    PRTODATE <> *ZEROS;
-                       WHERE = %TRIMR(WHERE) +
-                               ' INFIID = '+WAPOS+ PRINFIID +WAPOS+
-                               ' AND INDATE BETWEEN '+WAPOS+ %CHAR(PRINDATE) +WAPOS +
-                               ' AND ' +WAPOS+ %CHAR(PRTODATE) +WAPOS;
-                       wDone = '1';                
-
-                    //  Filter by : Interface Name   
-                    ELSEIF PRINFIID <> ' ' AND PRINFNAM <> ' ';
-                       WHERE = %TRIMR(WHERE) +
-                               ' INFNAM =' + WAPOS + PRINFNAM +WAPOS;
-                       wDone = '1';
-
+                        ' INFIID = '+WAPOS+ PRINFIID +WAPOS;
                     ELSE;
                        WHERE = %TRIMR(WHERE) +
-                               ' INFIID =' + WAPOS + PRINFIID +WAPOS;
-                       wDone = '1';
+                        ' INFIID = '+WAPOS+ 'INLNCLRB' +WAPOS;
+                    ENDIF;   
+
+                    // Add Filter : From Date.  
+                    IF PRINDATE <> *ZEROS AND PRTODATE = *ZEROS;
+                       WHERE = %TRIMR(WHERE) +
+                        ' AND INDATE = '+WAPOS+ %CHAR(PRINDATE) +WAPOS;
                     ENDIF;
+                       
+                    // Add Filter : From Date and To Date.  
+                    IF PRINDATE <> *ZEROS AND PRTODATE <> *ZEROS;
+                       WHERE = %TRIMR(WHERE) +
+                        ' AND INDATE BETWEEN '+WAPOS+ %CHAR(PRINDATE) +
+                        WAPOS +' AND '+WAPOS+ %CHAR(PRTODATE) +WAPOS;
+                    ENDIF;
+
+                    //  Filter by : Interface ID, Interface Name   
+                    IF PRINFNAM <> ' ';
+                       WHERE = %TRIMR(WHERE) +
+                        ' AND INFNAM =' + WAPOS + PRINFNAM +WAPOS;
+                    ENDIF;
+                       
       /END-FREE
      C
       *
@@ -320,32 +320,8 @@
      C*    EREXITAPP     ENDSR
      **===========================================
      C     SREXTOTH      BEGSR
-     C
-     C                   if        *in42='1'  or PRINFIID = *Blanks
-     C                   leavesr
-     C                   endif
-     C
-     C
-     C     KYRtn1Rec     klist
-     C                   kfld                    PRINFIID
-     C                   kfld                    PRINDATE
-     C
-     C     KYRtn1Rec     chain     rintfile                           41
-     C*                  eval      WX        = 0
-     C                   eval      wCont =  1
-     C                   if        *in41 = '0'  and PRINDATE <> *ZEROS and
-     C                                     wCont = 1
-     C
-     C                   eval      WX        = 1
-     C                   eval      HDNREC    = 1
-     C
-     C                   eval      PRINFIID  =   M_INFIID
-     C                   eval      PRINDATE  =   M_INDATE
-     C                   eval      PRTODATE  =   M_TODATE
-     C
-     C                   eval      *in42 = '1'
-     C                   eval      wCont = 2
-     C                   endif
+     C*
+     C*
      C                   ENDSR
      ****************************************************************
       *------------------------ END OF CODING ----------------------*
