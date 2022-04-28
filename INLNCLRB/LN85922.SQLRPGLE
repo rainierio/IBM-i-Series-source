@@ -188,22 +188,34 @@
      C                                   'INUSRID,' +
      C                                   'INPGM,' +
      C                                   'INUPUSR, ' +
-Jon1 C                                   'INERM1'
+     C                                   'INERM1'
      C
      C                   EVAL      WFROM = ' FROM INTFILEL9 '
       *
      C                   EVAL      WHERE  =  ' WHERE '
      C
-      /FREE
-                    IF PRINFIID <> ' ' AND PRINDATE <> ' ';
+      /FREE         
+                    // Filter by : Interface ID, From Date.  
+                    IF PRINFIID <> ' ' AND PRINDATE <> *ZEROS AND + 
+                    PRTODATE = *ZEROS;
                        WHERE = %TRIMR(WHERE) +
                                ' INFIID = '+WAPOS+ PRINFIID +WAPOS+
-                               ' AND INDATE = '+WAPOS+ PRINDATE +WAPOS;
+                               ' AND INDATE = '+WAPOS+ %CHAR(PRINDATE) +WAPOS;
                        wDone = '1';
 
-                    ELSEIF PRINFIID <> ' ' AND PRINDATE = ' ';
+                    // Filter by : Interface ID, From Date, To Date.  
+                    ELSEIF PRINFIID <> ' ' AND PRINDATE <> *ZEROS AND + 
+                    PRTODATE <> *ZEROS;
                        WHERE = %TRIMR(WHERE) +
-                               ' INFIID =' + WAPOS + PRINFIID +WAPOS;
+                               ' INFIID = '+WAPOS+ PRINFIID +WAPOS+
+                               ' AND INDATE BETWEEN '+WAPOS+ %CHAR(PRINDATE) +WAPOS +
+                               ' AND ' +WAPOS+ %CHAR(PRTODATE) +WAPOS;
+                       wDone = '1';                
+
+                    //  Filter by : Interface Name   
+                    ELSEIF PRINFIID <> ' ' AND PRINFNAM <> ' ';
+                       WHERE = %TRIMR(WHERE) +
+                               ' INFNAM =' + WAPOS + PRINFNAM +WAPOS;
                        wDone = '1';
 
                     ELSE;
@@ -321,7 +333,7 @@ Jon1 C                                   'INERM1'
      C     KYRtn1Rec     chain     rintfile                           41
      C*                  eval      WX        = 0
      C                   eval      wCont =  1
-     C                   if        *in41 = '0'  and PRINDATE <> *BLANK and
+     C                   if        *in41 = '0'  and PRINDATE <> *ZEROS and
      C                                     wCont = 1
      C
      C                   eval      WX        = 1
@@ -329,6 +341,7 @@ Jon1 C                                   'INERM1'
      C
      C                   eval      PRINFIID  =   M_INFIID
      C                   eval      PRINDATE  =   M_INDATE
+     C                   eval      PRTODATE  =   M_TODATE
      C
      C                   eval      *in42 = '1'
      C                   eval      wCont = 2

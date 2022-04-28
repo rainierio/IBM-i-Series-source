@@ -11,7 +11,7 @@
       *        TEL: +603-77216000                                    *
       ****************************************************************
       *  CREATED BY: Rainier Letidjawa                               *
-      *  DATE      : 27 Apr 2022                                     *
+      *  DATE      : 28 Apr 2022                                     *
       ****************************************************************
       *  MODIFICATION LOGS:                                          *
       *  NAME  INIT   DATE      REMARKS                              *
@@ -21,6 +21,7 @@
      A          R RLN85922I
      A            INFIID    R
      A            INDATE    R     S
-     A
+     A            TODATE    R     S
+     A            INFNAM    R     
      A          K INFIID
      **
