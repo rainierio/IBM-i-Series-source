@@ -1,45 +1,57 @@
      H/COPY QSYSREFRLE,COPYRIGHTH
-     H/COPY QMBSREFRLE,MBQTXHH
-      **==============================================================
-      *  Progran Name: LN85923          REF.NO:
-      *  DESCRIPTION.: Subfile - Loan Close and Rebook Uploaded
-      *  DATE CREATED: 28/04/2022
-      *  AUTHOR......: Rainier Letidjawa
-      **==============================================================
-      * LN85923 IS A PART OF SILVERLAKE SYSTEM (R)
-      *    (C) COPYRIGHT 1996-2022
-      **==============================================================
-      *  MODIFICATION LOGS
-      *  NAME  INIT   DATE      REMARKS
-      *  ----  -----  --------  -----------------------------------
-      **==============================================================
-     **
+     F*****************************************************************
+     F* Program Name..: LN85923                                       *
+     F* Description...: Loan Close and Rebook Inquiry                 *
+     F* Date Created..: 28 April 2022                                 *
+     F* Author........: Rainier Letidjawa                             *
+     F* Ref no........:                                               *
+     F*****************************************************************
+     F* LN85923 is part of Silverlake Integrated Banking System       *
+     F* Copyright 1996 by Silverlake System Sdn Bhd Kuala Lumpur,     *
+     F* Malaysia.                                                     *
+     F*****************************************************************
+     F* Modification Logs:                                            *
+     F* Init  RefN     Date    Description                            *
+     F* ----  ----     ----    -----------                            *
+     F*                                                               *
+      *****************************************************************
      FINLNCLRBF IF   E           K DISK    PREFIX(BF_)
      ** MBASE-Common D-Spec for Maint File Handler
      D/COPY QMBSREFRLE,MBQTXHD
-     **
      ** I/R struc
-     D DSLN85923I    E DS                  EXTNAME(LN85923I) PREFIX(PR)
-     D DSLN85923R    E DS                  EXTNAME(LN85923R) PREFIX(PW)
+     D DS85923I      E DS                  EXTNAME(LN85923I) PREFIX(PR)
+     D DS85923R      E DS                  EXTNAME(LN85923R)
      **
-     **
+     D DSIROW        E DS                  EXTNAME(LN85923I) PREFIX(PI)
      D DSWROW        E DS                  EXTNAME(LN85923R)
-     D                                     OCCURS(999)
+     D                                     OCCURS(999) PREFIX(PW)
      **
+     DDSINFIID         DS
+     D  INOUT                  1      2
+     D  CONTS                  3     20
      ** def constant
+     D PRLBDS          DS
+     D  INFILE                83     92
+     D  LENSSFXRP            125    126B 0
+     D  DB_RRN               397    400I 0
      **
-     **=================================================
-     ** def variable for SQL
-     **=================================================
-     **===========================================
-     ** def parameter/keylist
-     **===========================================
+     D  wCont          S              1S 0
+     D  wDone          S              1A
+     D WHDNREC         S                   LIKE(HDNREC)
+     **
      **===========================================
      ** main logic
      **===========================================
      **
      ** initialise, map header,
      C                   EXSR      SRINIT
+     C
+     C                   CLEAR                   DS85923I
+     C                   CLEAR                   DS85923R
+     C                   CLEAR                   OTSTRS
+     C                   eval      *in42='0'
+     C
+     C
      **
      ** main
      C                   SELECT
@@ -62,21 +74,16 @@
      C     SRINQ         BEGSR
      **
      ** map input response
-     C                   EVAL      DSLN85923I = INSTRS
-     C                   EVAL      WLEN        = %SIZE(DSLN85923R)
+     C                   EVAL      wCont = *ZEROS
+     C                   EVAL      DS85923I   = INSTRS
+     C*                  EVAL      DS85923R   = DS85923I
+     C                   EVAL      WLEN        = %SIZE(DS85923R)
      C                   EVAL      WSTRLEN     = 0
-     ** reset dswrow
+     C                   EVAL      WHDNREC     = HDNREC + 1
      C                   FOR       WX          = 1 to %ELEM(DSWROW)
      C     WX            OCCUR     DSWROW
      C                   RESET                   DSWROW
      C                   ENDFOR
-     ** wll - handle hdnrec exception
-     C                   IF        HDNREC     >
-     C                             (%SIZE(MB_MBDETL) / %SIZE(DSWROW))
-     C                   EVAL      HDNREC     =
-     C                             (%SIZE(MB_MBDETL) / %SIZE(DSWROW))
-     C                   ENDIF
-     **
      **
      C                   EXSR      SRCVTIN
      C                   IF        WERROR      = 'Y'
@@ -106,25 +113,25 @@
      **
      ** default error "Y"
      C                   EVAL      WERROR      = 'Y'
-     **
-     C                   IF        PRINDATE    = *Blanks
-     C                   EVAL      ERCODE      = 'IFS0001'
-     C                   EVAL      ERFLDN      = 'INDATE'
-     C                   LEAVESR
+     C
+     C                   IF        PRINPRDT    = *Zeros       
+     C                   EVAL      ERCODE      = 'IFS0011'    
+     C                   EVAL      ERFLDN      = 'INPRDT'     
+     C                   LEAVESR                              
      C                   ENDIF
      C
-     C                   IF        PRINREFN    = *Blanks
-     C                   EVAL      ERCODE      = 'IFS0002'
-     C                   EVAL      ERFLDN      = 'INREFN'
-     C                   LEAVESR
-     C                   ENDIF     
-     **
+     C                   IF        PRINREFN    = *Zeros       
+     C                   EVAL      ERCODE      = 'IFS0012'    
+     C                   EVAL      ERFLDN      = 'INREFN'     
+     C                   LEAVESR                              
+     C                   ENDIF                                
+     C
      ** If no error reset flag to "N"
      C                   EVAL      WERROR      = 'N'
      **
      C                   ENDSR
      **============================================
-     ** sr -
+     ** sr - process
      **============================================
      C     SRPROC1       BEGSR
      **
@@ -137,6 +144,11 @@
      C                   EXSR      SRSQLOPEN
      **
      C                   EXSR      SRSQLFETCH
+     C                   IF        WERROR      = 'Y'
+     C                   LEAVESR
+     C                   ENDIF
+      **
+     C                   EXSR      SROUTDATA
      **
      C                   EXSR      SRSQLCLOSE
      **
@@ -144,7 +156,6 @@
      C                   EVAL      ERCODE      = 'MBM2001'
      C                   EVAL      P8MDTA      = PSPGM
      C                   EVAL      WERROR      = 'Y'
-     C                   EVAL      HDNREC      = 1
      C                   LEAVESR
      C                   ENDIF
      **
@@ -165,6 +176,10 @@
      **============================================
      C     SRCVTOUT      BEGSR
      **
+     ** return search key
+     C*                  EVAL      DS85923I   = DS85923R
+     C*                  EVAL      WHDVFMT_KEY = DS85923I
+     C*                  EVAL      HDVFMT      = WHDVFMT
      **
      C     ERCVTOUT      ENDSR
      **============================================
@@ -172,18 +187,26 @@
      **============================================
      C     SRSQLPREP     BEGSR
       *
+     C                   EVAL      WFLDN='*'
      C
-     C                   EVAL      WFLDN = '*'
-     C
-     C                   EVAL      WFROM = ' FROM INLNCLRBF'
+     C                   EVAL      WFROM = ' FROM FINLNCLRBF '
       *
-     C                   EVAL      WCONDN = ' = '
-      *
-     C                   EVAL      WHERE = ' WHERE INDATE'+ WCONDN +
-     C                                       wapos+%CHAR(PRINDATE)+wapos
+     C                   EVAL      WHERE  =  ' WHERE '
      C
-     C                                     'AND INREFN'+ WCONDN +
-     C                                      wapos+PRINREFN+wapos+
+      /FREE         
+                    // Add Filter : Processing date  
+                    IF PRINPRDT <> *Zeros; 
+                       WHERE = %TRIMR(WHERE) +
+                        ' INPRDT = '+WAPOS+ %CHAR(PRINPRDT) +WAPOS;
+                    ENDIF;   
+
+                    // Add Filter : Reference number.  
+                    IF PRINREFN <> *Blanks;
+                       WHERE = %TRIMR(WHERE) +
+                        ' AND INREFN = '+WAPOS+ %CHAR(PRINREFN) +WAPOS;
+                    ENDIF;
+                       
+      /END-FREE
      C
       *
      C                   EVAL      WORDER = ' ORDER BY INSEQ DESC'
@@ -199,29 +222,39 @@
      C                                     + %TRIMR(WHERE)
      C                                     + %TRIMR(WORDER)
      **
+     C                   EVAL      WRRN  = 1
+     **
      C     ERSQLSTMT     ENDSR
      **==========================================
      ** SR -
      **==========================================
-     C     SRSQLFETCH    BEGSR
+     C*    SRSQLOPEN     BEGSR
      **
-     C/EXEC SQL
-     C+ FETCH RELATIVE :WRRN FROM C1 FOR :HDNREC ROWS INTO :DSWROW
-     C/END-EXEC
+     **C/EXEC SQL
+     **C+PREPARE S1 FROM :WSTMT
+     **C/END-EXEC
+
+     ** declare cursor
+     **C/exec sql
+     **C+ DECLARE C1 DYNAMIC SCROLL CURSOR FOR S1
+     **C/end-exec
      **
-     C                   EVAL      OTSTRS=*BLANKS
+     **C/EXEC SQL
+     **C+ OPEN C1
+     **C/END-EXEC
      **
-     C                   IF        SQLSTT = SqlEOF
-     C                   EVAL      HDNREC      = 0
-     C                   LEAVESR
-     C                   ENDIF
-     **
+     C*    ERSQLOPEN     ENDSR
+     **==========================================
+     ** SR -
+     **==========================================
+     C     SROUTDATA     BEGSR
      **
      C     1             DO        HDNREC        WX                4 0
      C     WX            OCCUR     DSWROW
      C                   IF        DSWROW      <> *allx'00' AND
      C                             DSWROW      <> *Blanks
      C                   EXSR      SREXTOTH
+     C                   EXSR      SRCVTOUT
      C                   EVAL      %SUBST(OTSTRS:WSTRLEN+1:WLEN)
      C                             = DSWROW
      C                   EVAL      WSTRLEN = WSTRLEN + WLEN
@@ -232,35 +265,45 @@
      **
      C                   EVAL      HDNREC       = WX - 1
      **
-     C     ERSQLFETCH    ENDSR
+     C     EROUTDATA     ENDSR
      **==========================================
      ** SR -
      **==========================================
-     C     SRSQLCLOSE    BEGSR
+     C*    SRSQLCLOSE    BEGSR
      **
-     C/EXEC SQL
-     C+ CLOSE C1
-     C/END-EXEC
+     **C/EXEC SQL
+     **C+ CLOSE C1
+     **C/END-EXEC
      **
-     C     ERSQL         ENDSR
+     C*    ERSQL         ENDSR
      **==========================================
      C****************************************************************
      C/COPY QMBSREFRLE,MBQTXHC
-     ** REM-Common C-Spec for SFL
-     C/COPY QREMREFRLE,RMQTXSSQL
+     ** LOANS-Common C-Spec for Maint File Handler
+     C*/COPY QBWCREFRLE,CFQTXHC
+     ** LOANS-Common C-Spec for Maint File Handler
+     C*/COPY QBWCREFRLE,CFQRTVPC
+     C/COPY QSYSREFRLE,SSQTXSSQL
      **===========================================
      **
      **===========================================
-     C     SRINZSR       BEGSR
+     C*    SRINZSR       BEGSR
      **
-     C     ERINZSR       ENDSR
+     C*                  READ      RCFPAR1
+     **
+     ** CIF - Common C-Spec for Initialize Routine
+     C*/COPY QBWCREFRLE,CFQINZR
+     C*    ERINZSR       ENDSR
      **===========================================
      ** sr - application exit program
      **===========================================
-     C     SREXITAPP     BEGSR
+     C*    SREXITAPP     BEGSR
      **
-     C     EREXITAPP     ENDSR
+     C*    EREXITAPP     ENDSR
      **===========================================
      C     SREXTOTH      BEGSR
-     C* Validate to other file here if needed
+     C*
+     C*
      C                   ENDSR
+     ****************************************************************
+      *------------------------ END OF CODING ----------------------*

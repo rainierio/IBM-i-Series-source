@@ -20,5 +20,5 @@
       ****************************************************************
      A                                      REF(INLNCLRBF)
      A          R RLN85923I
-     A            INDATE    R     S
-     A            INREFN    R     S
+     A            INPRDT    R     S
+     A            INREFN    R     
