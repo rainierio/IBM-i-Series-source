@@ -114,17 +114,17 @@
      ** default error "Y"
      C                   EVAL      WERROR      = 'Y'
      C
-     C                   IF        PRINPRDT    = *Zeros       
-     C                   EVAL      ERCODE      = 'IFS0011'    
-     C                   EVAL      ERFLDN      = 'INPRDT'     
-     C                   LEAVESR                              
+     C                   IF        PRINPRDT    = *Zeros
+     C                   EVAL      ERCODE      = 'IFS0011'
+     C                   EVAL      ERFLDN      = 'INPRDT'
+     C                   LEAVESR
      C                   ENDIF
      C
-     C                   IF        PRINREFN    = *Zeros       
-     C                   EVAL      ERCODE      = 'IFS0012'    
-     C                   EVAL      ERFLDN      = 'INREFN'     
-     C                   LEAVESR                              
-     C                   ENDIF                                
+     C                   IF        PRINREFN    = *Blanks
+     C                   EVAL      ERCODE      = 'IFS0012'
+     C                   EVAL      ERFLDN      = 'INREFN'
+     C                   LEAVESR
+     C                   ENDIF
      C
      ** If no error reset flag to "N"
      C                   EVAL      WERROR      = 'N'
@@ -187,29 +187,37 @@
      **============================================
      C     SRSQLPREP     BEGSR
       *
-     C                   EVAL      WFLDN='*'
+     C                   EVAL      WFLDN='INREFN, INSEQ,INTRNTYP,' +
+     C                             'INACCTNO, INLNACTP, INLNSTAT,' +
+     C                             'INDDACCT, INDDACTP, INDDSTAT,' +
+     C                             'INCFCIFN, INTRNAMT, INCURTYP,' +
+     C                             'INMDRMRK, INDDCBAL, INLNCBAL,' +
+     C                             'INACCINT, INOTHCRG, INUNTAMT,' +
+     C                             'INSTS, INERDCD, INERDSC,' +
+     C                             'INERRDT, INPRDT, PRCSTS,' +
+     C                             'ERRCDE, ERRDSC'
      C
-     C                   EVAL      WFROM = ' FROM FINLNCLRBF '
+     C                   EVAL      WFROM = ' FROM INLNCLRBF '
       *
      C                   EVAL      WHERE  =  ' WHERE '
      C
-      /FREE         
-                    // Add Filter : Processing date  
-                    IF PRINPRDT <> *Zeros; 
+      /FREE
+                    // Add Filter : Processing date
+                    IF PRINPRDT <> *Zeros;
                        WHERE = %TRIMR(WHERE) +
                         ' INPRDT = '+WAPOS+ %CHAR(PRINPRDT) +WAPOS;
-                    ENDIF;   
+                    ENDIF;
 
-                    // Add Filter : Reference number.  
+                    // Add Filter : Reference number.
                     IF PRINREFN <> *Blanks;
                        WHERE = %TRIMR(WHERE) +
-                        ' AND INREFN = '+WAPOS+ %CHAR(PRINREFN) +WAPOS;
+                      ' AND INREFN = '+WAPOS+ %TRIMR(PRINREFN) +WAPOS;
                     ENDIF;
-                       
+
       /END-FREE
      C
       *
-     C                   EVAL      WORDER = ' ORDER BY INSEQ DESC'
+     C                   EVAL      WORDER = ' ORDER BY INSEQ ASC'
       *
      C                   ENDSR
      **============================================
