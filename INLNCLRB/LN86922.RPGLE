@@ -1,4 +1,4 @@
-     H COPYRIGHT(' Copyright Silverlake System Sdn. Bhd. 1993, 2011          ')
+     H COPYRIGHT('Copyright Silverlake System Sdn. Bhd. 1993, 2022')
      H OPTION(*SRCSTMT:*NODEBUGIO)
      H BNDDIR('DDBNDDIR')
      H/COPY QSYSREFRLE,COPYRIGHTH
@@ -19,6 +19,9 @@
      F*                                                               *
       *-- File Declaration --*
      FCFAGRP    IF   E           K DISK    INFDS(INFDS)
+     F                                     prefix(CF_) 
+     FINLNCLRBF IF   E           K DISK    INFDS(INFDS)
+     F                                     prefix(BF_) 
      F
       *-- Variable declaration --*
      D/COPY QMBSREFRLE,MB8TXNDS
@@ -28,32 +31,15 @@
      D  INFILE                83     92
      D  DB_RRN               397    400I 0
      D
-     D  lck_FILE       S             10    INZ('CFAGRP')
-     D
-     D
+     DDSCFAGRP_KEY     DS
+     D  kACCTNO                            
+     D  kACCTYP
      D               EUDS                  EXTNAME(SSAPAR)
      D* Input/Output Data Structure
      D dsInput       E DS                  EXTNAME(DD26810I)   PREFIX(pr)
      D dsOutput      E DS                  EXTNAME(DD26810R)   inz
      D/copy qsysrefrle,prSSDATE
-     D CFAGRP_key      DS
-     D   i_ACCTNO                          Like(ACCTNO) Inz
-     D   i_ACTYPE                          Like(ACTYPE) Inz
-     D   i_ACCREF                          Like(ACCREF) Inz
-     D   i_CFATYP                          Like(CFATYP) Inz
      D
-     D*************************
-     D* Account Name Structure
-     D*************************
-     D                 DS
-     D NAME1                   1     80
-     D NAME2                  81    200
-     D CFANA1                  1     40
-     D CFANA2                 41     80
-     D CFANA3                 81    120
-     D CFANA4                121    160
-     D CFANA5                161    200
-     C
      C*-- Parameter and Key Lists declaration --*
      C     *ENTRY        PLIST
      C                   Parm                    QRECV
@@ -75,15 +61,13 @@
      C                   Parm                    TXCD             10
      C                   Parm                    gAUTCHK           1
      C
-     C     MSTKY2        Klist
-     C                   Kfld                    prACCTNO
-     C                   Kfld                    prACTYPE
-     C*
      C     MSTKY1        Klist
-     C                   Kfld                    prACCTNO
-     C*
+     C                   Kfld                    prINPRDT
+     C                   Kfld                    prINPRNO
      C
-     C
+     C     MSTKY2        Klist
+     C                   Kfld                    ACCTNO
+     C                   Kfld                    ACCTYP
      C
      C* Receive Header
      C                   Eval      MBHEADR = RECVHDR
@@ -172,7 +156,6 @@
      C
      C                   Exsr      RcdLock
      C
-     C                   EVAL      HDVFMT  = 'S' + CFAGRP_key
      C
      C                   Eval      %SUBST(OTSTRS:1:%SIZE(dsOUTPUT))
      C                             = dsOutput
@@ -189,24 +172,8 @@
       * PURPOSE   : Format reponse before passing out                *
       ****************************************************************
      C     FmtResp       BEGSR
-     C
-     C* Return account name in 2 lines
-     C                   Eval      CURNAM1 = CFANA1 + CFANA2
-     C                   Eval      CURNAM2 = CFANA3 + CFANA4 + CFANA5
-     C                   Eval      CURSNME = CFSNME
-     C                   Eval      EXTNAM1 = CFANA1 + CFANA2
-     C                   Eval      EXTNAM2 = CFANA3 + CFANA4 + CFANA5
-     C                   Eval      EXTSNME = CFSNME
-     C
-     C
-     C* Convert timestamp to time
-     C                   Eval      WMNLTIM =  pSSTNUM(MNLTIM)
-     C
-     C                   Eval      i_ACCTNO = ACCTNO
-     C                   Eval      i_ACTYPE = ACTYPE
-     C                   Eval      i_ACCREF = ACCREF
-     C                   Eval      i_CFATYP = CFATYP
-     C
+     C**
+     C**
      C                   ENDSR
      C*--------------------------------------------- END OF CODING --*
      C/COPY QMBSREFRLE,MB8RCLCK
