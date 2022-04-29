@@ -1,0 +1,32 @@
+      ****************************************************************
+      *   INLNCLRBF   detail inquiry by INDATE                       *
+      *                                 INREFN                       *
+      ****************************************************************
+      *  LN86922I IS A PART OF SILVERLAKE SYSTEM (R)                 *
+      *  (C) COPYRIGHT 2002, 2022                                    *
+      *    BY: SILVERLAKE SYSTEM SDN. BHD.                           *
+      *        LEVEL 2A,KPMG TOWER,                                  *
+      *        FIRST AVENUE, BANDAR UTAMA,                           *
+      *        47800 PETALING JAYA,                                  *
+      *        SELANGOR, MALAYSIA                                    *
+      *        TEL: +603-77216000                                    *
+      ****************************************************************
+      *  CREATED BY: Rainier Letidjawa                               *
+      *  DATE      : 29 April 2022                                   *
+      ****************************************************************
+      *  MODIFICATION LOGS:                                          *
+      *  NAME  INIT   DATE      REMARKS                              *
+      *  ----  -----  --------  -----------------------------------  *
+      ****************************************************************     
+     A                                      REF(DDMAST)
+     A          R RDD26810R
+     A            ACCTNO    R     S
+     A            INLNACNM      20          COLHDG('Case Account Name')
+     A            ACTYPE    R
+     A            DDCTYP    R
+     A            CIFNO     R     S    
+     A            BANKNO    R     S
+     A            BRANCH    R     S
+     A            STATUS    R     
+     A            SCCODE    R
+     A            CBAL      R     S
