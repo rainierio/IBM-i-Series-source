@@ -4,7 +4,7 @@
      H/COPY QSYSREFRLE,COPYRIGHTH
      F*****************************************************************
      F* Program Name..: LN86922                                       *
-     F* Description...: Loan Close and Rebook Inquiry                 *
+     F* Description...: Loan Close and Header Inquiry                 *
      F* Date Created..: 29 April 2022                                 *
      F* Author........: Rainier Letidjawa                             *
      F* Ref no........:                                               *
