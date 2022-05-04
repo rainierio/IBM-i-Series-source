@@ -16,8 +16,7 @@ OS01 H/COPY QMBSREFRLE,MBQTXHH
      F* ----  ----     ----    -----------                            *
      F*                                                               *
       *-- File Declaration --*
-     FINLNCLRBFLIF   E           K DISK    INFDS(INFDS)
-     F                                     prefix(BF_)
+     FINLNCLRBFLIF   E           K DISK    prefix(BF_)
      FCFACCT    IF   E           K DISK    
      FDDMAST    IF   E           K DISK    
      FDDTNEW    IF   E           K DISK    RENAME(RDDMAST:RDDTNEW)
@@ -65,11 +64,10 @@ OS01 C                   EXSR      SRSENDERR
      C                   EVAL      DS86922I   = INSTRS  
      C                   EVAL      DS86922R   = DS86922I
      C
-     C                   EXSR      SRCVTIN 
       *
       *-- READ FIRST RECORDS --*
       *
-     C     KYCLBRF       CHAIN     RINLNCLRBFL                        31
+     C     KYCLBRF       CHAIN     RINLNCLRBF                        31
       *
      C                   IF        *IN31 = *ON
       *-- ERROR RETURN --*
@@ -85,7 +83,7 @@ OS01 C                   EXSR      SRSENDERR
      **
      C                   EXSR      SRCVTOUT
      C                   EVAL      OTSTRS = DS86822R
-      *                                               
+     *                                               
      C                   EVAL      COUNTR = COUNTR + 1
      C                   EXSR      SRLOCK1            
      C                   ENDIF                        
@@ -107,15 +105,15 @@ OS01 ** sr - SRCVTOUT
      C     KYDDMAST      CHAIN     RDDMAST                            33
      C   33KYDDMAST      CHAIN     RDDTNEW                            33
      C                   IF        *IN33 = *OFF
-     C                   EVAL      ouACCTNO = dmACCTNO
-     C                   EVAL      ouACTYPE = dmACCTTP
-     C                   EVAL      ouDDCTYP = dmDDCTYP
-     C                   EVAL      ouSCCODE = dmSCCODE
-     C                   EVAL      ouCIFNO  = dmCIFNO         
-     C                   EVAL      ouBANKNO = dmBANKNO
-     C                   EVAL      ouBRANCH = dmBRANCH
-     C                   EVAL      ouSTATUS = dmSTATUS
-     C                   EVAL      ouCBAL   = dmCBAL
+     C                   EVAL      ouACCTNO = ACCTNO
+     C                   EVAL      ouACTYPE = ACCTTP
+     C                   EVAL      ouDDCTYP = DDCTYP
+     C                   EVAL      ouSCCODE = SCCODE
+     C                   EVAL      ouCIFNO  = CIFNO         
+     C                   EVAL      ouBANKNO = BANKNO
+     C                   EVAL      ouBRANCH = BRANCH
+     C                   EVAL      ouSTATUS = STATUS
+     C                   EVAL      ouCBAL   = CBAL
      C** CFACCT
      C     dmCIFNO       CHAIN     RCFACCT                            34
      C                   IF        *IN34 = *OFF
