@@ -62,7 +62,7 @@ OS01 C                   EXSR      SRSENDERR
      CSR   SRINQ         BEGSR
       *-- BREAK THE KEY VALUES --*
      C                   EVAL      DS86922I   = INSTRS  
-     C                   EVAL      DS86922R   = DS86922I
+     C*                   EVAL      DS86922R   = DS86922I
      C
       *
       *-- READ FIRST RECORDS --*
@@ -84,8 +84,7 @@ OS01 C                   EXSR      SRSENDERR
      C                   EXSR      SRCVTOUT
      C                   EVAL      OTSTRS = DS86922R
      *                                               
-     C                   EVAL      COUNTR = COUNTR + 1
-     C                   EXSR      SRLOCK1            
+     C                   EVAL      COUNTR = COUNTR + 1            
      C                   ENDIF                        
      **
      C                   ENDIF
@@ -128,8 +127,6 @@ OS01 ** sr - SRCVTOUT
      **
      C     ERCVTOUT      ENDSR
       *--------------------------------------------- END OF CODING --*
-     ** MBASE-Common C-Spec for Record locking
-OS01 C/COPY QMBSREFRLE,MBQLCK
      ** MBASE-Common C-Spec for Maint File Handler
 OS01 C/COPY QMBSREFRLE,MBQTXHC
      ** LOANS-Common C-Spec for Maint File Handler
