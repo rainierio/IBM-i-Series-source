@@ -31,13 +31,11 @@
      D  INFILE                83     92
      D  DB_RRN               397    400I 0
      D
-     DDSCFAGRP_KEY     DS
-     D  kACCTNO                            
-     D  kACCTYP
      D               EUDS                  EXTNAME(SSAPAR)
      D* Input/Output Data Structure
      D dsInput       E DS                  EXTNAME(DD26810I)   PREFIX(pr)
-     D dsOutput      E DS                  EXTNAME(DD26810R)   inz
+     D dsOutput      E DS                  EXTNAME(DD26810R)   PREFIX(o_)
+     D                                                         inz
      D/copy qsysrefrle,prSSDATE
      D
      C*-- Parameter and Key Lists declaration --*
@@ -66,8 +64,8 @@
      C                   Kfld                    prINPRNO
      C
      C     MSTKY2        Klist
-     C                   Kfld                    ACCTNO
-     C                   Kfld                    ACCTYP
+     C                   Kfld                    INDDACCT
+     C                   Kfld                    INDDACTP
      C
      C* Receive Header
      C                   Eval      MBHEADR = RECVHDR
@@ -143,7 +141,7 @@
      C
      C                   Eval      COUNTR = *ZEROS
      C
-     C     MSTKY2        CHAIN     RCFAGRP                            31
+     C     MSTKY1        CHAIN     RINLNCLRBF                            31
      C
      C                   If        *IN31 = *ON
      C*-- ERROR Return --*
@@ -151,7 +149,8 @@
      C                   Eval      FINAME = *BLANKS
      C                   Exsr      SendErr
      C                   Else
-     C
+     C                   
+     C                   Exsr      getDetails
      C                   Exsr      FmtResp
      C
      C                   Exsr      RcdLock
@@ -172,8 +171,26 @@
       * PURPOSE   : Format reponse before passing out                *
       ****************************************************************
      C     FmtResp       BEGSR
-     C**
-     C**
+     C
+     C
+     C                   ENDSR
+     C*
+     ****************************************************************
+      * SUBROUTINE: getDetails                                       *
+      * PURPOSE   : propose detail information                       *
+      ****************************************************************
+     C     getDetails    BEGSR
+     C                   Eval     o_ACCTNO     = BF_INDDACCT
+     C                   Eval     o_INLNACNM   = BF_INDDACNM
+     C                   Eval     o_ACTYPE     = BF_INDDACTP
+     C                   Eval     o_DDCTYP     = BF_INCURTYP
+     C                   Eval     o_CIFNO      = BF_INCFCIFN
+     C                   Eval     o_BANKNO     = ''
+     C                   Eval     o_BRANCH     = ''
+     C                   Eval     o_STATUS     = BF_INDDSTAT
+     C                   Eval     o_SCCODE     = 'DDMAST'
+     C                   Eval     o_CBAL       = ''
+     C
      C                   ENDSR
      C*--------------------------------------------- END OF CODING --*
      C/COPY QMBSREFRLE,MB8RCLCK
