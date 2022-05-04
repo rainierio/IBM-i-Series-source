@@ -19,7 +19,7 @@
       *  ----  -----  --------  -----------------------------------  *
       ****************************************************************     
      A                                      REF(DDMAST)
-     A          R RDD26810R
+     A          R RLN86922R
      A            ACCTNO    R     S
      A            INLNACNM      20          COLHDG('Case Account Name')
      A            ACTYPE    R
