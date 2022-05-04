@@ -17,7 +17,7 @@ OS01 H/COPY QMBSREFRLE,MBQTXHH
      F*                                                               *
       *-- File Declaration --*
      FINLNCLRBFLIF   E           K DISK    prefix(BF_)
-     FCFACCT    IF   E           K DISK    
+     FCFACCT    IF   E           K DISK    prefix(cf)
      FDDMAST    IF   E           K DISK    
      FDDTNEW    IF   E           K DISK    RENAME(RDDMAST:RDDTNEW)
       *-- VARIABLE DECLARATION --*
@@ -82,7 +82,7 @@ OS01 C                   EXSR      SRSENDERR
      C                             (COUNTR < HDNREC)
      **
      C                   EXSR      SRCVTOUT
-     C                   EVAL      OTSTRS = DS86822R
+     C                   EVAL      OTSTRS = DS86922R
      *                                               
      C                   EVAL      COUNTR = COUNTR + 1
      C                   EXSR      SRLOCK1            
@@ -92,8 +92,6 @@ OS01 C                   EXSR      SRSENDERR
       *
      C                   EVAL      HDMREC = 'N'
      C                   EVAL      HDNREC = COUNTR
-      *
-     C                   ENDIF
       *
      CSR                 ENDSR
      **============================================
@@ -106,7 +104,7 @@ OS01 ** sr - SRCVTOUT
      C   33KYDDMAST      CHAIN     RDDTNEW                            33
      C                   IF        *IN33 = *OFF
      C                   EVAL      ouACCTNO = ACCTNO
-     C                   EVAL      ouACTYPE = ACCTTP
+     C                   EVAL      ouACTYPE = ACTYPE
      C                   EVAL      ouDDCTYP = DDCTYP
      C                   EVAL      ouSCCODE = SCCODE
      C                   EVAL      ouCIFNO  = CIFNO         
@@ -115,7 +113,7 @@ OS01 ** sr - SRCVTOUT
      C                   EVAL      ouSTATUS = STATUS
      C                   EVAL      ouCBAL   = CBAL
      C** CFACCT
-     C     dmCIFNO       CHAIN     RCFACCT                            34
+     C       CIFNO       CHAIN     RCFACCT                            34
      C                   IF        *IN34 = *OFF
      C                   EVAL      ouINLNACNM = cfCFFMSH
      C                   ENDIF
