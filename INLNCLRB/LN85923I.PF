@@ -1,6 +1,7 @@
       ****************************************************************
       *   INLNCLRBF  subfile inquiry by INDATE                       *
       *                                 INREFN                       *
+      *                                 INTRNTYP                     *
       ****************************************************************
       *  LN85923I IS A PART OF SILVERLAKE SYSTEM (R)                 *
       *  (C) COPYRIGHT 2002, 2022                                    *
@@ -22,3 +23,4 @@
      A          R RLN85923I
      A            INPRDT    R     S
      A            INREFN    R
+     A            INTRNTYP  R

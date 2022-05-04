@@ -121,8 +121,14 @@
      C                   ENDIF
      C
      C                   IF        PRINREFN    = *Blanks
-     C                   EVAL      ERCODE      = 'IFS0012'
+     C                   EVAL      ERCODE      = 'IFS0010'
      C                   EVAL      ERFLDN      = 'INREFN'
+     C                   LEAVESR
+     C                   ENDIF
+
+     C                   IF        PRINTRNTYP  = *Blanks
+     C                   EVAL      ERCODE      = 'IFS0023'
+     C                   EVAL      ERFLDN      = 'INTRNTYP'
      C                   LEAVESR
      C                   ENDIF
      C
@@ -212,6 +218,12 @@
                     IF PRINREFN <> *Blanks;
                        WHERE = %TRIMR(WHERE) +
                       ' AND INREFN = '+WAPOS+ %TRIMR(PRINREFN) +WAPOS;
+                    ENDIF
+                    ;
+                    // Add Filter : Transaction Type.
+                    IF PRINTRNTYP <> *Blanks;
+                       WHERE = %TRIMR(WHERE) +
+                      ' AND INTRNTYP = '+WAPOS+ %TRIMR(PRINTRNTYP) +WAPOS;
                     ENDIF;
 
       /END-FREE
