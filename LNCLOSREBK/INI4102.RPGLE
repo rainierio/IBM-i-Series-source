@@ -308,7 +308,7 @@
        //S_V9INSBUCDE     =  W_INSBUCDE;
        //S_V9INSUBCDE     =  W_INSUBCDE;
          S_V9INSTS       =  W_INSTS;
-         S_V9INERDCD     =  %Trim(W_INERDSC)+' '+%TRIM(W_INERRDT);
+         S_V9INERDCD     =  %TRIM(W_INERRDT);
 
         Endsr;
        //****************************************************************
