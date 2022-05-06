@@ -394,7 +394,7 @@
          Write TRAILER12;
          Exsr SrNwLine98;
          Write TRAILER13;
-         %SUBST(S_R#ENDSL:89:21) = 'End of Uploader Report';
+         %SUBST(S_R#ENDSL:89:21) = 'End of Report';
          Exsr SrNwLine98;
          Write ENDSRPT;
 
@@ -421,7 +421,7 @@
          Write TRAILER22;
          Exsr SrNwLine99;
          Write TRAILER23;
-         %SUBST(R_R#ENDSL:89:21) = 'End of Approver Report';
+         %SUBST(R_R#ENDSL:89:21) = 'End of Report';
          Write ENDFRPT;
 
          Endsr;
