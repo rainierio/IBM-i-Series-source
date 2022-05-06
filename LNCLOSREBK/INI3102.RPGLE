@@ -296,12 +296,12 @@
           // Validate Transaction Type
           If D_INRCDID = *blank;
             wINERCD  = 'INI011';
-            wINERVAL = 'Transaction Type is mandatory'+D_INRCDID;
+            wINERVAL = 'Transaction Type is mandatory '+D_INRCDID;
             Exsr srINTDTE;
           Else;
             if D_INTRNTYP <> 'S' AND D_INTRNTYP <> 'D';
             wINERCD  = 'INI012';
-            wINERVAL = 'Only S or D are allowed'+D_INTRNTYP;
+            wINERVAL = 'Only S or D are allowed '+D_INTRNTYP;
             Exsr srINTDTE;
             Endif;
           Endif;
@@ -317,7 +317,7 @@
 
           If WKCHKSTS > 0;
             wINERCD  = 'INI004';
-            wINERVAL = 'Loan Acc No: '+D_INACCTNO;
+            wINERVAL = D_INACCTNO;
             Exsr srINTDTE;
             D_INACCTNO = *all'0';
           Else;
@@ -329,7 +329,7 @@
               Chain wLNACCTNO RLNTNEW;                
               If Not %found(LNTNEW);                  
                 wINERCD  = 'INI015'; 
-                wINERVAL = 'Loan Acc No: '+D_INACCTNO;
+                wINERVAL = D_INACCTNO;
                 Exsr srINTDTE;                        
               Endif;                                  
             Endif;                                      
@@ -344,7 +344,7 @@
                 wLNSUBCOD = SUBCOD;
               Else;
                 wINERCD  = 'INI016';
-                wINERVAL = 'Loan Acc No: '+D_INACCTNO;
+                wINERVAL = D_INACCTNO;
                 Exsr srINTDTE;
               Endif;
             Endif;
@@ -360,7 +360,7 @@
 
           If WKCHKSTS > 0;
             wINERCD  = 'INI004';
-            wINERVAL = 'CASA Acc No: '+D_INDDACCT;
+            wINERVAL = D_INDDACCT;
             Exsr srINTDTE;
             D_INACCTNO = *all'0';
           Else;
@@ -372,7 +372,7 @@
               Chain wINDDACCT RDDTNEW;                
               If Not %found(DDTNEW);                  
                 wINERCD  = 'INI015';
-                wINERVAL = 'CASA Acc No: '+D_INDDACCT;
+                wINERVAL = D_INDDACCT;
                 Exsr srINTDTE;                        
               Endif;                                  
             Endif;                                      
@@ -402,7 +402,7 @@
 
           If WKCHKSTS > 0;
             wINERCD  = 'INI004';
-            wINERVAL = 'Transaction amount: '+D_INTRNAMT;
+            wINERVAL = D_INTRNAMT;
             Exsr srINTDTE;
             D_INTRNAMT = *all'0';
           Else;
@@ -420,7 +420,7 @@
           // Currency type checking
           If wLNCURTYP <> wDDCURTYP;
             wINERCD = 'INI012';
-            wINERVAL = 'Account currency type must be the same';
+            wINERVAL = 'Account currency must be similar';
             Exsr srINTDTE;
           Endif;
 
