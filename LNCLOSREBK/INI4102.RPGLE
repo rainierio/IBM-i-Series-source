@@ -64,46 +64,48 @@
         Read INI3102W;
 
        //Compose Uploader Report
-      If (P9APPR = 'U');
-        WSPAGNO += 1;
-        Exsr SrRptFmt;
-        Write HEADER1;
-        Exsr SrSuccSHdr;
-        Write DTLHDR1;
+        If (P9APPR = 'U');
+          WSPAGNO += 1;
+          Exsr SrRptFmt;
+          Write HEADER1;
+          Exsr SrSuccSHdr;
+          Write DTLHDR1;
 
-        Dow Not %Eof (INI3102W);
-          Exsr SrReport;
-        Read INI3102W;
-        Enddo;
+          Dow Not %Eof (INI3102W);
+            Exsr SrReport;
+          Read INI3102W;
+          Enddo;
 
-        If WSCOUNT = 0;
-           Exsr SrNoRec;
+          If WSCOUNT = 0;
+            Exsr SrNoRec;
+          Endif;
+          Exsr SrTrailer;
         Endif;
-        Exsr SrTrailer;
-      Endif;
 
        //Compose approver Report
+        If (P9APPR = 'A');
+          WRPAGNO += 1;
+          Exsr SrFRptFmt;
+          Write HEADER2;
+          Exsr SrFailSHdr;
+          Write DTLHDR2;
 
-        WRPAGNO += 1;
-        Exsr SrFRptFmt;
-        Write HEADER2;
-        Exsr SrFailSHdr;
-        Write DTLHDR2;
+          Setll (I_INFIID:I_INFNAM:I_INFSEQ:I_INDATE:I_INTIME) RINTDTE;
+          If %Equal;
+          Reade (I_INFIID:I_INFNAM:I_INFSEQ:I_INDATE:I_INTIME) RINTDTE;
+          Dow Not %Eof (INTDTEL3);
+              Exsr SrFReport;
+              Reade (I_INFIID:I_INFNAM:I_INFSEQ:I_INDATE:I_INTIME) RINTDTE;
+          Enddo;
+          Endif;
 
-        Setll (I_INFIID:I_INFNAM:I_INFSEQ:I_INDATE:I_INTIME) RINTDTE;
-        If %Equal;
-        Reade (I_INFIID:I_INFNAM:I_INFSEQ:I_INDATE:I_INTIME) RINTDTE;
-        Dow Not %Eof (INTDTEL3);
-            Exsr SrFReport;
-            Reade (I_INFIID:I_INFNAM:I_INFSEQ:I_INDATE:I_INTIME) RINTDTE;
-        Enddo;
+          If WFCOUNT = 0;
+            Exsr SrFNoRec;
+          Endif;
+
+          Exsr SrFTrailer;
         Endif;
 
-        If WFCOUNT = 0;
-           Exsr SrFNoRec;
-        Endif;
-
-        Exsr SrFTrailer;
         Exsr SrEndRpt;
 
         *Inlr = *On;
@@ -444,12 +446,12 @@
 
            Chain (P9IMID:P9BREF) RINTFILE;
            If %Found (INTFILEl5);
-             //Route to the correct branch
+             // Route to the correct branch
              If P9APPR <> 'A';
-               //Uploader report goes to Maker ID
+               // Uploader report goes to Maker ID
                Chain (I_INUPUSR) RMNUUSR;
              Else;
-               //Approver report goes to Approver ID
+               // Approver report goes to Approver ID
                Chain (I_INLUID) RMNUUSR;
              Endif;
 
