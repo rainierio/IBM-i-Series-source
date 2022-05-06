@@ -62,7 +62,9 @@
        //***********************************************************************
 
         Read INI3102W;
-       //Compose Success Report
+
+       //Compose Uploader Report
+      If (P9APPR = 'U');
         WSPAGNO += 1;
         Exsr SrRptFmt;
         Write HEADER1;
@@ -70,11 +72,7 @@
         Write DTLHDR1;
 
         Dow Not %Eof (INI3102W);
-        If W_INSTS    = 'S';
-         If (P9APPR = 'U' or (P9APPR = 'A' and W_PRCSTS = 'AA'));
-           Exsr SrReport;
-         Endif;
-        Endif;
+          Exsr SrReport;
         Read INI3102W;
         Enddo;
 
@@ -82,8 +80,10 @@
            Exsr SrNoRec;
         Endif;
         Exsr SrTrailer;
+      Endif;
 
-       //Compose Failed Report
+       //Compose approver Report
+
         WRPAGNO += 1;
         Exsr SrFRptFmt;
         Write HEADER2;
@@ -380,7 +380,7 @@
          Endsr;
        //****************************************************************
        // Subroutine  : SrTrailer
-       // Description : Compose Total for Successful Report
+       // Description : Compose Total for Uploader Report
        //****************************************************************
          Begsr SrTrailer;
 
@@ -392,7 +392,7 @@
          Write TRAILER12;
          Exsr SrNwLine98;
          Write TRAILER13;
-         %SUBST(S_R#ENDSL:89:21) = 'End of Success Report';
+         %SUBST(S_R#ENDSL:89:21) = 'End of Uploader Report';
          Exsr SrNwLine98;
          Write ENDSRPT;
 
@@ -407,7 +407,7 @@
          Endsr;
        //****************************************************************
        // Subroutine  : SrFTrailer
-       // Description : Compose Total for Failed Report
+       // Description : Compose Total for Approver Report
        //****************************************************************
          Begsr SrFTrailer;
 
@@ -419,7 +419,7 @@
          Write TRAILER22;
          Exsr SrNwLine99;
          Write TRAILER23;
-         %SUBST(R_R#ENDSL:89:21) = 'End of Failed Report';
+         %SUBST(R_R#ENDSL:89:21) = 'End of Approver Report';
          Write ENDFRPT;
 
          Endsr;
@@ -431,9 +431,9 @@
             Write ENDRPT1;
 
          Endsr;
-    ‚  //***********************************************************************
+       //***********************************************************************
        //    ‚Subroutine       : *INZSR
-    ‚  //***********************************************************************
+       //***********************************************************************
           BEGSR *INZSR;
 
           If P9APPR = 'A';
