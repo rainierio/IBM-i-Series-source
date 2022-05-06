@@ -248,7 +248,7 @@
          // If error record happen other than record 1
          If wHdrSeq <> 1;
           wINERCD    = 'INI001';
-          wINERVAL   = 'HeaderID:'+I_INDATA;
+          wINERVAL   = 'HeaderID Not valid';
           // P9ERR = 'Y';
           Exsr srINTDTE;
           Leavesr;
@@ -259,7 +259,7 @@
          Test(DE) *ISO0 H_INPRDT;
          If %Error;
           wINERCD    = 'INI002';
-          wINERVAL   = 'ProcessDt:'+H_INPRDT;
+          wINERVAL   = 'Process date not valid';
           // P9ERR = 'Y';
           Exsr srINTDTE;
          Endif;
@@ -275,7 +275,7 @@
          // Check agreed system source
            If H_INSRCS <> 'INLNCLRB';
             wINERCD    = 'INI005';
-            wINERVAL   = 'SourceSys:'+H_INSRCS;
+            wINERVAL   = 'SourceSys not valid';
          //  P9ERR = 'Y';
             Exsr srINTDTE;
            Endif;
@@ -296,12 +296,12 @@
           // Validate Transaction Type
           If D_INRCDID = *blank;
             wINERCD  = 'INI011';
-            wINERVAL = 'Transaction Type is mandatory '+D_INRCDID;
+            wINERVAL = 'Trans Type is blank';
             Exsr srINTDTE;
           Else;
             if D_INTRNTYP <> 'S' AND D_INTRNTYP <> 'D';
             wINERCD  = 'INI012';
-            wINERVAL = 'Only S or D are allowed '+D_INTRNTYP;
+            wINERVAL = 'Trans type not valid';
             Exsr srINTDTE;
             Endif;
           Endif;
@@ -317,7 +317,7 @@
 
           If WKCHKSTS > 0;
             wINERCD  = 'INI004';
-            wINERVAL = D_INACCTNO;
+            wINERVAL = 'Loan account not valid';
             Exsr srINTDTE;
             D_INACCTNO = *all'0';
           Else;
@@ -329,7 +329,7 @@
               Chain wLNACCTNO RLNTNEW;                
               If Not %found(LNTNEW);                  
                 wINERCD  = 'INI015'; 
-                wINERVAL = D_INACCTNO;
+                wINERVAL = 'Loan account not found';
                 Exsr srINTDTE;                        
               Endif;                                  
             Endif;                                      
@@ -344,7 +344,7 @@
                 wLNSUBCOD = SUBCOD;
               Else;
                 wINERCD  = 'INI016';
-                wINERVAL = D_INACCTNO;
+                wINERVAL = 'Loan acc not active';
                 Exsr srINTDTE;
               Endif;
             Endif;
@@ -360,7 +360,7 @@
 
           If WKCHKSTS > 0;
             wINERCD  = 'INI004';
-            wINERVAL = D_INDDACCT;
+            wINERVAL = 'CASA Acc not valid';
             Exsr srINTDTE;
             D_INACCTNO = *all'0';
           Else;
@@ -372,7 +372,7 @@
               Chain wINDDACCT RDDTNEW;                
               If Not %found(DDTNEW);                  
                 wINERCD  = 'INI015';
-                wINERVAL = D_INDDACCT;
+                wINERVAL = 'CASA Acc not found';
                 Exsr srINTDTE;                        
               Endif;                                  
             Endif;                                      
@@ -385,7 +385,7 @@
                 wDDCIFNO  = DD_CIFNO;
               Else;
                 wINERCD  = 'INI016';
-                wINERVAL = 'CASA Acc No: '+D_INDDACCT;
+                wINERVAL = 'CASA Acc not active';
                 Exsr srINTDTE;              
               Endif;
             Endif;
@@ -402,7 +402,7 @@
 
           If WKCHKSTS > 0;
             wINERCD  = 'INI004';
-            wINERVAL = D_INTRNAMT;
+            wINERVAL = 'Trans amount not valid';
             Exsr srINTDTE;
             D_INTRNAMT = *all'0';
           Else;
@@ -413,14 +413,14 @@
           // Loan and CASA CIF checking
           If wLNCIFNO <> wDDCIFNO;
             wINERCD = 'INI012';
-            wINERVAL = 'Account must be under the same CIF';
+            wINERVAL = 'Account has different CIF';
             Exsr srINTDTE;
           Endif;
 
           // Currency type checking
           If wLNCURTYP <> wDDCURTYP;
             wINERCD = 'INI012';
-            wINERVAL = 'Account currency must be similar';
+            wINERVAL = 'Accnt currency is different';
             Exsr srINTDTE;
           Endif;
 
