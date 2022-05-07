@@ -9,7 +9,7 @@
       * Modification Logs:                                                       *
       * Init  Ref#     Date    Description                                       *
       ****************************************************************************
-     ** Input/Output/Update file 
+     ** Input/Output/Update file
      FSSPAR1    IF   E             DISK
      FINTFILEL5 UF   E           K DISK
      FINTHDR    UF A E           K DISK
@@ -70,7 +70,7 @@
      D WCDATE          S                   LIKE(INDATE)
      D WCTIME          S              6  0
      D WKCHKSTS        S              2S 0                                       Var for check sts
-     D WDTLCOUNT       S              9S 0                                       Var for DTL Seq No 
+     D WDTLCOUNT       S              9S 0                                       Var for DTL Seq No
      D wChkSum         S             26S 2                                       Var for Check Sum
      D WHDRSEQ         S              9S 0
      D WTSEQNO         S              9S 0
@@ -113,21 +113,21 @@
      D xNum26          S             26S 0
 
      D* LNMAST LNTNEW working variables
-     D wLNACCTNO       S             19S 0 
+     D wLNACCTNO       S             19S 0
      D wLNSTATUS       S              1S 0
      D wLNACTYPE       S              1A
      D wLNCURTYP       S              4A
      D wLNCIFNO        S             19S 0
      D wLNSBUCOD       S              4A
      D wLNSUBCOD       S              4A
-     
+
      D* DDMAST DDTNEW Local working variables
-     D wINDDACCT       S             19S 0 
+     D wINDDACCT       S             19S 0
      D wDDSTATUS       S              1S 0
      D wDDACTYPE       S              1A
      D wDDCURTYP       S              4A
      D wDDCIFNO        S             19S 0
-     
+
       /Free
        //*******************************************************************************************
        //  Main Proccesing
@@ -172,7 +172,7 @@
          Else;
            P9ERR = 'N';
            Commit;
-           
+
           // Write to the log file
           Exsr SrLogfile;
 
@@ -322,24 +322,24 @@
             D_INACCTNO = *all'0';
           Else;
             wLNACCTNO = %Dec(%Trim(D_INACCTNO):19:0);
-            
+
             // Loan account check
             Chain wLNACCTNO RLNMAST;
-            If Not %found(LNMAST);                    
-              Chain wLNACCTNO RLNTNEW;                
-              If Not %found(LNTNEW);                  
-                wINERCD  = 'INI015'; 
+            If Not %found(LNMAST);
+              Chain wLNACCTNO RLNTNEW;
+              If Not %found(LNTNEW);
+                wINERCD  = 'INI015';
                 wINERVAL = 'Loan account not found';
-                Exsr srINTDTE;                        
-              Endif;                                  
-            Endif;                                      
+                Exsr srINTDTE;
+              Endif;
+            Endif;
 
             If %found(LNMAST) Or %found(LNTNEW);
               If STATUS = 1 or STATUS = 4;
                 wLNSTATUS = STATUS;
-                wLNACTYPE = ACTYPE; 
+                wLNACTYPE = ACTYPE;
                 wLNCURTYP = CURTYP;
-                wLNCIFNO  = CIFNO; 
+                wLNCIFNO  = CIFNO;
                 wLNSBUCOD = SBUCOD;
                 wLNSUBCOD = SUBCOD;
               Else;
@@ -368,14 +368,14 @@
 
             // CASA account check
             Chain wINDDACCT RDDMAST;
-            If Not %found(DDMAST);                    
-              Chain wINDDACCT RDDTNEW;                
-              If Not %found(DDTNEW);                  
+            If Not %found(DDMAST);
+              Chain wINDDACCT RDDTNEW;
+              If Not %found(DDTNEW);
                 wINERCD  = 'INI015';
                 wINERVAL = 'CASA Acc not found';
-                Exsr srINTDTE;                        
-              Endif;                                  
-            Endif;                                      
+                Exsr srINTDTE;
+              Endif;
+            Endif;
 
             If %found(DDMAST) Or %found(DDTNEW);
               If DD_STATUS = 1 or DD_STATUS = 4;
@@ -386,10 +386,10 @@
               Else;
                 wINERCD  = 'INI016';
                 wINERVAL = 'CASA Acc not active';
-                Exsr srINTDTE;              
+                Exsr srINTDTE;
               Endif;
             Endif;
-                          
+
           Endif;
 
           // Validate Transactions amount
@@ -425,10 +425,10 @@
           Endif;
 
           If wINERCD <> *blank;
-            wFailRcd += 1;      
-          Else;                
-            wSuccRcd += 1;      
-          Endif;               
+            wFailRcd += 1;
+          Else;
+            wSuccRcd += 1;
+          Endif;
 
          Endsr;
        //***********************************************************************
@@ -453,7 +453,7 @@
 
           W_INTRNTYP    = D_INTRNTYP;                          // Transaction Type
           W_INACCTNO    = %Int(D_INACCTNO);                    // Loan Accont Number
-          W_INLNACTP    = wLNACTYPE;                           // Loan Account Type 
+          W_INLNACTP    = wLNACTYPE;                           // Loan Account Type
           W_INLNACNM    = D_INLNACNM;                          // Loan Account Name
           W_INLNSTAT    = wLNSTATUS;                           // Loan Account Status
           W_INDDACCT    = %Int(D_INDDACCT);                    // CASA Account Number
@@ -469,7 +469,7 @@
           Else;
             W_INCURFLG = 'F';                                  //  Transaction Currency flag foreign
           Endif;
-          
+
           W_INMDRMRK    = D_INMDRMRK;                          // Remarks
           W_INSBUCDE    = wLNSBUCOD;                           // SBU Code
           W_INSUBCDE    = wLNSUBCOD;                           // SUB Code
@@ -486,7 +486,7 @@
        // Description : Write into log file - INLNCLRBF
        //***********************************************************************
         Begsr SrLogfile;
-          
+
           Setll *START INI3102W;
           Read RINI3102W;
           Dow Not %Eof(INI3102W);
@@ -499,7 +499,7 @@
             B_INRCDID     = W_INRCDID;                           // Record Identifier
             B_INTRNTYP    = W_INTRNTYP;                          // Transaction Type
             B_INACCTNO    = W_INACCTNO;                          // Loan Accont Number
-            B_INLNACTP    = W_INLNACTP;                          // Loan Account Type 
+            B_INLNACTP    = W_INLNACTP;                          // Loan Account Type
             B_INLNACNM    = W_INLNACNM;                          // Loan Account Name
             B_INLNSTAT    = W_INLNSTAT;                          // Loan Account Status
             B_INDDACCT    = W_INDDACCT;                          // CASA Account Number
@@ -515,11 +515,11 @@
             B_INSUBCDE    = W_INSUBCDE;                          // SUB Code
             B_INPRDT      = W_INPRDT;                            // Interface Processing Date
             B_INSTS       = W_INSTS;                             // Interface Status
-            B_INERDCD     = W_INERDCD;                           // IFC Error Code     
+            B_INERDCD     = W_INERDCD;                           // IFC Error Code
             B_INERDSC     = W_INERDSC;                           // IFC Error Description
             B_INERRDT     = W_INERRDT;                           // IFC Error Date
             B_INPRDT      = W_INPRDT;                            // Interface Processing Date
-            B_INPRTM      = W_INPRTM;                            // Interface Processing Time    
+            B_INPRTM      = W_INPRTM;                            // Interface Processing Time
             B_PRCSTS      = W_PRCSTS;                            // Application Status AA/AB
             B_PRCTIM      = W_PRCTIM;                            // Application Time
             B_ERRCDE      = W_ERRCDE;                            // Error Code
@@ -527,7 +527,7 @@
 
             Write RINLNCLRBF;
           Read RINI3102W;
-          Enddo;            
+          Enddo;
         Endsr;
 
        //***********************************************************************

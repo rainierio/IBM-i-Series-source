@@ -12,7 +12,7 @@
       *  Modification Logs:                                                    *
       *                                                                        *
       *  ----  ----- --------   ---------------------------------------------- *
-      * ‚Name  Init  Date       Remarks (Description)                          *
+      *  Name  Init  Date       Remarks (Description)                          *
       *  ----  ---- --------    ------------------------                       *
       *                                                                        *
       *                                                                        *
@@ -225,7 +225,7 @@
        //****************************************************************
          Begsr SrReport;
 
-              //‚Write on a new line if not enough place for footer
+              // Write on a new line if not enough place for footer
               Exsr SrNwLine98;
               WSCOUNT += 1;                                     // Successful Count
               Exsr srDetail;
@@ -238,7 +238,7 @@
        //****************************************************************
          Begsr SrFReport;
 
-              //‚Write on a new line if not enough place for footer
+              // Write on a new line if not enough place for footer
               Exsr SrNwLine99;
               If P9APPR = 'A' And E_INIFERR = 'N';
                  Exsr SrADetail;
@@ -263,7 +263,7 @@
        //****************************************************************
          Begsr SrOvrflow;
               WSPAGNO += 1;
-           //‚Get Header Details
+           // Get Header Details
               Exsr SrRptFmt;
               Write HEADER1;
               Exsr SrSuccSHDR;
@@ -286,7 +286,7 @@
        //****************************************************************
          Begsr SrROvrflow;
               WRPAGNO += 1;
-           //‚Get Header Details
+           // Get Header Details
               Exsr SrFRptFmt;
               Write HEADER2;
               Exsr SrFailSHdr;
@@ -434,7 +434,7 @@
 
          Endsr;
        //***********************************************************************
-       //    ‚Subroutine       : *INZSR
+       //     Subroutine       : *INZSR
        //***********************************************************************
           BEGSR *INZSR;
 
