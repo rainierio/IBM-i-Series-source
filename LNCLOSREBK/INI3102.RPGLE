@@ -311,8 +311,8 @@
           If D_INACCTNO <> *blank;
             WKCHKSTS = %CHECK(WNUMCHK:%Trim(D_INACCTNO):1);
           Else;
-            D_INACCTNO = *all'0';
             WKCHKSTS = %CHECK(WNUMCHK:D_INACCTNO:1);
+            D_INACCTNO = *all'0';
           Endif;
 
           If WKCHKSTS > 0;
@@ -354,8 +354,8 @@
           If D_INDDACCT <> *blank;
             WKCHKSTS = %CHECK(WNUMCHK:%Trim(D_INDDACCT):1);
           Else;
-            D_INDDACCT = *all'0';
             WKCHKSTS = %CHECK(WNUMCHK:D_INDDACCT:1);
+            D_INDDACCT = *all'0';
           Endif;
 
           If WKCHKSTS > 0;
@@ -396,8 +396,8 @@
           If D_INTRNAMT <> *blank;
             WKCHKSTS = %CHECK(WNUMCHK:%Trim(D_INTRNAMT):1);
           Else;
-            D_INTRNAMT = *all'0';
             WKCHKSTS = %CHECK(WNUMCHK:D_INTRNAMT:1);
+            D_INTRNAMT = *all'0';
           Endif;
 
           If WKCHKSTS > 0;
