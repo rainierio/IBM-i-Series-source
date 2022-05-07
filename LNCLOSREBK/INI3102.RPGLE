@@ -295,13 +295,13 @@
 
           // Validate Transaction Type
           If D_INRCDID = *blank;
-            wINERCD  = 'INI011';
-            wINERVAL = 'Trans Type is blank';
+            wINERCD  = 'INI011'; 
+            wINERVAL = D_INRCDID;
             Exsr srINTDTE;
           Else;
             if D_INTRNTYP <> 'S' AND D_INTRNTYP <> 'D';
-            wINERCD  = 'INI012';
-            wINERVAL = 'Trans type not valid '+D_INTRNTYP;
+            wINERCD  = 'INI011';
+            wINERVAL = D_INTRNTYP;
             Exsr srINTDTE;
             Endif;
           Endif;
@@ -317,7 +317,7 @@
 
           If WKCHKSTS > 0;
             wINERCD  = 'INI004';
-            wINERVAL = 'Loan acc not valid';
+            wINERVAL = D_INACCTNO;
             Exsr srINTDTE;
             D_INACCTNO = *all'0';
           Else;
@@ -329,7 +329,7 @@
               Chain wLNACCTNO RLNTNEW;
               If Not %found(LNTNEW);
                 wINERCD  = 'INI015';
-                wINERVAL = 'Loan acc not found '+D_INACCTNO;
+                wINERVAL = D_INACCTNO;
                 Exsr srINTDTE;
               Endif;
             Endif;
@@ -344,7 +344,7 @@
                 wLNSUBCOD = SUBCOD;
               Else;
                 wINERCD  = 'INI016';
-                wINERVAL = 'Loan acc not active '+D_INACCTNO;
+                wINERVAL = D_INACCTNO;
                 Exsr srINTDTE;
               Endif;
             Endif;
@@ -360,7 +360,7 @@
 
           If WKCHKSTS > 0;
             wINERCD  = 'INI004';
-            wINERVAL = 'CASA Acc not valid '+D_INDDACCT;
+            wINERVAL = D_INDDACCT;
             Exsr srINTDTE;
             D_INDDACCT = *all'0';
           Else;
@@ -372,7 +372,7 @@
               Chain wINDDACCT RDDTNEW;
               If Not %found(DDTNEW);
                 wINERCD  = 'INI015';
-                wINERVAL = 'CASA Acc not found '+D_INDDACCT;
+                wINERVAL = D_INDDACCT;
                 Exsr srINTDTE;
               Endif;
             Endif;
@@ -385,7 +385,7 @@
                 wDDCIFNO  = DD_CIFNO;
               Else;
                 wINERCD  = 'INI016';
-                wINERVAL = 'CASA Acc not active '+D_INDDACCT;
+                wINERVAL = D_INDDACCT;
                 Exsr srINTDTE;
               Endif;
             Endif;
@@ -402,7 +402,7 @@
 
           If WKCHKSTS > 0;
             wINERCD  = 'INI004';
-            wINERVAL = 'Trans amount not valid '+D_INTRNAMT;
+            wINERVAL = D_INTRNAMT;
             Exsr srINTDTE;
             D_INTRNAMT = *all'0';
           Else;
@@ -413,14 +413,14 @@
           // Loan and CASA CIF checking
           If wLNCIFNO <> wDDCIFNO;
             wINERCD = 'INI012';
-            wINERVAL = 'Account has different CIF';
+            wINERVAL = 'Different CIF';
             Exsr srINTDTE;
           Endif;
 
           // Currency type checking
           If wLNCURTYP <> wDDCURTYP;
             wINERCD = 'INI012';
-            wINERVAL = 'Different acc Currency';
+            wINERVAL = 'Different Currency';
             Exsr srINTDTE;
           Endif;
 
