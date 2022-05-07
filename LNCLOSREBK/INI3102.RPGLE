@@ -671,7 +671,7 @@
          Begsr srINTDTE;
 
            W_INSTS  = 'R';
-          //W_PRCSTS = 'AB';
+           W_PRCSTS = 'AB';
 
            V9Index = *zero;
            V9Index = %LookUp(wINERCD:V9ErCd);
