@@ -400,7 +400,7 @@
 
               Else;
                 wINERCD  = 'INI016';
-                wINERVAL = 'CasaAcc '+D_INDDACCT;;
+                wINERVAL = 'CasaAcc '+D_INDDACCT;
                 Exsr srINTDTE;
               Endif;
             Endif;
