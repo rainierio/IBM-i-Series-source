@@ -296,12 +296,12 @@
           // Validate Transaction Type
           If D_INRCDID = *blank;
             wINERCD  = 'INI011'; 
-            wINERVAL = D_INRCDID;
+            wINERVAL = 'Trans type '+D_INTRNTYP;
             Exsr srINTDTE;
           Else;
             if D_INTRNTYP <> 'S' AND D_INTRNTYP <> 'D';
             wINERCD  = 'INI011';
-            wINERVAL = D_INTRNTYP;
+            wINERVAL = 'TranType '+D_INTRNTYP;
             Exsr srINTDTE;
             Endif;
           Endif;
@@ -311,13 +311,13 @@
           If D_INACCTNO <> *blank;
             WKCHKSTS = %CHECK(WNUMCHK:%Trim(D_INACCTNO):1);
           Else;
-            WKCHKSTS = %CHECK(WNUMCHK:D_INACCTNO:1);
+            WKCHKSTS = 1;
             D_INACCTNO = *all'0';
           Endif;
 
           If WKCHKSTS > 0;
             wINERCD  = 'INI004';
-            wINERVAL = D_INACCTNO;
+            wINERVAL = 'LoanAcc '+D_INACCTNO;
             Exsr srINTDTE;
             D_INACCTNO = *all'0';
           Else;
@@ -329,7 +329,7 @@
               Chain wLNACCTNO RLNTNEW;
               If Not %found(LNTNEW);
                 wINERCD  = 'INI015';
-                wINERVAL = D_INACCTNO;
+                wINERVAL = 'LoanAcc '+D_INACCTNO;
                 Exsr srINTDTE;
               Endif;
             Endif;
@@ -344,7 +344,7 @@
                 wLNSUBCOD = SUBCOD;
               Else;
                 wINERCD  = 'INI016';
-                wINERVAL = D_INACCTNO;
+                wINERVAL = 'LoanAcc '+D_INACCTNO;
                 Exsr srINTDTE;
               Endif;
             Endif;
@@ -354,13 +354,13 @@
           If D_INDDACCT <> *blank;
             WKCHKSTS = %CHECK(WNUMCHK:%Trim(D_INDDACCT):1);
           Else;
-            WKCHKSTS = %CHECK(WNUMCHK:D_INDDACCT:1);
+            WKCHKSTS = 1;
             D_INDDACCT = *all'0';
           Endif;
 
           If WKCHKSTS > 0;
             wINERCD  = 'INI004';
-            wINERVAL = D_INDDACCT;
+            wINERVAL = 'CasaAcc '+D_INDDACCT;
             Exsr srINTDTE;
             D_INDDACCT = *all'0';
           Else;
@@ -372,7 +372,7 @@
               Chain wINDDACCT RDDTNEW;
               If Not %found(DDTNEW);
                 wINERCD  = 'INI015';
-                wINERVAL = D_INDDACCT;
+                wINERVAL = 'CasaAcc '+D_INDDACCT;
                 Exsr srINTDTE;
               Endif;
             Endif;
@@ -383,9 +383,24 @@
                 wDDACTYPE = DD_ACTYPE;
                 wDDCURTYP = DD_DDCTYP;
                 wDDCIFNO  = DD_CIFNO;
+
+                If wLNCURTYP <> *Blanks and wLNCIFNO <> *Zeros;
+                  // Currency type checking
+                  If wLNCURTYP <> wDDCURTYP;
+                    wINERCD = 'INI012';
+                    wINERVAL = 'Different Currency';
+                    Exsr srINTDTE;
+                  // Loan and CASA CIF checking
+                  ElseIf wLNCIFNO <> wDDCIFNO;
+                    wINERCD = 'INI012';
+                    wINERVAL = 'Different CIF';
+                    Exsr srINTDTE;
+                  Endif;
+                Endif;
+
               Else;
                 wINERCD  = 'INI016';
-                wINERVAL = D_INDDACCT;
+                wINERVAL = 'CasaAcc '+D_INDDACCT;;
                 Exsr srINTDTE;
               Endif;
             Endif;
@@ -396,32 +411,18 @@
           If D_INTRNAMT <> *blank;
             WKCHKSTS = %CHECK(WNUMCHK:%Trim(D_INTRNAMT):1);
           Else;
-            WKCHKSTS = %CHECK(WNUMCHK:D_INTRNAMT:1);
+            WKCHKSTS = 1;
             D_INTRNAMT = *all'0';
           Endif;
 
           If WKCHKSTS > 0;
             wINERCD  = 'INI004';
-            wINERVAL = D_INTRNAMT;
+            wINERVAL = 'Amnt '+D_INTRNAMT;
             Exsr srINTDTE;
             D_INTRNAMT = *all'0';
           Else;
             xNum17 = %Dec(%Trim(D_INTRNAMT):17:0);
             D_INTRNAMT = %Editc(xNum17:'X');
-          Endif;
-
-          // Loan and CASA CIF checking
-          If wLNCIFNO <> wDDCIFNO;
-            wINERCD = 'INI012';
-            wINERVAL = 'Different CIF';
-            Exsr srINTDTE;
-          Endif;
-
-          // Currency type checking
-          If wLNCURTYP <> wDDCURTYP;
-            wINERCD = 'INI012';
-            wINERVAL = 'Different Currency';
-            Exsr srINTDTE;
           Endif;
 
           If wINERCD <> *blank;
