@@ -304,11 +304,11 @@
          If W_INSTS = 'R' and W_ERRCDE = *Blanks;
             S_V9INSTS       =  W_INSTS;
             S_V9INERDCD     =  %TRIM(W_INERRDT);
-         Elseif W_INSTS = 'S' and W_ERRCDE <> *Blanks;
+         Elseif W_INSTS = 'S' and W_ERRCDE <> *Blanks and W_PRCSTS = 'AB';
             S_V9INSTS       =  'R';
             S_V9INERDCD     =  %TRIM(W_ERRDSC);
           Else;
-            S_V9INSTS       =  W_PRCSTS;
+            S_V9INSTS       =  W_INSTS;
             S_V9INERDCD     =  %TRIM(W_INERRDT);
          Endif;
 
@@ -332,11 +332,11 @@
          If W_INSTS = 'R' and W_ERRCDE = *Blanks;
             R_V9INSTS       =  W_INSTS;
             R_V9INERDCD     =  %TRIM(W_INERRDT);
-         Elseif W_INSTS = 'S' and W_ERRCDE <> *Blanks;
+         Elseif W_INSTS = 'S' and W_ERRCDE <> *Blanks and W_PRCSTS = 'AB';
             R_V9INSTS       =  'R';
             R_V9INERDCD     =  %TRIM(W_ERRDSC);
           Else;
-            R_V9INSTS       =  W_PRCSTS;
+            R_V9INSTS       =  W_INSTS;
             R_V9INERDCD     =  %TRIM(W_INERRDT);
          Endif;
 
