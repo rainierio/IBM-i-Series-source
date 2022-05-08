@@ -90,14 +90,10 @@
           Exsr SrFailSHdr;
           Write DTLHDR2;
 
-          Setll (I_INFIID:I_INFNAM:I_INFSEQ:I_INDATE:I_INTIME) RINTDTE;
-          If %Equal;
-          Reade (I_INFIID:I_INFNAM:I_INFSEQ:I_INDATE:I_INTIME) RINTDTE;
-          Dow Not %Eof (INTDTEL3);
-              Exsr SrFReport;
-              Reade (I_INFIID:I_INFNAM:I_INFSEQ:I_INDATE:I_INTIME) RINTDTE;
-          Enddo;
-          Endif;
+          Dow Not %Eof (INI3102W);
+            Exsr SrFReport;
+          Read INI3102W;
+          Enddo;          
 
           If WFCOUNT = 0;
             Exsr SrFNoRec;
@@ -234,16 +230,14 @@
          Endsr;
        //****************************************************************
        // Subroutine  : srFReport
-       // Description : Populate Failed Report
+       // Description : approver succes and failed record
        //****************************************************************
          Begsr SrFReport;
 
               // Write on a new line if not enough place for footer
               Exsr SrNwLine99;
-              If P9APPR = 'A' And E_INIFERR = 'N';
+              If P9APPR = 'A';
                  Exsr SrADetail;
-              Elseif P9APPR <> 'A' AND E_INIFERR = 'Y';
-                 Exsr SrMDetail;
               Endif;
 
          Endsr;
@@ -305,8 +299,6 @@
          S_V9INDDACCT    =  W_INDDACCT;
          S_V9INTRNAMT    =  W_INTRNAMT;
          S_V9INCURTYP    =  W_INCURTYP;
-       //S_V9INSBUCDE     =  W_INSBUCDE;
-       //S_V9INSUBCDE     =  W_INSUBCDE;
          S_V9INSTS       =  W_INSTS;
          S_V9INERDCD     =  %TRIM(W_INERRDT);
 
@@ -317,22 +309,18 @@
        //****************************************************************
          Begsr SrADetail;
 
-         R_V9SEQ = E_INRSEQN;
-         If W#RCD <> E_INRSEQN;
-             W#RCD = E_INRSEQN;
-             W#TFRCD += 1;
-         Endif;
+         R_V9RUNDGT = %Trim(%Char(WSCOUNT));
+         R_V9SEQ         =  W_INSEQ;
+         R_V9INTRNTYP    =  W_INTRNTYP;
+         R_V9INACCTNO    =  W_INACCTNO;
+         R_V9INDDACCT    =  W_INDDACCT;
+         R_V9INTRNAMT    =  W_INTRNAMT;
+         R_V9INCURTYP    =  W_INCURTYP;
+         R_V9INSBUCDE    =  W_INSBUCDE;
+         R_V9INSUBCDE    =  W_INSUBCDE;
+         R_V9INSTS       =  W_INSTS;
+         R_V9INERDCD     =  %TRIM(W_INERRDT);
 
-          CHAIN (P9IMID:P9BREF:E_INRSEQN) RINI3102W;
-          If %Found (INI3102W);
-             R_V9INACCTNO = W_INACCTNO;
-          Else;
-             R_V9INACCTNO = *ZERO;
-          Endif;
-
-         R_V9INERDCD = %TRIM(E_INERCD) + ':' + %TRIM(E_INERVAL);
-         WFCOUNT  +=1;
-         R_V9RUNDGT = %Char(WFCOUNT);
          Write DETAIL2;
 
 

@@ -274,7 +274,7 @@ CHKSTS:
              Call       PGM(INI3102A)  PARM(&FIID &P9REF &RCNERR)
 
         /* Generate upload status report */
-        /*   CALL       PGM(INI4102C) PARM('U' &FIID &P9REF)    */
+             CALL       PGM(INI4102C) PARM('U' &FIID &P9REF)  
 
         /* INI3020CX - Summary display for application status       */
              CHGVAR     VAR(&WFILE) VALUE('INI3102W')
@@ -341,7 +341,7 @@ UPSTS:       IF (&PREJECT *NE 'Y') DO
              Call       PGM(INI3102A)  PARM(&FIID &P9REF &RCNERR)
 
         /* Generate upload status report */
-          /*  CALL       PGM(INI4102C) PARM('A' &FIID &P9REF) */
+             CALL       PGM(INI4102C) PARM('A' &FIID &P9REF)
 
              DLTOVR     FILE(*ALL) LVL(*JOB)
 
