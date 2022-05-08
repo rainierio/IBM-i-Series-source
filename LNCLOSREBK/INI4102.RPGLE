@@ -238,6 +238,7 @@
               Exsr SrNwLine99;
               If P9APPR = 'A';
                  Exsr SrADetail;
+                 WFCOUNT += 1;
               Endif;
 
          Endsr;
@@ -299,8 +300,14 @@
          S_V9INDDACCT    =  W_INDDACCT;
          S_V9INTRNAMT    =  W_INTRNAMT;
          S_V9INCURTYP    =  W_INCURTYP;
-         S_V9INSTS       =  W_INSTS;
-         S_V9INERDCD     =  %TRIM(W_INERRDT);
+
+         If W_INSTS = 'R' and W_ERRCDE = *Blanks;
+            S_V9INSTS       =  W_PRCSTS;
+            S_V9INERDCD     =  %TRIM(W_INERRDT);
+         Elseif W_INSTS = 'S' and W_ERRCDE <> *Blanks;
+            S_V9INSTS       =  W_PRCSTS;
+            S_V9INERDCD     =  %TRIM(W_ERRCDE);
+         Endif;
 
         Endsr;
        //****************************************************************
@@ -318,8 +325,14 @@
          R_V9INCURTYP    =  W_INCURTYP;
          R_V9INSBUCDE    =  W_INSBUCDE;
          R_V9INSUBCDE    =  W_INSUBCDE;
-         R_V9INSTS       =  W_INSTS;
-         R_V9INERDCD     =  %TRIM(W_INERRDT);
+
+         If W_INSTS = 'R' and W_ERRCDE = *Blanks;
+            S_V9INSTS       =  W_PRCSTS;
+            S_V9INERDCD     =  %TRIM(W_INERRDT);
+         Elseif W_INSTS = 'S' and W_ERRCDE <> *Blanks;
+            S_V9INSTS       =  W_PRCSTS;
+            S_V9INERDCD     =  %TRIM(W_ERRCDE);
+         Endif;
 
          Write DETAIL2;
 
