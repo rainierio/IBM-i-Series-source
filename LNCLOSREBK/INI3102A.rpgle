@@ -11,6 +11,7 @@
      FINTFILEL5 UF   E           K DISK
      FINTDTE    IF A E           K DISK
      FINPDWE    IF   E           K DISK    prefix(E_)
+     FINLNCLRBF UF A E           K DISK    Prefix(B_)
      D**************************************************************************
      D* Prototypes
      D INI3102Pr       PR                  Extpgm('INI3102A')                    
@@ -65,6 +66,8 @@
                   INERVAL = %trim(ERRDSC);  // Error Data
                   INERCD = ERRCDE;          // Error Codes
                   Write RINTDTE;
+
+                  Exsr srCoreApproved;      // update INLNCLRBF log file
                 Endif;
                 Reade (P9FIID:P9REF) INI3102W;
               Enddo;
@@ -88,5 +91,30 @@
               Enddo;
             Endif;
           Endsr;
+
+
+        //***********************************************************************
+       // Subroutine  : srCoreApproved
+       // Description : Update into log file when after core apps approved
+       //***********************************************************************
+        Begsr srCoreApproved;
+          Chain (P9FIID:P9REF:INFSEQ) RINLNCLRBF;
+          If %found(INLNCLRBF);
+            B_APRVID = W_APRVID;                                  // Checker User ID
+            B_INSTS  = W_INSTS;                                   // Interface Status
+            B_PRCSTS = W_PRCSTS;                                  // Application Status AA/AB
+            B_INERDCD = W_INERDCD;                                // IFC Error Code
+            B_INERDSC = W_INERDSC;                                // IFC Error Description
+            B_INERRDT = W_INERRDT;                                // IFC Error Data
+            B_INPRDT  = W_INPRDT;                                 // Interface Processing Date
+            B_INPRTM  = W_INPRTM;                                 // Interface Processing Time
+
+            // Initial simulation data are not updated here ini INILNCLRBF
+
+            update RINLNCLRBF %fields(B_APRVID:B_INSTS:B_PRCSTS:
+            B_INERDCD:B_INERDSC:B_INERRDT:B_INPRDT:B_INPRTM);
+          Endif;
+        Endsr;
+       //***********************************************************************   
 
       /End-Free
