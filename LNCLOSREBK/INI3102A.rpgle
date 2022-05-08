@@ -100,14 +100,14 @@
         Begsr srCoreApproved;
           Chain (P9FIID:P9REF:INFSEQ) RINLNCLRBF;
           If %found(INLNCLRBF);
-            B_APRVID = W_APRVID;                                  // Checker User ID
-            B_INSTS  = W_INSTS;                                   // Interface Status
-            B_PRCSTS = W_PRCSTS;                                  // Application Status AA/AB
-            B_INERDCD = W_INERDCD;                                // IFC Error Code
-            B_INERDSC = W_INERDSC;                                // IFC Error Description
-            B_INERRDT = W_INERRDT;                                // IFC Error Data
-            B_INPRDT  = W_INPRDT;                                 // Interface Processing Date
-            B_INPRTM  = W_INPRTM;                                 // Interface Processing Time
+            B_APRVID = APRVID;                                  // Checker User ID
+            B_INSTS  = INSTS;                                   // Interface Status
+            B_PRCSTS = PRCSTS;                                  // Application Status AA/AB
+            B_INERDCD = INERDCD;                                // IFC Error Code
+            B_INERDSC = INERDSC;                                // IFC Error Description
+            B_INERRDT = INERRDT;                                // IFC Error Data
+            B_INPRDT  = INPRDT;                                 // Interface Processing Date
+            B_INPRTM  = INPRTM;                                 // Interface Processing Time
 
             // Initial simulation data are not updated here ini INILNCLRBF
 
