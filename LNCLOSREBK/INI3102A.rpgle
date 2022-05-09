@@ -98,21 +98,18 @@
        // Description : Update into log file when after core apps approved
        //***********************************************************************
         Begsr srCoreApproved;
-          Chain (P9FIID:P9REF:INFSEQ) RINLNCLRBF;
+          Chain (P9FIID:P9REF:INSEQ) RINLNCLRBF;
           If %found(INLNCLRBF);
             B_APRVID = APRVID;                                  // Checker User ID
-            B_INSTS  = INSTS;                                   // Interface Status
             B_PRCSTS = PRCSTS;                                  // Application Status AA/AB
-            B_INERDCD = INERDCD;                                // IFC Error Code
-            B_INERDSC = INERDSC;                                // IFC Error Description
-            B_INERRDT = INERRDT;                                // IFC Error Data
-            B_INPRDT  = INPRDT;                                 // Interface Processing Date
-            B_INPRTM  = INPRTM;                                 // Interface Processing Time
+            B_PRCTIM = PRCTIM;                                  // Apps Timestamps
+            B_ERRCDE = ERRCDE;                                  // Apps Error Code
+            B_ERRDSC = ERRDSC;                                  // Apps Error Desc
 
             // Initial simulation data are not updated here ini INILNCLRBF
 
-            update RINLNCLRBF %fields(B_APRVID:B_INSTS:B_PRCSTS:
-            B_INERDCD:B_INERDSC:B_INERRDT:B_INPRDT:B_INPRTM);
+            update RINLNCLRBF %fields(B_APRVID:B_PRCSTS:B_PRCTIM:
+            B_ERRCDE:B_ERRDSC);
           Endif;
         Endsr;
        //***********************************************************************   
