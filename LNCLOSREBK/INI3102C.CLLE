@@ -267,7 +267,7 @@ CHKSTS:
              ENDCMTCTL
 
         /* Call Core Program */
-         /*  CALL       PGM(LNI792C) PARM(&FIID &P9REF &APPRV)  */
+           CALL       PGM(LNI792C) PARM(&FIID &P9REF 'S') 
 
         /* Recon the Apps error                  */
              CHGVAR     VAR(&RCNERR) VALUE(' ')
@@ -334,7 +334,7 @@ UPSTS:       IF (&PREJECT *NE 'Y') DO
              ENDCMTCTL
 
         /* Call Core Program */
-           /*  CALL       PGM(LNI792C) PARM(&FIID &P9REF &APPRV)  */
+             CALL       PGM(LNI792C) PARM(&FIID &P9REF &APPRV)  
 
         /* Recon the Apps error                  */
              CHGVAR     VAR(&RCNERR) VALUE(' ')
