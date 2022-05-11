@@ -1,8 +1,8 @@
-#!/QOpenSys/pkgs/bin/bash
+#!/QOpenSys/pkgs/bin/bash 
 #----------------------------------------------------------------
 # Script name: cpysrctoifs.sh
-# Author: Richard Schoen
-# Parameters:
+# Author: Richard Schoen - 
+# Parameters: : still dont know how to make it work
 # 1.) Desired source member name plus source type extension. Ex: SAMPLE.CLP
 #     (You don't need to specify a directory path because it uses current dir)
 # 2.) Replace IFS file. N-DO not replace IFS file member, Y-Replace IFS file.
