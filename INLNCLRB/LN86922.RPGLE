@@ -1,5 +1,6 @@
 OS01 H/COPY QSYSREFRLE,COPYRIGHTH
-OS01 H/COPY QMBSREFRLE,MBQTXHH
+OS01 H/COPY QMBSREFRLE,MBQTXHH                                                                                                             
+     H OPTION(*SRCSTMT:*NODEBUGIO)                                                       
      F*****************************************************************
      F* Program Name..: LN86922                                       *
      F* Description...: Loan Close and Header Inquiry                 *

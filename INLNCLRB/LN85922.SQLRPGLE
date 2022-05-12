@@ -1,4 +1,5 @@
      H/COPY QSYSREFRLE,COPYRIGHTH
+     H OPTION(*SRCSTMT:*NODEBUGIO)      
      F*****************************************************************
      F* Program Name..: LN85922                                       *
      F* Description...: Loan Close and Rebook Inquiry                 *
