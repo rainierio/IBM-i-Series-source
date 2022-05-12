@@ -1,3 +1,8 @@
+     H COPYRIGHT('█ Copyright Silverlake System Sdn. Bhd. 1993, 2008          ')
+     H CVTOPT(*VARCHAR)                                                         
+     H DFTACTGRP(*NO)                                                           
+     H ACTGRP(*CALLER)                                                                                                                 
+     H OPTION(*SRCSTMT:*NODEBUGIO)                                              
       **************************************************************************
       * Program Name : INI4102                                                 *
       * Description  : Loan Close and Rebook Upload Summary Report             *
