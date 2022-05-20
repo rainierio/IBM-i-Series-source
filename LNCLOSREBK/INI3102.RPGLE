@@ -1,8 +1,4 @@
-     H COPYRIGHT('█ Copyright Silverlake System Sdn. Bhd. 1993, 2008          ')
-     H CVTOPT(*VARCHAR)                                                         
-     H DFTACTGRP(*NO)                                                           
-     H ACTGRP(*CALLER)                                                                                                                 
-     H OPTION(*SRCSTMT:*NODEBUGIO)                                                                                        
+     H CVTOPT(*VARCHAR)                                                                                                                                          
       ****************************************************************************
       * Program Name..: INI3102                                                  *
       * Description...: Loan - Close and Rebook eTP Upload                       *
@@ -584,29 +580,29 @@
             Endif;
           Endif;
 
-          // Total Check Sum Amount  - Temporary disabled
-       // If T_INCHKSUM <> *blank;
-       //   WKCHKSTS = %CHECK(WNUMCHK:%Trim(T_INCHKSUM):1);
-       //   If WKCHKSTS = 0;
-       //     xNum26 = %Dec(%Trim(T_INCHKSUM):26:0);
-       //     T_INCHKSUM = %EditC(xNum26:'X');
-       //
-       //     If T_INCHKSUM <> %EditC((wChkSum):'X');
-       //       wINERCD    = 'INI014';
-       //       wINERVAL   = 'InvalidDetailChksum: '+
-       //       %Triml(T_INCHKSUM:'0')+' <> '
-       //       +%Triml( %EditC((wChkSum):'X'):'0');
-                // P9Err = 'Y';
-       //       Exsr srINTDTE;
-       //     Endif;
-       //   Else;
-       //     wINERCD    = 'INI007';
-       //     wINERVAL   = 'InvalidDetailChksum: '+%Triml(T_INCHKSUM:'0');
-              // P9Err = 'Y';
-       //     Exsr srINTDTE;
+        //Total Check Sum Amount
+       If T_INCHKSUM <> *blank;
+          WKCHKSTS = %CHECK(WNUMCHK:%Trim(T_INCHKSUM):1);
+          If WKCHKSTS = 0;
+           xNum26 = %Dec(%Trim(T_INCHKSUM):26:2);
+           T_INCHKSUM = %EditC(xNum26:'X');
+       
+            If T_INCHKSUM <> %EditC((wChkSum):'X');
+             wINERCD    = 'INI014';
+             wINERVAL   = 'InvalidDetailChksum: '+
+             %Triml(T_INCHKSUM:'0')+' <> '
+             +%Triml( %EditC((wChkSum):'X'):'0');
+             // P9Err = 'Y';
+             Exsr srINTDTE;
+            Endif;
+          Else;
+            wINERCD    = 'INI007';
+            wINERVAL   = 'InvalidDetailChksum: '+%Triml(T_INCHKSUM:'0');
+            // P9Err = 'Y';
+            Exsr srINTDTE;
             //Leavesr;
-       //   Endif;
-       // Endif;
+          Endif;
+        Endif;
 
 
          Endsr;
