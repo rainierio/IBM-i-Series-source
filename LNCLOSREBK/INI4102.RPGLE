@@ -242,8 +242,8 @@
               // Write on a new line if not enough place for footer
               Exsr SrNwLine99;
               If P9APPR = 'A';
-                 Exsr SrADetail;
                  WFCOUNT += 1;
+                 Exsr SrADetail;
               Endif;
 
          Endsr;
@@ -324,7 +324,7 @@
        //****************************************************************
          Begsr SrADetail;
 
-         R_V9RUNDGT = %Trim(%Char(WSCOUNT));
+         R_V9RUNDGT = %Trim(%Char(WFCOUNT));
          R_V9SEQ         =  W_INSEQ;
          R_V9INTRNTYP    =  W_INTRNTYP;
          R_V9INACCTNO    =  W_INACCTNO;
