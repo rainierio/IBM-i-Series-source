@@ -283,7 +283,7 @@
          Endsr;
        //***********************************************************************
        // Subroutine  : SrCHKDTL
-       // Description : Check Detail Record
+       // Description : Check Detail Record - Promoted to SIT
        //***********************************************************************
           Begsr SrCHKDTL;
 
