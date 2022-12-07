@@ -1,0 +1,34 @@
+      *************************************************************
+      * Physical File : INI1003D                                  *
+      * Description   : Bill Payment History Transaction (ISPPDD) *
+      * Created By    : Jordan Chin                               *
+      * Date Created  : 26/01/2015                                *
+      ************************************************************
+      *  Modification Logs:                                       *
+      *  Name  Init  Date       Remarks                           *
+      *  ----  ----- --------   ----------------------------------*
+      *  DW    SL01     110717  ADD FIELDS THREFY AND THEFTH      *
+      *  RL    4599  22/10/06   SVL004599 - SIBS ENHANCEMENT ON   *
+      *                         PAYEE CODE                        *
+      ************************************************************
+     A          R RINI1003D
+     A            INRCD          2A         COLHDG('Record Type')
+ 4599A*           ISPYCD         3A         COLHDG('Payee Code')
+ 4599A            ISPYCD         6A         COLHDG('Payee Code')
+     A            ISACDB        19S 0       COLHDG('Acct Number Debit')
+     A            ISACCR        19S 0       COLHDG('Acct Number Credit')
+     A            ISNREF        20A         COLHDG('Reference Number')
+     A            INSIGN1        1A         COLHDG('Sign Trans Amt')
+     A            ISAMTS        17S 2       COLHDG('Transaction Amount')
+     A            ISTRDT         8S 0       COLHDG('Transaction Date')
+     A            ISTRTM         6S 0       COLHDG('Transaction  Time')
+     A            ISBRNO         5S 0       COLHDG('Owning Branch')
+     A            ISVENO        19A         COLHDG('Card Number VE')
+     A            ISUSID        10A         COLHDG('User ID')
+     A            ISSTAT         1A         COLHDG('STATUS AFT/NON AFT')
+     A            ISSTA1         1A         COLHDG('STATUS POST/PREPAID')
+     A            REMARK        40A         COLHDG('REMARK')
+     A            GLRECON       20A         COLHDG('GL RECON NUMBER')
+SL01 A            ISYREF        20A         COLHDG('YOUR REFERENCE')
+SL01 A            IREMARK      258A         COLHDG('ADDITIONAL INFO')
+     A          K ISPYCD

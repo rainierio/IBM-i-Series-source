@@ -1,0 +1,712 @@
+     €****************************************************************************
+      * Program Name..:šINI1030                                            €    €*
+      * Description...:šToday Transaction Extraction                            €*
+      * Date Created..:š22/03/2021                                         €    €*
+      * Author........:šDendi Aristia £SVL004514]                          €    €*
+     *****************************************************************************
+      * Modification Logs:                                                       *
+      * Init  Ref#     Date    Description                                       *
+      * RL    SL001    160222  Get trx timestamp from tllog SVL004584            *
+      * RL    SL002    061022  SVL004599 - SIBS Enhancement on Payee Code        *
+      ****************************************************************************
+      ****************************************************************************
+     **
+     FSSPAR1    IF   E             DISK
+     FINPPAR    IF   E           K DISK
+     FINIPAR3   IF   E           K DISK    Prefix(P_)
+     FINIPAR3D  IF   E           K DISK    Prefix(PD_)
+     FTLTX      IF   E           K DISK    Prefix(TL_)
+     FTLLOGLE   IF   E           K DISK    INFDS(INFDS)
+SL002F*INIISPPM  IF   E           K DISK
+     **
+     FINI1030I  O    E             DISK
+     FINI1030D  O    E             DISK    PREFIX(D_)
+     FINI1030R  IF A E           K DISK
+     FINI1030W  UF A E             DISK    PREFIX(W_)
+     **********************
+     D Header        E DS                  EXTNAME(INI1030H)  PREFIX(H_)
+     D Detail        E DS                  EXTNAME(INI1030D)  PREFIX(D_)
+     D Trailer       E DS                  EXTNAME(INI1030T)  PREFIX(T_)
+     **
+      **‚Working Variable€**
+     D WKFLG           S              1A
+     D p_Filename      S             10A   Inz('INI1030D')
+     D p_Mbr           S             10A   INZ('*FIRST')
+     D p_NoRcds        S             10S 0 INZ(0)
+     D p_ChkSum        S             26  2 INZ(0)
+     D WChkSum         S             26  2 INZ(0)
+     D WKCHKSTS        S              2S 0 Inz(0)
+     D WVALCHK         C                   '0123456789 '
+     D WTLBTMI_S       S              8  0
+     D WTLBTMI_E       S              8  0
+     D p_string        S           9621A
+     D p_mode          S              1A   INZ('1')
+     D p_errInd        S              1A   INZ('Y')
+      *Keep Debit And Credit Account
+     D W#DrAcct        S             19S 0
+     D w#CrAcct        S             19S 0
+     D SPOS            S              3S 0
+     D LPOS            S              3S 0
+     D POS             S              3S 0
+     D TPOS            S              3S 0
+     D TVALID          S              1A
+     D VALID           S              1A
+     D CHAR            S              1A
+     D DONE            S              1A
+     D W#String        s            120A
+      **‚Nway variable€**
+     D INFDS           DS
+     D*‚FILE INFO DATA STRUCTURE
+     D  IFFILO                83     92
+     D  IFFMTN               261    270
+     D  IFCSRL               370    371
+     D  IFSFLD               378    379B 0
+     D  IFRRNO               397    400B 0
+      *‚Program Data Structure
+     D                SDS
+     D  PSJOBN               244    253
+     D  PSUSRN               254    263
+      *‚Array to store Error Msg
+     D V9Index         S              3  0 INZ(0)
+     D V9TLBF          S                   Dim(45) Like(TLBF01)
+      *‚Array to Keep Parameter
+     D aParD           s           1024    dim(99)
+     D RawINIPAR3D     ds                  LikeRec(RINIPAR3D)
+     D iParD           s              2  0
+     D dsParD          ds                  qualified
+     d  RCIFID                       20A
+     d  RCHTCD                       10A
+     d  RCSEQN                        2P 0
+     d  RCDRAC                        1A
+     d  RCTXDR                        2P 0
+     d  RCCRAC                        1A
+     d  RCTXCR                        2P 0
+     d  RCTRAM                        5A
+     d  RCFEAM                        5A
+     d  RCOTH2                       20A
+      *
+      *‚TLLOG Array
+     D RawTLLOG        DS                  LIKEREC(RTLLOG)
+     D dsTLLOG       E DS                  EXTNAME(TLLOG) INZ
+     D TLF                   180    629P 0 Dim(45)
+      *‚TLTX Array
+     D iTlxAct         s              2  0
+     D aTlxAct         s             19P 0 Dim(30)
+      *‚Array to Keep Transaction Detail
+     D aTrxD           s           1024    dim(99)
+     D iTrxD           s              2  0
+     D dsTrxD          ds                  qualified
+     d  OTHR2                        20A
+     d  DACCTNO                      19S 0
+     d  CACCTNO                      19S 0
+     d  SIGN1                         1A
+     d  TRNAMT                       17S 2
+     d  SIGN2                         1A
+     d  TRNFEE                       17S 2
+     d  TLBREM1                     120A
+     d  TLBFIL                      100A
+SL001d  TLBMDT                         Z
+      *‚DS For Packed Decimal conversion
+     D cvtNum          DS            20
+     D iNUM                          39P 0
+     D sNUM                    1     20
+      **‚Entry Parameter List€**
+     DINI1030pr        PR                        ExtPgm('INI1030')
+     D P9FLG                          1A
+     D P9RCIFID                      20
+     D P9TLBTMI_S                     8
+     D P9TLBTMI_E                     8
+
+     DINI1030pr        PI
+     D P9FLG                          1A
+     D P9RCIFID                      20
+     D P9TLBTMI_S                     8
+     D P9TLBTMI_E                     8
+      *šProgram Prototype (Retrieve Count Program)
+     DGetNoRecords     PR                  EXTPGM('INI7004C')
+     Dp_Filename                     10
+     Dp_Mbr                          10
+     Dp_NoRcds                       10S 0
+      *šData Structure
+     DDate             DS
+     DYY                       3      4
+     DMM                       5      6
+     DDD                       7      8
+
+SL001 *šProgram Prototype (Remove special character)
+|    DRmvSpChrPR       PR                  EXTPGM('INIRMVCH')
+|    Dp_string                     9621
+|    Dp_mode                          1
+SL001Dp_errInd                        1
+      /free
+    ‚  //***********************************************************************
+    š  //    ‚Main Process
+    ‚  //***********************************************************************
+           WKFLG = P9FLG;
+
+          If WKFLG = 'H';
+            EXSR SRHEADER;
+          Endif;
+
+          If WKFLG = 'D';
+            EXSR SREXtraction;
+          Endif;
+
+          If WKFLG = 'T';
+             EXSR SRTRAILER;
+          Endif;
+
+          *INLR = *ON;
+    ‚  //***********************************************************************
+    š  //    ‚Subroutine       : SREXtraction;
+    ‚  //***********************************************************************
+          BEGSR SREXtraction;
+
+            //‚Default
+            Monitor;
+              WTLBTMI_S = %int(P9TLBTMI_S);
+            On-error;
+              WTLBTMI_S = 0;
+            EndMon;
+
+            Monitor;
+              WTLBTMI_E = %int(P9TLBTMI_E);
+            On-error;
+              WTLBTMI_E = *HIVAL;
+            EndMon;
+
+            //‚Main Processing
+            V9Index = 0;
+            Setll WTLBTMI_S RTLLOG;
+            Read RTLLOG RawTLLOG;
+            Dow Not %EOF(TLLOGLE) and RawTLLOG.TLBTMI <= WTLBTMI_E;
+              //ERROR CORRECTION, transaction need to be excluded.
+              dsTLLOG = RawTLLOG;
+             If TLTXOK = 'Y' and TLBTRN <> 'Y' and TLBCOR <> 'Y' and
+                TLBDEL = ' ';
+              Chain (P9RCIFID:TLBTCD) RINIPAR3;
+              If %Found (INIPAR3);
+                Chain (TLBTCD) RTLTX;
+                If %Found (TLTX);
+                  Chain (P9RCIFID:TLBTDT:TLBTMI:TLBTCD:TLBID:TLBSEQ) RINI1030R;
+                  If Not %Found (INI1030R);
+                    Eval RCIFID = P9RCIFID;
+                    Write RINI1030R;
+                    Clear Detail;
+                    Exsr GetRecTltx;
+                    Exsr SrGetParam;
+                    Exsr SrMapfield;
+                    Exsr SrMapDetail;
+                    Exsr Srdetail;
+                  Endif;
+                Endif;
+              Endif;
+             Endif;
+
+              Read RTLLOG RawTLLOG;
+            ENDDO;
+            Exsr SrChksum;
+          ENDSR;
+    ‚  //***********************************************************************
+    š  //    ‚Subroutine       : SRHEADER;
+    š  //    ‚Description      : Compose Header Information
+    ‚  //***********************************************************************
+          BEGSR SRHEADER;
+            H_OURCID = '00';
+            H_OUPRDT = SP1PD8 ;
+            H_OUFCDT = %DEC(%DATE());
+            H_OUFCTM = %DEC(%TIME());
+            H_OUSRCS = 'SIBS' ;
+            H_OUAREA = 'CTYN';
+            OUDATA = HEADER;
+            WRITE RINI1030I;
+          ENDSR;
+    ‚  //***********************************************************************
+    š  //    ‚Subroutine       : SrMapDetail
+    š  //    ‚Description      : Map detail record.
+    ‚  //***********************************************************************
+          BEGSR SrMapDetail;
+
+             If iParD <> 0;
+               for iTrxD = 1 to iParD;
+
+               //šLoad Parameter Detail
+                  dsParD = aParD(iTrxD);
+
+               //šMap Detail item - Direct Mapping
+                  dsTrxD.OTHR2       = dsParD.RCOTH2;
+                  dsTrxD.TLBREM1     = TLBREM1;
+                  dsTrxD.TLBFIL      = TLBFIL;
+
+               //šMap Detail item - Debit Account
+                  Select;
+                    When dsParD.RCDRAC = 'B';
+                       if dsParD.RCTXDR <> 0;
+                         dsTrxD.DACCTNO     = TLF(dsParD.RCTXDR);
+                       else;
+                         dsTrxD.DACCTNO     = 0;
+                       EndIf;
+                    When dsParD.RCDRAC = 'T';
+                       if dsParD.RCTXDR <> 0;
+                         dsTrxD.DACCTNO     = aTlxAct(dsParD.RCTXDR);
+                       else;
+                         dsTrxD.DACCTNO     = 0;
+                       EndIf;
+                    When dsParD.RCDRAC = '1'
+                             or dsParD.RCDRAC = '2';
+                       if dsParD.RCDRAC = '1';
+                         w#String = TLBFIL;
+                       Else;
+                         w#String = TLBREM1;
+                       EndIf;
+
+                       W#DrAcct = 0;
+                       DONE = 'N';
+
+                       //šGet last position of the string
+                       TPos = %Len(%TrimR(w#String));
+                       //šScan 1st "FR" from 57
+                       Pos = %SCAN('FR':w#String:57);
+                       //š"FR" position is lesser than string
+                       //š"FR" must found
+JC07                 IF Pos <> 0;
+                       Pos += 2;  //š"FR" Found         move positiion "FR "
+                       SPos = Pos;
+                       Dow TPOS >= POS;
+                         Char = %Subst(W#String:Pos:1);
+                         WKCHKSTS = %CHECK(WVALCHK:CHAR:1);  //Check the char is blank or numeric
+                         IF WKCHKSTS = 0;   // No not ABC
+                           POS += 1;
+                           Char = %Subst(W#String:Pos:1);
+                           IF TPOS = POS;
+                             DONE = 'Y';
+                             Pos += 1;
+                           ENDIF;
+                         Else;
+                           DONE = 'Y';
+                         ENDIF;
+
+                         IF DONE  = 'Y';
+                           LPos = Pos - SPos;
+                           Monitor;
+                             W#DrAcct = %Int(%Subst(W#String:SPos:LPOS));
+                             Leave;
+                           On-error;
+                             Pos = %SCAN('FR':w#String:Pos);
+JC07                         If Pos = 0;
+JC07                           Leave;
+JC07                         Endif;
+
+                             Pos += 2;
+                             SPos = Pos;
+                             DONE = 'N';
+                           Endmon;
+                         Endif;
+                       Enddo;
+JC07                 Endif;
+
+                       dsTrxD.DACCTNO     = W#DrAcct;
+
+                    Other;
+                       dsTrxD.DACCTNO     = 0;
+                  EndSl;
+
+               //šMap Detail item - Credit Account
+                  Select;
+                    When dsParD.RCCRAC = 'B';
+                       if dsParD.RCTXCR <> 0;
+                         dsTrxD.CACCTNO     = TLF(dsParD.RCTXCR);
+                       else;
+                         dsTrxD.CACCTNO     = 0;
+                       EndIf;
+                    When dsParD.RCCRAC = 'T';
+                       if dsParD.RCTXCR <> 0;
+                         dsTrxD.CACCTNO     = aTlxAct(dsParD.RCTXCR);
+                       else;
+                         dsTrxD.CACCTNO     = 0;
+                       EndIf;
+                    When dsParD.RCCRAC = '1'
+                                or dsParD.RCCRAC = '2';
+                       if dsParD.RCCRAC = '1';
+                         w#String = TLBFIL;
+                       Else;
+                         w#String = TLBREM1;
+                       EndIf;
+
+                       W#CrAcct = 0;
+                       DONE = 'N';
+
+                       //šGet last position of the string
+                       TPos = %Len(%TrimR(w#String));
+                       //šScan 1st "TO" from 57
+                       Pos = %SCAN('TO':w#String:57);
+                       //š"TO" position is lesser than string
+                       //š"TO" must found
+JC07                 IF Pos <> 0;
+                       Pos += 2;  //š"TO" Found         move positiion "TO "
+                       SPos = Pos;
+                       Dow TPOS >= POS;
+                         Char = %Subst(W#String:Pos:1);
+                         WKCHKSTS = %CHECK(WVALCHK:CHAR:1);  //Check the char is blank or numeric
+                         IF WKCHKSTS = 0;   // No not ABC
+                           POS += 1;
+                           Char = %Subst(W#String:Pos:1);
+                           IF TPOS = POS;
+                             DONE = 'Y';
+                             Pos += 1;
+                           ENDIF;
+                         Else;
+                           DONE = 'Y';
+                         ENDIF;
+
+                         IF DONE  = 'Y';
+                           LPos = Pos - SPos;
+                           Monitor;
+                             W#CrAcct = %Int(%Subst(W#String:SPos:LPOS));
+                             Leave;
+                           On-error;
+                             Pos = %SCAN('FR':w#String:Pos);
+JC07                         If Pos = 0;
+JC07                           Leave;
+JC07                         Endif;
+
+                             Pos += 2;
+                             SPos = Pos;
+                             DONE = 'N';
+                           Endmon;
+                         Endif;
+                       Enddo;
+JC07                 Endif;
+
+                       dsTrxD.CACCTNO     = W#CrAcct;
+                    Other;
+                       dsTrxD.CACCTNO     = 0;
+                  EndSl;
+
+               //šMap Detail item - Transaction Amount
+                  Select;
+                    When %Len(%Trim(dsParD.RCTRAM)) = 2;
+                       Monitor;
+                         dsTrxD.TRNAMT      = TLF(%int(%trim(dsParD.RCTRAM)))
+                                                /100;
+                       On-Error;
+                         dsTrxD.TRNAMT      = 0;
+                       EndMon;
+                    When %Len(%Trim(dsParD.RCTRAM)) = 5;
+                       Select;
+                         When %subst(dsParD.RCTRAM:3:1) = '+';
+                           dsTrxD.TRNAMT      = (TLF(%int
+                                                   (%subst(dsParD.RCTRAM:1:2)))
+                                                 +
+                                                TLF(%int
+                                                   (%subst(dsParD.RCTRAM:4:2))))
+                                                /100;
+                         When %subst(dsParD.RCTRAM:3:1) = '-';
+                           dsTrxD.TRNAMT      = (TLF(%int
+                                                   (%subst(dsParD.RCTRAM:1:2)))
+                                                 -
+                                                TLF(%int
+                                                   (%subst(dsParD.RCTRAM:4:2))))
+                                                /100;
+                         Other;
+                           dsTrxD.TRNAMT      = 0;
+                       EndSl;
+                    Other;
+                       dsTrxD.TRNAMT      = 0;
+                  EndSl;
+
+               //šMap Detail item - Transaction Amount Sign
+                  If dsTrxD.TRNAMT >= 0;
+                    dsTrxD.SIGN1       = '+';
+                    WChksum += dsTrxD.TRNAMT;
+                  Else;
+                    dsTrxD.SIGN1       = '-';
+                    WChksum += dsTrxD.TRNAMT;
+                    dsTrxD.TRNAMT = -1 * dsTrxD.TRNAMT;
+                  EndIf;
+
+
+               //šMap Detail item - Transaction Fee
+                  Select;
+                    When %Len(%Trim(dsParD.RCFEAM)) = 2;
+                       Monitor;
+                         dsTrxD.TRNFEE      = TLF(%int(%trim(dsParD.RCFEAM)))
+                                                /100;
+                       On-Error;
+                         dsTrxD.TRNFEE      = 0;
+                       EndMon;
+                    When %Len(%Trim(dsParD.RCFEAM)) = 5;
+                       Select;
+                         When %subst(dsParD.RCFEAM:3:1) = '+';
+                           dsTrxD.TRNFEE      = (TLF(%int
+                                                   (%subst(dsParD.RCFEAM:1:2)))
+                                                 +
+                                                TLF(%int
+                                                   (%subst(dsParD.RCFEAM:4:2))))
+                                                /100;
+                         When %subst(dsParD.RCFEAM:3:1) = '-';
+                           dsTrxD.TRNFEE      = (TLF(%int
+                                                   (%subst(dsParD.RCFEAM:1:2)))
+                                                 -
+                                                TLF(%int
+                                                   (%subst(dsParD.RCFEAM:4:2))))
+                                                /100;
+                         Other;
+                           dsTrxD.TRNFEE      = 0;
+                       EndSl;
+                    Other;
+                       dsTrxD.TRNFEE      = 0;
+                  EndSl;
+
+               //šMap Detail item - Transaction Fee  Sign
+                  If dsTrxD.TRNFEE >= 0;
+                    dsTrxD.SIGN2       = '+';
+                  Else;
+                    dsTrxD.SIGN2       = '-';
+                    dsTrxD.TRNFEE = -1 * dsTrxD.TRNFEE;
+                  EndIf;
+
+               //šKeep the record on Array First
+                  aTrxD(iTrxD) = dsTrxD;
+
+
+               EndFor;
+             EndIf;
+
+          Endsr;
+    ‚  //***********************************************************************
+    š  //    ‚Subroutine       : SrMapfield;
+    š  //    ‚Description      : Map Bucket field into the array
+    ‚  //***********************************************************************
+          BEGSR SrMapfield;
+
+          ENDSR;
+    ‚  //***********************************************************************
+    š  //    ‚Subroutine       : GetRecTltx
+    š  //    ‚Description      : Get Record TLTX
+    ‚  //***********************************************************************
+          BEGSR GetRecTltx;
+
+            //šTake those in the parameter
+
+            Clear aTlxAct;
+
+                aTlxAct(01)   = TL_TLACT1;
+                aTlxAct(02)   = TL_TLACT2;
+                aTlxAct(03)   = TL_TLACT3;
+                aTlxAct(04)   = TL_TLACT4;
+                aTlxAct(05)   = TL_TLACT5;
+                aTlxAct(06)   = TL_TLACT6;
+                aTlxAct(07)   = TL_TLACT7;
+                aTlxAct(08)   = TL_TLACT8;
+                aTlxAct(09)   = TL_TLACT9;
+                aTlxAct(10)   = TL_T1ACT0;
+                aTlxAct(11)   = TL_T1ACT1;
+                aTlxAct(12)   = TL_T1ACT2;
+                aTlxAct(13)   = TL_T1ACT3;
+                aTlxAct(14)   = TL_T1ACT4;
+                aTlxAct(15)   = TL_T1ACT5;
+                aTlxAct(16)   = TL_T1ACT6;
+                aTlxAct(17)   = TL_T1ACT7;
+                aTlxAct(18)   = TL_T1ACT8;
+                aTlxAct(19)   = TL_T1ACT9;
+                aTlxAct(20)   = TL_T2ACT0;
+                aTlxAct(21)   = TL_T2ACT1;
+                aTlxAct(22)   = TL_T2ACT2;
+                aTlxAct(23)   = TL_T2ACT3;
+                aTlxAct(24)   = TL_T2ACT4;
+                aTlxAct(25)   = TL_T2ACT5;
+                aTlxAct(26)   = TL_T2ACT6;
+                aTlxAct(27)   = TL_T2ACT7;
+                aTlxAct(28)   = TL_T2ACT8;
+                aTlxAct(29)   = TL_T2ACT9;
+                aTlxAct(30)   = TL_T3ACT0;
+
+          ENDSR;
+    ‚  //***********************************************************************
+    š  //    ‚Subroutine       : SRDETAIL;
+    š  //    ‚Description      : Compose Detail Information
+    ‚  //***********************************************************************
+          BEGSR SRDETAIL;
+
+          //šUpdate General Part
+            D_INRCD       = '01';
+            D_INTLBTCD    = TLBTCD;
+            D_INTLBSRCS   = TLBSRCSYS;
+            D_INTLBTDT    = TLBTDT;
+            D_INTLBTMI    = TLBTMI/100;
+            D_INTLSVBR    = TLSVBR;
+            D_INTLBID     = TLBID;
+            D_INTLBSEQ    = TLBSEQ;
+            D_INTLBGREF   = TLBGLREF;
+SL001     //D_INTLBRFN    = TLBRFN;
+|           p_string      = TLBRFN;
+|           RmvSpChrPR(p_string:p_mode:p_errInd);
+|           D_INTLBRFN    = p_string;
+|         //D_INTLBYRF    = TLBYRF;
+|           p_string      = TLBYRF;
+|           RmvSpChrPR(p_string:p_mode:p_errInd);
+|           D_INTLBYRF    = p_string;
+SL001       D_INTLBMDT    = TLBSSTMDT;
+            If P_INRCATMF <> *Blanks;
+              D_INBERPRI    = 'A' + P_INRCATMF;
+            EndIf;
+
+          //šUpdate General Part - Other Reference
+            Select;
+            When P_INRCOTHR1 = '1';
+              Select;
+                When P_INRCOTHR1T = 'S';
+                 Monitor;
+                  D_INOTHR1     = %subst(RawTLLOG:P_INRCOTHR1S:P_INRCOTHR1L);
+                 On-Error;
+                    D_INOTHR1     = *Blanks;
+                 EndMon;
+                When P_INRCOTHR1T = 'P';
+                  Monitor;
+                  iNum = 0;
+                  %subst(sNUM:21-P_INRCOTHR1L:P_INRCOTHR1L) =  %subst(RawTLLOG
+                                                  :P_INRCOTHR1S:P_INRCOTHR1L);
+                    D_INOTHR1     = %TRIM(%EDITC(iNum:'Z'));
+                  On-Error;
+                    D_INOTHR1     = *Blanks;
+                  EndMon;
+                When P_INRCOTHR1T = 'Z';
+                 Monitor;
+                  D_INOTHR1     = %subst(RawTLLOG:P_INRCOTHR1S:P_INRCOTHR1L);
+                 On-Error;
+                    D_INOTHR1     = *Blanks;
+                 EndMon;
+                Other;
+                  D_INOTHR1   =   *Blanks;
+              EndSl;
+            Other;
+                D_INOTHR1     =   *Blanks;
+            EndSL;
+
+
+          //šUpdate General Part - Payee Code
+            If P_INRCBILL = 'Y';
+             If iParD <> 0;
+              for iTrxD = 1 to iParD;
+                dsTrxD = aTrxD(iTrxD);
+
+        //SL002 If dsTrxD.DACCTNO <> 0;
+        //SL002   Chain (dsTrxD.DACCTNO) RISPPM;
+        //SL002   If %Found (INIISPPM);
+        //SL002     D_INPAYEE = INPAYEE;
+        //SL002   EndIf;
+        //SL002 EndIf;
+
+        //SL002 If dsTrxD.CACCTNO <> 0;
+        //SL002   Chain (dsTrxD.CACCTNO) RISPPM;
+        //SL002   If %Found (INIISPPM);
+        //SL002     D_INPAYEE = INPAYEE;
+        //SL002   EndIf;
+        //SL002 EndIf;
+               endFor;
+             EndIf;
+            EndIf;
+
+          //šMain Update Process
+           If iParD <> 0;
+            for iTrxD = 1 to iParD;
+              dsTrxD = aTrxD(iTrxD);
+              If dsTrxD.TRNAMT <> 0
+                  or dsTrxD.TRNFEE <> 0;
+                D_INOTHR2     = dsTrxD.OTHR2;
+                D_INDACCTNO   = dsTrxD.DACCTNO;
+                D_INCACCTNO   = dsTrxD.CACCTNO;
+                D_INSIGN1     = dsTrxD.SIGN1;
+                D_INTRNAMT    = dsTrxD.TRNAMT;
+                D_INSIGN2     = dsTrxD.SIGN2;
+                D_INTRNFEE    = dsTrxD.TRNFEE;
+SL001           p_string      = dsTrxD.TLBREM1;
+|               RmvSpChrPR(p_string:p_mode:p_errInd);
+|               D_INTLBREM1   = p_string;
+|               p_string      = dsTrxD.TLBFIL;
+|               RmvSpChrPR(p_string:p_mode:p_errInd);
+SL001           D_INTLBFIL    = p_string;
+
+                OUDATA = DETAIL;
+                write RINI1030I;
+                write RINI1030D;
+              EndIf;
+            EndFor;
+           EndIf;
+
+
+          ENDSR;
+    ‚  //***********************************************************************
+    š  //    ‚Subroutine       : SrGetParam
+    š  //    ‚Description      : Get Detail parameter
+    ‚  //***********************************************************************
+          BEGSR SrGetParam;
+
+            //šInit Some Variable
+            iParD = 0;
+
+            //šClear Array
+            Clear aParD;
+            Clear aTrxD;
+
+            //šRead Detail parameter on INIPAR1D
+            Setll (P9RCIFID:P_INRCHTCD) RINIPAR3D;
+            Reade (P9RCIFID:P_INRCHTCD) RINIPAR3D RawINIPAR3D;
+            Dow Not %EOF(INIPAR3D);
+              iParD = iParD + 1;
+              aParD(iParD) = RawINIPAR3D;
+            Reade (P9RCIFID:P_INRCHTCD) RINIPAR3D RawINIPAR3D;
+            Enddo;
+
+          ENDSR;
+    ‚  //***********************************************************************
+    š  //    ‚Subroutine       : SrTrailer
+    š  //    ‚Description      : Compose Trailer Infomration
+    ‚  //***********************************************************************
+          BEGSR SRTRAILER;
+            T_OURCID = '99';
+            GetNoRecords(p_Filename:p_Mbr:p_NoRcds);
+            T_OUDETCO =  p_NoRcds;
+
+            //šRead consolidate checksum from the WORKFILE
+            Read RINI1030W;
+            Dow Not %EOF(INI1030W);
+              p_chkSum += W_INCHKSUM;
+            Read RINI1030W;
+            Enddo;
+
+            T_OuChkSum =  p_chkSum;
+            IF  p_chkSUm   < 0;
+              T_OUCHKSGN = '-';
+              T_OuChkSum = -1 * p_chkSUm;
+            Else;
+              T_OUCHKSGN =  '+';
+            Endif;
+
+            OUDATA = TRAILER;
+            WRITE RINI1030I;
+          ENDSR;
+    ‚  //***********************************************************************
+    š  //    ‚Subroutine       : SrChksum
+    š  //    ‚Description      : Compouse Checksum records
+    ‚  //***********************************************************************
+          BEGSR SRCHKSUM;
+            W_INSTART    = 1;
+            W_INEND      = *Hival;
+            W_INCHKSUM   = WChkSum;
+            W_INCUID     = PSUSRN;
+            W_INCWID     = PSJOBN;
+            W_INCDT8     = %DEC(%DATE());
+            W_INCLTM     = %TIMESTAMP();
+            Write RINI1030W;
+          ENDSR;
+    ‚  //***********************************************************************
+    š  //    ‚Subroutine       : *INZSR
+    ‚  //***********************************************************************
+          BEGSR *INZSR;
+            Read RSSPAR1;
+          ENDSR;
+    ‚  //-------------------------------END-OF-CODING---------------------------
+      /end-free
+

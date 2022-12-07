@@ -1,0 +1,36 @@
+      *************************************************************
+      * Physical File : INI1007D                                  *
+      * Description   : Rec7 - Concolidated Report ATM/RekPH/Bill *
+      * Created By    : Dendi Aristia                             *
+      * Date Created  : 18/03/2021                                *
+      ************************************************************
+      *  Modification Logs:                                       *
+      *  Name  Init  Date       Remarks                           *
+      *  ----  ----- --------   ----------------------------------*
+      *  RL    4599  22/10/06   SVL004599 - SIBS ENHANCEMENT ON   *
+      ************************************************************
+     A          R RINI1007D
+     A            INRCD          2A         COLHDG('Record Type')
+     A            INTLBTCD      10A         COLHDG('Transaction Code')
+     A            INTLBSRCS      4A         COLHDG('Source System')
+     A            INTLBTDT       8S 0       COLHDG('Transaction Date')
+     A            INTLBTMI       6S 0       COLHDG('Transaction Time')
+     A            INTLSVBR       5S 0       COLHDG('Servicing Branch')
+     A            INTLBID       10A         COLHDG('Teller ID')
+     A            INTLBSEQ       9S 0       COLHDG('Journal Sequence')
+     A            INTLBGREF     20A         COLHDG('GL Reference')
+     A            INTLBRFN      20A         COLHDG('Our Referencence')
+     A            INTLBYRF      20A         COLHDG('Your Referencete')
+4599 A*           INPAYEE        3A         COLHDG('Payee Code')
+4599 A            INPAYEE        6A         COLHDG('Payee Code')
+     A            INBERPRI       2A         COLHDG('ATM Recon Type')
+     A            INOTHR1       40A         COLHDG('Others reference')
+     A            INOTHR2       20A         COLHDG('Others reference 2')
+     A            INDACCTNO     19S 0       COLHDG('Dr Account No')
+     A            INCACCTNO     19S 0       COLHDG('Cr Account No')
+     A            INSIGN1        1A         COLHDG('Transaction Amt Sign')
+     A            INTRNAMT      17S 2       COLHDG('Transaction Amount')
+     A            INSIGN2        1A         COLHDG('Fee Amt Sign')
+     A            INTRNFEE      17S 2       COLHDG('Fee Amount')
+     A            INTLBREM1    120A         COLHDG('Remark')
+     A            INTLBFIL     100A         COLHDG('Additional Remark')

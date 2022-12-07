@@ -1,0 +1,45 @@
+      *************************************************************
+      * Physical File : INIISPPM                                  *
+      * Description   : Bill Payment History Transaction          *
+      * Created By    : 26/01/15                                  *
+      * Date Created  : Jordan Chin                               *
+      ************************************************************
+      *  Modification Logs:                                       *
+      *  Name  Init  Date       Remarks                           *
+      *  ----  ----- --------   ----------------------------------*
+      *  RL    SL001 04/10/22   Extend payee code to 4 Char       *
+      *                         SVL004599                         *
+      ************************************************************
+     A                                      UNIQUE
+     A                                      REF(INPFRF)
+     A          R RISPPM                    TEXT('Payee Code')
+     A            INACCTNO      19S 0       COLHDG('Debit Acct No')
+SL001A*           INPAYEE        3A         COLHDG('Payee Code')
+SL001A            INPAYEE        6A         COLHDG('Payee Code')
+     A            INDESC        30A         COLHDG('Payee Description')
+      * Maintenance Field
+     A            INLUID    R               REFFLD(INCOD10)
+     A                                      COLHDG('Maintenance User' -
+     A                                      'ID')
+     A            INLWID    R               REFFLD(INDESC)
+     A                                      COLHDG('Maintenance ' -
+     A                                      'Workstation ID')
+     A            INLDT8    R               REFFLD(INLMD8)
+     A                                      COLHDG('Last Maintenance' -
+     A                                      'Date')
+     A            INLLTM    R               REFFLD(INLMTM)
+     A                                      COLHDG('Last Maintenance' -
+     A                                      'Time Stamp')
+     A            INCUID    R               REFFLD(INCOD10)
+     A                                      COLHDG('Creation User ID')
+     A            INCWID    R               REFFLD(INDESC)
+     A                                      COLHDG('Creation ' -
+     A                                      'Workstation ID')
+     A            INCDT8    R               REFFLD(INLMD8)
+     A                                      COLHDG('Creation' -
+     A                                      'Date')
+     A            INCLTM    R               REFFLD(INLMTM)
+     A                                      COLHDG('Creation' -
+     A                                      'Time')
+     A          K INACCTNO
+     A          K INPAYEE

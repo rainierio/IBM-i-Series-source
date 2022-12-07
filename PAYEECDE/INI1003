@@ -1,0 +1,350 @@
+     H CVTOPT(*VARCHAR)
+      *****************************************************************************
+      * Program Name..:šINI1003                                            €    €*
+      * Description...:šOU: Citynet Bill Payment History                        €*
+      * Date Created..:š26/01/2015                                         €    €*
+      * Author........:šJordan Chin                                        €    €*
+     *****************************************************************************
+      * Modification Logs:                                                       *
+      * Init  Ref#     Date    Description                                       *
+      * Jc    J001     210515  CRID0138 - ISVENO -> 2nd Remark in THEFTH         *
+      *                             - ISSTA1 -> Check from 2nd Remark in THETH   *
+      * Jc    J002     290715  UAT#4333 - Fix Debit and Credit account position  *
+      * Jc    J003     060815  UAT#4875 - Fix reference number to THREFN         *
+      * Jc    J004     200815  POST/PRE/AUTO in Remark 1 (13->53)                *
+      * Jc    J005     231115  Add in checking on affecting balance transaction  *
+      * DW    SL01     110717  Add fields THREFY and THEFTH                      *
+      * Lw    4246     040521  SVL004246 - fix Field Account Debet               *
+      * RL    4599   22/10/06  SVL004599 - SIBS Enhancement on Payee Code        *
+      ****************************************************************************
+      ****************************************************************************
+     **
+     FSSPAR1    IF   E             DISK
+     FINPPAR    IF   E           K DISK
+     FINIISPPM  IF   E           K DISK    Prefix(P_)
+     FDDAFTM    IF   E           K DISK    Prefix(A_)
+     FDDDHIS    IF   E             DISK    INFDS(INFDS)
+     FDDDHISL4  IF   E           K DISK    Prefix(L4_)
+     F                                     Rename(RDDHIST:RDDDHISL4)
+     **
+     FINI1003I  O    E             DISK
+     FINI1003D  O    E             DISK    PREFIX(D_)
+     FINI1003W  UF A E             DISK    PREFIX(W_)
+     **********************
+     D Header        E DS                  EXTNAME(INI1001H)  PREFIX(H_)
+     D Detail        E DS                  EXTNAME(INI1003D)  PREFIX(D_)
+     D Trailer       E DS                  EXTNAME(INI1001T)  PREFIX(T_)
+     **
+      **‚Working Variable€**
+Nway D BegRrn          S             11  0
+Nway D EndRrn          S             11  0
+     D WKFLG           S              1A
+     D p_Filename      S             10A   Inz('INI1003D')
+     D p_Field         S             10A   Inz('ISAMTS')
+     D p_Mbr           S             10A   INZ('*FIRST')
+     D p_NoRcds        S             10S 0 INZ(0)
+     D p_ChkSum        S             26  2 INZ(0)
+     D WChkSum         S             26  2 INZ(0)
+     D w#RMARK1        S             40A
+     D W#LEN           S              3S 0
+4599 D p_string        S           9621A
+4599 D p_mode          S              1A   INZ('1')
+4599 D p_errInd        S              1A   INZ('Y')
+     D
+      **‚Nway variable€**
+Nway D INFDS           DS
+Nway D*šFILE INFO DATA STRUCTURE
+Nway D  IFFILO                83     92
+Nway D  IFFMTN               261    270
+Nway D  IFCSRL               370    371
+Nway D  IFSFLD               378    379B 0
+Nway D  IFRRNO               397    400B 0
+      *
+      *‚Array to store Error Msg
+     D V9TRANDX        S              3  0 INZ(0)
+     D V9AXTCDX        S              3  0 INZ(0)
+     D V9TRAN          S                   Dim(100) Like(THTRAN)                ‚DDPAR3
+     D V9AXTC          S                   Dim(100) Like(THAXTC)                ‚TLTX
+      * ‚Program Data Structure
+     D                SDS
+     D  PSJOBN               244    253
+     D  PSUSRN               254    263
+      *
+      **‚Entry Parameter List€**
+Nway DINI1003pr        PR                        ExtPgm('INI1003')
+Nway D P9BEGRRN                      11  0
+Nway D P9ENDRRN                      11  0
+Nway D P9SRL                          3  0
+Nway D P9FLG                          1A
+
+Nway DINI1003pr        PI
+Nway D P9BEGRRN                      11  0
+Nway D P9ENDRRN                      11  0
+Nway D P9SRL                          3  0
+Nway D P9FLG                          1A
+      *šProgram Prototype (CHECK SUM)
+     DGetNoRecords     PR                  EXTPGM('INI7004C')
+     Dp_Filename                     10
+     Dp_Mbr                          10
+     Dp_NoRcds                       10S 0
+      *‚Program Prototype (Remove special character)
+4599 DRmvSpChrPR       PR                  EXTPGM('INIRMVCH')
+4599 Dp_string                     9621
+4599 Dp_mode                          1
+4599 Dp_errInd                        1
+      /free
+    ‚  //***********************************************************************
+    š  //    ‚Main Process
+    ‚  //***********************************************************************
+          If %PARMS = 4;
+           WKFLG = P9FLG;
+          Else;
+           WKFLG = 'D';
+          Endif;
+
+          If WKFLG = 'H';
+            EXSR SRHEADER;
+          Endif;
+
+          If WKFLG = 'D';
+            EXSR SREXtraction;
+          Endif;
+
+          If WKFLG = 'T';
+             EXSR SRTRAILER;
+          Endif;
+
+          *INLR = *ON;
+    ‚  //***********************************************************************
+    š  //    ‚Subroutine       : SREXtraction;
+    ‚  //***********************************************************************
+          BEGSR SREXtraction;
+
+            //‚Default
+            If %Parms = 4 or %Parms = 0 ;
+              Begrrn = 1;
+              Endrrn = 99999999999;
+            Endif;
+
+            //‚Nway Program Split
+            If %Parms = 3;
+              Begrrn = P9BegRrn;
+              Endrrn = P9EndRrn;
+            Endif;
+
+            //‚Main Processing
+            Setll Begrrn RDDHIST;
+            Read RDDHIST;
+            Dow Not %EOF(DDDHIS) and IFRRNO <= EndRrn;
+              Chain(e) (THACCT) RISPPM;
+              //‚Account found in INIISPPM Parameter
+              IF %Found (INIISPPM);
+                V9TRANDX= 0;
+                V9AXTCDX= 0;
+                V9TRANDX = %LookUp(THTRAN:V9TRAN);
+                V9AXTCDX = %LookUp(THAXTC:V9AXTC);
+                //‚Transaction code found in parameter;
+                IF V9TRANDX <> 0 and V9AXTCDX <> 0;
+                  //‚Valid Transaction
+J005              IF (THBORI = 'B' AND THRSV5 <> 'Y') OR THBORI = 'C';
+                    Clear Detail;
+                    Exsr SrDetail;
+J005              Endif;
+                Endif;
+              Endif;
+              Read RDDHIST;
+            ENDDO;
+            Exsr SrChkSum;
+          ENDSR;
+    ‚  //***********************************************************************
+    š  //    ‚Subroutine       : SRHEADER;
+    š  //    ‚Description      : Header file in all CASA Statements, Combined and Single
+    ‚  //***********************************************************************
+          BEGSR SRHEADER;
+            H_OURCID = '00';
+            H_OUPRDT = SP1PD8 ;
+            H_OUFCDT = %DEC(%DATE());
+            H_OUFCTM = %DEC(%TIME());
+            H_OUSRCS = 'SIBS' ;
+            H_OUAREA = 'CTYN';
+            OUDATA = HEADER;
+            WRITE RINI1003I;
+          ENDSR;
+    ‚  //***********************************************************************
+    š  //    ‚Subroutine       :€SRDETAIL;
+    š  //    ‚Description      :€Compose Detail Record
+    ‚  //***********************************************************************
+          BEGSR SRDETAIL;
+            D_INRCD = '01';
+            D_ISPYCD = P_INPAYEE;
+
+J002        //Fix Account position for Debit or Credit transaction
+J002        If THDORC = 'D';
+J002          D_ISACDB = THACCT;
+J002        Else;
+J002          D_ISACCR = THACCT;
+J002        Endif;
+
+            //‚Loop DDDHIS to get Credit Account
+            Exsr SrGetAccount;
+          //‰D_ISNREF = THTRFR;
+J003         D_ISNREF = THREFN;
+SL01         D_ISYREF = THREFY;
+SL01      // D_IREMARK = %SUBST(THEFTH:3:256);
+4599         p_string  = %SUBST(THEFTH:3:256);
+4599         RmvSpChrPR(p_string:p_mode:p_errInd);
+4599         D_IREMARK = p_string;
+            D_ISAMTS = THAMTA;
+            IF THAMTA < 0;
+             D_INSIGN1 = '-';
+             WChkSum -= D_ISAMTS;
+            Else;
+             D_INSIGN1 = '+';
+             WChkSum += D_ISAMTS;
+            Endif;
+            D_ISTRDT = THDAT8;
+            D_ISTRTM = THTIM6;
+            D_ISBRNO = THCBRN;
+            D_ISUSID = THUSER;
+
+            D_ISSTAT = *BLANKS;
+            Chain (THACCT) RDDAFTM;
+            Reade (THACCT) RDDAFTM;
+              Dow Not %Eof (DDAFTM);
+                D_ISSTAT = '1';
+              Reade (THACCT) RDDAFTM;
+              Enddo;
+
+              //ˆW#Len = %Len(%Trimr(%Subst(THEFTH:3)));
+              //ˆIF W#Len > 41;
+              //ˆ  W#Len = W#Len - 40;
+              //ˆW#RMARK1 = %Subst(THEFTH:53:W#Len);
+J001            W#RMARK1 = %Subst(THEFTH:13:40);
+              //ˆElse;
+              //ˆW#RMARK1 = *Blanks;
+              //ˆEndif;
+
+              IF %scan('PRE':W#RMARK1) > 0;
+                D_ISSTA1  = '1';
+              Elseif %scan('POST':W#RMARK1) > 0;
+                D_ISSTA1  = '2';
+              Elseif %scan('AUTO':W#RMARK1) > 0;
+                D_ISSTA1  = '2';
+              ELse;
+                D_ISSTA1  = *Blank;
+              Endif;
+
+              //ˆW#Len = %Len(%Trimr(%Subst(THEFTH:3)));
+              //ˆIF W#Len > 4;
+J001            D_ISVENO = %Subst(THEFTH:53:40);
+4599          //D_REMARK = %Subst(THEFTH:13:40);
+4599            p_string = %Subst(THEFTH:13:40);
+4599            RmvSpChrPR(p_string:p_mode:p_errInd);
+4599            D_REMARK = p_string;
+              //ˆElse;
+              //ˆ  D_ISVENO = *Blanks;
+              //ˆ  D_REMARK = *Blanks;
+              //ˆEndif;
+
+            D_GLRECON = THRECN;
+
+            OUDATA = DETAIL;
+            WRITE RINI1003I;
+            WRITE RINI1003D;
+          ENDSR;
+    ‚  //***********************************************************************
+    š  //    ‚Subroutine       : SrGetAccount
+    š  //    ‚Description      : Find Credit Account
+    ‚  //***********************************************************************
+          BEGSR SrGetAccount;
+          Setll (THSREF) RDDDHISL4;
+          Reade (THSREF) RDDDHISL4;
+            Dow not %EOF (DDDHISL4);
+            //‚If Valid
+            IF THRECN = L4_THRECN and THAMTA = L4_THAMTA;
+              IF THDORC = 'D' and L4_THDORC = 'C';
+                D_ISACCR = L4_THACCT;
+                Leave;
+              ElseIF THDORC = 'C' and L4_THDORC = 'D';
+                D_ISACDB = L4_THACCT;
+                Leave;
+              Else;
+                D_ISACDB = *Zero;
+              Endif;
+            ENDIF;
+            Reade (THSREF) RDDDHISL4;
+            Enddo;
+4246        IF D_ISACDB = 0;                                     //4246//
+4246           D_ISACDB = THEFTA;                                //4246//
+4246        EndIf;                                               //4246//
+          ENDSR;
+    ‚  //***********************************************************************
+    š  //    ‚Subroutine       : srTrailer
+    š  //    ‚Description      : Compose Trailer Interface
+    ‚  //***********************************************************************
+          BEGSR SRTRAILER;
+            T_OURCID = '99';
+            GetNoRecords(p_Filename:p_Mbr:p_NoRcds);
+            T_OUDETCO =  p_NoRcds;
+
+            //šRead consolidate checksum from the WORKFILE
+            Read RINI1003W;
+            Dow Not %EOF(INI1003W);
+              p_chkSum += W_INCHKSUM;
+            Read RINI1003W;
+            Enddo;
+
+            T_OUCHKSUM = p_ChkSum;
+            IF  p_ChkSum < 0;
+             T_OUCHKSGN = '-';
+            Else;
+             T_OUCHKSGN = '+';
+            Endif;
+            OUDATA = TRAILER;
+            WRITE RINI1003I;
+          ENDSR;
+       //***********************************************************************
+       //‚    Subroutine       : SrChksum
+       //‚    Description      : Compouse Checksum records
+       //***********************************************************************
+          BEGSR SRCHKSUM;
+            W_INSTART    = Begrrn;
+            W_INEND      = Endrrn;
+            W_INCHKSUM   = WChkSum;
+            W_INCUID     = PSUSRN;
+            W_INCWID     = PSJOBN;
+            W_INCDT8     = %DEC(%DATE());
+            W_INCLTM     = %TIMESTAMP();
+            Write RINI1003W;
+          ENDSR;
+    ‚  //***********************************************************************
+    š  //    ‚Subroutine       : *INZSR
+    ‚  //***********************************************************************
+          BEGSR *INZSR;
+            Read RSSPAR1;
+
+            //‚Load Auxiliary Transaction code into Array
+            SETLL ('INI1003') RINPPAR;
+            READE ('INI1003') RINPPAR;
+            DOW 'INI1003' = INPNAM And Not %Eof(INPPAR);
+              IF %scan('AXT':INPITM) > 0;
+                V9AXTCDX = V9AXTCDX + 1;
+                V9AXTC(V9AXTCDX) = INTVAL;
+              ENDIF;
+              READE ('INI1003') RINPPAR;
+            ENDDO;
+
+            //‚Load Transaction code into Array
+            SETLL ('INI1003') RINPPAR;
+            READE ('INI1003') RINPPAR;
+            DOW 'INI1003' = INPNAM And Not %Eof(INPPAR);
+              IF %scan('TRAN':INPITM) > 0;
+                V9TRANDX = V9TRANDX + 1;
+                V9TRAN(V9TRANDX) = %INT(INTVAL);
+              ENDIF;
+              READE ('INI1003') RINPPAR;
+            ENDDO;
+          ENDSR;
+    ‚  //-------------------------------END-OF-CODING---------------------------
+      /end-free
+

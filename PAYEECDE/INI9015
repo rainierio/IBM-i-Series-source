@@ -1,0 +1,559 @@
+      ************************************************************************
+      * Program Name..:‚INI9015                                             €*
+      * Description...:‚Citynet : ISPPM Bill Payment Parameter Screen       €*
+      * Date Created..:‚27/01/15                                            €*
+      * Author........:‚Jordan Chin                                         €*
+      * REF NO........:                                                      *
+      ************************************************************************
+      * INI9015 is part of Silverlake Integrated Banking System              *
+      * Copyright 2001 by Silverlake System Sdn Bhd Kuala LumpPr,            *
+      * Malaysia.                                                            *
+      ************************************************************************
+      * Modification Logs:                                                   *
+      * Init  Ref#     Date    Description                                   *
+      * ----  ----     ----    -----------                                   *
+      * DNAR  4264  21/04/04   SVL004264 - Consolidate ATM/RekPon/Bill       *
+      * RL    4599  22/10/06   SVL004599 - SIBS Enhancement on Payee Code    *
+      *                                    Recompiled, changes in the DSPF   *
+      ************************************************************************
+     FINI9015FM CF   E             WORKSTN
+     F                                     INFDS(INFDS)
+     F                                     SFILE(SFL01:RRN)
+     FINIISPPM  UF A E           K DISK
+     F                                     INFDS(MINFDS)
+4264 FINIISPPML1IF   E           K DISK    PREFIX(L1)
+4264 F                                     RENAME(RISPPM:RISPPML1)
+     FSSPAR1    IF   E             DISK
+      ***********************************************************
+      *šcopybook - Data Structure - System Status Data Structure
+      /COPY QSYSREFRLE,SSQSSDSD
+      *šcopybook - Data Structure - SIBS Data Structure
+      /COPY QSYSREFRLE,SSQSIBSD
+     €*ˆMAINTENANCE FILE INFO DATA STRUCTURE
+     D MINFDS          DS
+     D  FILNAM                83     92
+     D  RCDLEN               125    126B 0
+      *ˆBUFFER PASSED TO MAINTENANCE CONTROL
+     D BUFFER1         DS
+     D  BUF1                   1   5000
+     D                                     DIM(5000)
+     D BUFFER2         DS
+     D  BUF2                   1   8000    DIM(8000)
+
+      *ˆBuffer passed to maintained control
+     D MNTDS         E DS                  OCCURS(2) EXTNAME(INIISPPM)
+      *ˆMaintenance Log Parameter
+     D SSMCTLLOG       PR                  EXTPGM('SSMCTLLOG')
+     D  SSPACD                             LIKE(SSPACD)
+     D  PSUSRN                             LIKE(SSPACD)
+     D  PSJOBN                             LIKE(PSJOBN)
+     D  PSJBNO                             LIKE(PSJBNO)
+     D  PSPGM                              LIKE(PSPGM)
+     D  SSPDT8                             LIKE(SSPDT8)
+     D  SSPTIM                             LIKE(SSPTIM)
+     D  FILNAM                             LIKE(FILNAM)
+     D  wFILNAM                            LIKE(FILNAM)
+     D  SSABNK                             LIKE(SSABNK)
+     D  SSABRN                             LIKE(SSABRN)
+     D  SSTBNK                             LIKE(SSTBNK)
+     D  SSTBRN                             LIKE(SSTBRN)
+     D  SSPSPR                             LIKE(SSPSPR)
+     D  SSTRNC                             LIKE(SSTRNC)
+     D  SSPSRC                             LIKE(SSPSRC)
+     D  SSACNO                             LIKE(SSACNO)
+     D  SSACTY                             LIKE(SSACTY)
+     D  SSACCY                             LIKE(SSACCY)
+     D  SSCIFN                             LIKE(SSCIFN)
+     D  CRTSPC                             LIKE(CRTSPC)
+     D  BUFFER                             LIKE(BUFFER)
+     D  MNTREQ                             LIKE(MNTREQ)
+     D  ERRIN                              LIKE(ERRIN)
+      *ˆMaintenance Inquiry Parameter
+     D SSMCTQLOG       PR                  EXTPGM('SSMCTQLOG')
+     D  FILNAM                             LIKE(FILNAM)
+     D  SSPKYV                             LIKE(SSPKYV)
+     D  INQREQ                             LIKE(INQREQ)
+     D  INQERR                             LIKE(INQERR)
+      *ˆFor maintenance inquiry
+     D SSPKYV1         DS
+     D  wINACCTNO                          LIKE(INACCTNO)
+     D  wINPAYEE                           LIKE(INPAYEE)
+      *
+     D PLOG            DS
+     D  wFILNAM                            LIKE(FILNAM)
+     D  CRTSPC                        1
+     D  MNTREQ                        8
+     D  ERRIN                         1
+      *
+     D PINQ            DS
+     D  SSPKYV                      100
+     D  INQREQ                        8
+     D  INQERR                        1
+      *ˆBank Information
+     D SSSB            C                   CONST('  Copyright Silverla-
+     D                                     ke System Sdn. Bhd. -
+     D                                     1993, 1994          ')
+      *ˆWorking variables
+     D WHI             S              4  0 INZ(0)
+     D Wacctn          S             19A
+     D WLINE           S              4  0 INZ(0)
+     D RRN             S              4  0
+     D RRN1            S              4  0
+     D RRN2            S              4  0
+     D R               S              5  0
+     D R1              S              5  0
+     D SVKEY1          S                   LIKE(INACCTNO)
+     D SVKEY2          S                   LIKE(INPAYEE)
+     D RBLFLG          S              4
+     D RBLFLG1         S              4
+     D seq             S              9  0 inz(1)
+     D RRNL            S                   LIKE(RRN)
+     D RRNL1           S                   LIKE(RRN)
+     D D9DDPTYP        S              2A
+      *ˆIndicator Parameter
+     D wVALID          S              1
+     D w9delete        S              1
+     D wIIDVALID       S              1
+     D WSKIP           S              1
+     D wRBLFLG         S               N
+     D wRBLFLGa        S               N
+      *ˆConstant Parameter
+     D On              C                   const('1')
+     D Off             C                   const('0')
+      *ˆRetrieve Bank Name Parameter
+     D SSBCTR          PR                  EXTPGM('SSBCTR')
+     D  WRKNAM                             LIKE(WRKNAM)
+      * Work fields
+     DISODATE          DS
+     DYYYY                     1      4
+     DMM                       5      6
+     DDD                       7      8
+     DFMTDATE          DS
+     DYYYY1                    1      4
+     DMM1                      6      7
+     DDD1                      9     10
+     DTIMESTAMP        DS
+     DYYYYMMDD                 1     10
+     DHHMMSS                  12     19
+      /Free
+       //**********************************************************************
+       //˜MAIN LOGIC
+       //**********************************************************************
+                   EXSR SRBLDLST;
+                   EXSR SRPROCESS;
+            *INLR = *ON;
+       //**********************************************************************
+       //˜SUBROUTINE    :  SRBLDLST
+       //˜DEFINITION    :  Retrieve information & display subfile
+       //**********************************************************************
+              BEGSR SRBLDLST;
+                   *IN75 = *ON;
+                   Write SFL01C;
+                   *IN75 = *OFF;
+                   Rrn = 0;
+
+                   Setll (*Loval) RISPPM;
+                   Read(N) RISPPM;
+                   Dow not %eof;
+                       Rrn += 1;
+                       Write SFL01;
+                     Read(N) RISPPM;
+                   Enddo;
+
+                   If Rrn = 0;
+                     Write SFEMPTY;
+                     *IN60 = *Off;
+                     *IN76 = *On;
+                     Rrnc = 0;
+                     Rrnl = 0;
+                   Else;
+                     Rrnc = 1;
+                     Rrnl = Rrn;
+                     *IN76  = *Off;
+                     Rrn = 1;
+                     *IN54 = *On;
+                   Endif;
+              ENDSR;
+       //**********************************************************************
+       //˜SUBROUTINE    :  SRPROCESS
+       //˜DEFINITION    :  Begin with subfile screen
+       //**********************************************************************
+              BEGSR SRPROCESS ;
+                   Dow *IN03 = *Off AND *IN12 = *Off;
+                     Write  SFLOPT;
+                     Exfmt  SFL01C;
+
+                     IF *IN12 = *ON;
+                       LEAVESR;
+                     ENDIF;
+
+                     Select;
+                       When *IN05 = *On;
+                         wRBLFLG = *On;
+
+                       When *IN06 = *On;
+                           Exsr SRCLRSRN;
+                           Exsr SRADDREC;
+                       When Rrn > 0;
+                         EXSR  SRSELOPT;
+                     Endsl;
+
+                     If *IN12 = *On;
+                       *IN12 = *Off;
+                     Endif;
+
+                   //šRebuild Main List
+                     IF wRBLFLG = *ON;
+                       Exsr SRBLDLST;
+                       wRBLFLG = *OFF;
+                     ENDIF;
+
+                   ENDDO;
+              ENDSR;
+       //*******************************************************************
+       //˜SUBROUTINE    :  SRSELOPT
+       //˜DEFINITION    :  Option Selection
+       //******************************************************************
+              BEGSR SRSELOPT;
+                   Rrn = 0;
+                   Readc SFL01;
+
+                   Dow not %eof;
+                    If Option = '2';
+                      Wskip = *on;
+                      Exsr SRCHGREC;
+t                   ELSEIF Option = '4';
+                      Wskip = *on;
+                      EXsr SRDELREC;
+                    ENDIF;
+
+                    IF *IN12 = *ON;
+                      *IN12 = *OFF;
+                    ENDIF;
+                    Readc SFL01 ;
+                  ENDDO;
+
+                  if Wskip = *on;
+                    INDESCls = *blanks;
+                    INPAYEEls  = *blanks;
+                    wRBLFLG = *ON;
+                  ELSE;
+                    IF INDESCls <> *blanks Or INPAYEEls <> *blanks;
+                    EXSR  SRSEARCH;
+                    LEAVESR;
+                    ENDIF;
+                  ENDIF;
+
+                  Exsr SRBLDLST;
+              ENDSR;
+       //*******************************************************************
+       //˜SUBROUTINE    :  SRSEARCH;
+       //˜DEFINITION    :  Search
+       //******************************************************************
+              Begsr SRSEARCH;
+                CHAIN WHI SFL01;
+                  IF %FOUND;
+                    *IN40 = *OFF;
+                    *IN41 = *OFF;
+                    UPDATE SFL01;
+                  ENDIF;
+
+                If WHI = RRNL;
+                  RRNC = 1;
+                  WHI = 0;
+                  *IN53 = *ON;
+                  LEAVESR;
+                ENDIF;
+
+                WHI = WLINE + 1;
+
+                IF WHI > RRNL;
+                  WHI = 1;
+                ENDIF;
+
+                FOR WLINE = WHI TO RRNL;
+                  CHAIN WLINE SFL01;
+                  IF %FOUND;
+                    *IN40 = *OFF;
+                    *IN41 = *OFF;
+                    SELECT;
+                      WHEN INDESCLS <> *blanks AND INPAYEELS = *blanks;
+                        INDESCLS = %TRIM(INDESCLS);
+                        IF %SCAN(%TRIM(INDESCLS):INDESC) <> 0;
+                          RRN1 = WLINE;
+                          *IN40 = *ON;
+                          WHI = WLINE;
+                          UPDATE SFL01;
+                          RRNC = WHI;
+                          LEAVESR;
+                        ENDIF;
+                      WHEN INDESCLS = *blanks AND INPAYEELS <> *blanks;
+                        INPAYEELS = %TRIM(INPAYEELS);
+                        IF %SCAN(%TRIM(INPAYEELS):INPAYEE) <> 0;
+                          RRN1 = WLINE;
+                          *IN41 = *ON;
+                          WHI = WLINE;
+                          UPDATE SFL01;
+                          RRNC = WHI;
+                          LEAVESR;
+                        ENDIF;
+                      WHEN INDESCLS <> *blanks AND INPAYEELS <> *blanks;
+                        INDESCLS = %TRIM(INDESCLS);
+                        INPAYEELS = %TRIM(INPAYEELS);
+                        IF %SCAN(%TRIM(INDESCLS):INDESC) <> 0 AND
+                           %SCAN(%TRIM(INPAYEELS):INPAYEE) <> 0 ;
+                          RRN1 = WLINE;
+                          *IN40 = *ON;
+                          *IN41 = *ON;
+                          WHI = WLINE;
+                          UPDATE SFL01;
+                          RRNC = WHI;
+                          LEAVESR;
+                        ENDIF;
+                    ENDSL;
+                  ENDIF;
+                ENDFOR;
+
+                IF WLINE + 1 > RRNL;
+                  WHI = 0;
+                  *IN53 = *ON;
+                  RRNC = 1;
+                ENDIF;
+
+
+              Endsr;
+       //*******************************************************************
+       //˜SUBROUTINE    :  SRADDREC
+       //˜DEFINITION    :  Add new record
+       //******************************************************************
+              BEGSR SRADDREC;
+                   WVALID = 'Y';
+                   D9STAT = '  Add  ';
+                   Dow *IN03 = *Off And *IN12 = *Off;
+                     EXFMT SF01;
+
+                   IF *IN03 = *OFF AND *IN12 = *OFF;
+                     Exsr SRValidate;
+                       //€šValid, Proceed to Add new Record
+                       If wVALID = 'Y' and (*iN03 = *OFF and *IN12 = *OFF);
+                         INLUID = PSUSRN;
+                         INLWID = PSJOBN;
+                         INLDT8 = %DEC(%DATE());
+                         INLLTM = %TIMESTAMP();
+                         INCUID = PSUSRN;
+                         INCWID = PSJOBN;
+                         INCDT8 = %DEC(%DATE());
+                         INCLTM = %TIMESTAMP();
+                         Write RISPPM;
+                         MNTREQ = '*ADD';
+                         EXSR SRMNTCTL;
+                         wRBLFLG = *ON;
+                         Leave;
+                       Endif;
+                     Endif;
+                   Enddo;
+              ENDSR;
+       //*******************************************************************
+       //˜SUBROUTINE    :  SRCHGREC
+       //˜DEFINITION    :  Change Record
+       //******************************************************************
+              Begsr SRCHGREC;
+                     WVALID = 'Y';
+
+         //4264    Dow *IN03 = *OFF AND *IN12 = *OFF;
+                    CHAIN (INACCTNO:INPAYEE) RISPPM;
+                      SVKEY1 = INACCTNO;
+                      SVKEY2 = INPAYEE;
+                      %OCCUR(MNTDS) = 2;
+                      INACCTNO = SVKEY1;
+                      INPAYEE  = SVKEY2;
+                      CHAIN (INACCTNO:INPAYEE) RISPPM;
+                      INLUID =  *BLANKS;
+                      INLWID =  *BLANKS;
+                      INLDT8 =  *ZEROS;
+                      %OCCUR(MNTDS) = 1;
+                      D9STAT = ' Change';
+
+                   Dow *IN03 = *OFF AND *IN12 = *OFF;              //4264
+
+                      Exfmt SF02;
+                     IF *IN03 = *OFF AND *IN12 = *OFF;
+                       IF *IN08 = *ON;
+                         wINACCTNO = INACCTNO;
+                         wINPAYEE = INPAYEE;
+                         SSPKYV  = SSPKYV1;
+                         EXSR SRMNTINQ;
+                       ENDIF;
+
+                       EXSR SRVALIDATE;
+                     ENDIF;
+
+                      //˜ Valid, Proceed to Add new Record
+                      If (wVALID='Y'and(*iN03=*OFF and
+                      *IN12 = *OFF))and(*In08=*OFF);
+                         INLUID = PSUSRN;
+                         INLWID = PSJOBN;
+                         INLDT8 = %DEC(%DATE());
+                         INLLTM = %TIMESTAMP();
+                         Update RISPPM;
+                         MNTREQ = '*CHANGE ';
+                         EXSR SRMNTCTL;
+                         Leave;
+                     Endif;
+                     wRBLFLG  = *On;
+                     ENDDO;
+              Endsr;
+       //*******************************************************************
+       //˜SUBROUTINE    :  SRDELREC
+       //˜DEFINITION    :  Delete Record
+       //******************************************************************
+              Begsr SRDELREC;
+                Dow *IN03 = *OFF AND *IN12 = *OFF;
+                  Chain (INACCTNO:INPAYEE) RISPPM;
+                    Exfmt SF03;
+                  If *IN03 = *OFF AND *IN12 = *OFF;
+                    Chain (INACCTNO:INPAYEE) RISPPM;
+                    IF %found (INIISPPM);
+                      MNTREQ = '*DELETE ';
+                      EXSR SRMNTCTL;
+                      Delete RISPPM;
+                    ENDIF;
+                    wRBLFLG  = *On;
+                    Leave;
+                  Endif;
+                Enddo;
+              Endsr;
+       //*******************************************************************
+       //˜SUBROUTINE    :  SrValidate
+       //˜DEFINITION    :  Validation
+       //******************************************************************
+              Begsr SrValidate;
+                   Dow *IN03 = *OFF AND *IN12 = *OFF;
+
+                     WVALID = 'Y';
+
+                     If *IN03 = *OFF AND *IN12 = *OFF;
+
+                       //šCheck Trancode is blank
+                       If INACCTNO = *zero;
+                         *IN50 = *On;
+                         *In44 = *On;
+                         wValid = 'N';
+                         Leave;
+                       Endif;
+
+                       IF INPAYEE = *Blanks;
+                         *IN52 = *On;
+                         *In44 = *On;
+                         wValid = 'N';
+                         Leave;
+                       Endif;
+
+                       //šDuplicate Tran Code
+                       IF Option <> '2';
+                         CHAIN (INACCTNO:INPAYEE) RISPPM;
+                         IF %FOUND (INIISPPM);
+                           *IN47 = *On;
+                           *In51 = *On;
+                           wValid = 'N';
+                           Leave;
+                         ENDIF;
+                       //šDuplicate Escrow Account                        //4264
+                         CHAIN (INACCTNO) RISPPM;                         //4264
+                         IF %FOUND (INIISPPM);                            //4264
+                           *IN68 = *On;                                   //4264
+                           *In51 = *On;                                   //4264
+                           wValid = 'N';                                  //4264
+                           Leave;                                         //4264
+                         ENDIF;                                           //4264
+                       ELSE;                                              //4264
+                         IF INPAYEE <> SVKEY2;                            //4264
+                           CHAIN (INPAYEE:INACCTNO) RISPPML1;             //4264
+                           IF %FOUND (INIISPPML1);                        //4264
+                             *IN47 = *On;                                 //4264
+                             *In51 = *On;                                 //4264
+                             wValid = 'N';                                //4264
+                             Leave;                                       //4264
+                           ENDIF;                                         //4264
+                         ENDIF;                                           //4264
+                       ENDIF;
+
+                       IF INDESC = *Blanks;
+                         *IN53 = *On;
+                         *In44 = *On;
+                         wValid = 'N';
+                         Leave;
+                       Endif;
+
+                       IF WVALID = 'Y';
+                         LEAVE;
+                       ENDIF;
+                     ENDIF;
+                   ENDDO;
+
+              Endsr;
+       //*******************************************************************
+       //˜SUBROUTINE    :  SRCLRSRN
+       //˜DEFINITION    :  CLEAR all fields on screen.
+       //******************************************************************
+              BEGSR SRCLRSRN;
+
+
+              ENDSR;
+       //*********************************************************************
+       //‚Subroutine    : SRMNTINQ
+       //‚Defination    : Maintenance Inquiry
+       //*********************************************************************
+              BEGSR SRMNTINQ;
+                //˜ FEOD on maintenanace
+                    SSPACD = 'IF';
+                    MNTREQ = '*FEOD   ';
+                    ERRIN = 'N';
+                    SSMCTLLOG(SSPACD:PSUSRN:PSJOBN:PSJBNO:PSPGM:SSPDT8:SSPTIM:
+                        FILNAM:wFILNAM:SSABNK:SSABRN:SSTBNK:SSTBRN:SSPSPR:
+                        SSTRNC:SSPSRC:SSACNO:SSACTY:SSACCY:SSCIFN:CRTSPC:
+                        BUFFER:MNTREQ:ERRIN);
+                    INQREQ = '*MAINT  ';
+                    SSMCTQLOG(FILNAM:SSPKYV:INQREQ:INQERR);
+            ENDSR;
+       //*********************************************************************
+       //‚Subroutine    : SRMNTCTL
+       //‚Defination    : Maintenance Control
+       //*********************************************************************
+              BEGSR SRMNTCTL;
+                   SSPACD = 'IF';
+                   SSPDT8 = SP1NB8;
+                   SSPTIM = %DEC(%TIME());
+                                                           // fill buffer - old + new
+                   IF MNTREQ = '*ADD' OR MNTREQ = '*DELETE';
+                     %OCCUR(MNTDS) = 1;
+                     BUFFER = MNTDS;
+                     R = RCDLEN + 1;
+                     %SUBARR(BUF:R) = %SUBARR(BUF:1:R-1);
+                   ELSE;
+                     %OCCUR(MNTDS) = 2;
+                     BUFFER = MNTDS;
+                     R = RCDLEN + 1;
+                     %OCCUR(MNTDS) = 1;
+                     BUFFER2 = MNTDS;
+                     %SUBARR(BUF:R) = %SUBARR(BUF2:1:R-1);
+                   ENDIF;
+
+                   ERRIN = 'N';
+
+                   SSMCTLLOG(SSPACD:PSUSRN:PSJOBN:PSJBNO:PSPGM:SSPDT8:SSPTIM:
+                             FILNAM:wFILNAM:SSABNK:SSABRN:SSTBNK:SSTBRN:SSPSPR:
+                             SSTRNC:SSPSRC:SSACNO:SSACTY:SSACCY:SSCIFN:CRTSPC:
+                             BUFFER:MNTREQ:ERRIN);
+                   MNTREQ = '*BLANKS';
+              ENDSR;
+       //*******************************************************************
+       //‚INZSR - Initial subroutine
+       //******************************************************************
+              BEGSR *INZSR;
+                //˜Centre Bank Name
+                    SSBCTR(WRKNAM);
+                    READ SSPAR1;
+                    INLDT8  = SP1NB8;
+              Endsr;
+      /End-Free

@@ -1,0 +1,2896 @@
+     H COPYRIGHT(' Copyright Silverlake System Sdn. Bhd. 1993, 2007          ')
+     H DFTACTGRP(*NO)
+     H ACTGRP(*CALLER)
+     H BNDDIR('TMBNDDIR')
+     H FIXNBR(*ZONED:*INPUTPACKED)
+     H CVTOPT(*VARCHAR)
+     H
+      **************************************************************************
+      *                                                                        *
+      *   Program Name : TMPNIN5                                               *
+      *‚  Description  : Multi Account Inquiry Handler 24 - HR                 *
+      *‚                                                                       *
+      *                                                                        *
+      *   TMPNIN5     IS A PART OF THE SILVERLAKE SYSTEM(R)                    *
+      *              (C) Copyright Silverlake System Sdn. Bhd. 2006.           *
+      *                 By:  Silverlake System Sdn. Bhd.                       *
+      *                      Floor 12A, Plaza IBM,                             *
+      *                      No.1, Jalan Tun Mohd Fuad,                        *
+      *                      Taman Tun Dr. Ismail,                             *
+      *                      60000 Kuala Lumpur, Malaysia                      *
+      *                                                                        *
+      **************************************************************************
+      *  Created by     :                                                      *
+      *  Date           :                                                      *
+      **************************************************************************
+      * Modification Logs:                                                     *
+      * ==================                                                     *
+      * Init  Ref      Date      Description                                   *
+      * ----  ----   ----------  --------------------------------------------- *
+      **************************************************************************
+      * CIMB                                                                   *
+      * -----                                                                  *
+      *
+      * CIMB NIAGA                                                             *
+      * -----                                                                  *
+      * James I300   18/12/14    Add New Response TMQ1B for country specific   *
+      *                          Response                                      *
+      *                          Retrieve Account name from CFNAME Pgm         *
+      *                                                                        *
+S2025 *  SVL002025   25/01/17    Customer Alert (Alert VIP Flag)               *
+      *                          Inroduce a new field response for VIP Alert   *
+      *                          Search: S2025                                 *
+      * DNAR  4062   08/03/21    SVL004062 BDS - Revams                        *
+      *                            - Enhancement of Biller Name and ATM Vendor *
+      *                              TACNM1 = CIF Name + Account Name          *
+      **************************************************************************
+     ‚* Notes :
+      *
+      **************************************************************************
+      * File Specification
+      *------------------------------------------------------------------
+     ‚* Deposits ---------------------------------------------------------------
+     FDDMAST    IF   E           K DISK
+     FDDTNW24   IF   E           K DISK    RENAME(RDDMAST:RDDTNEW)
+     FDDME24    IF   E           K DISK
+     FDDASTS    IF   E           K DISK    RENAME(RTLASTS:RDDASTS)
+     FDDTRXTL1  IF   E           K DISK
+     FDDTRXT24L1IF   E           K DISK    RENAME(RDDTRXT:RDDTRXT24)
+     FDDPAR31   IF   E           K DISK
+     FDDPAR32   IF   E           K DISK    usropn prefix(P02)
+     FDDGC24L1  IF   E           K DISK
+     FDDPAR1    IF   E             DISK
+     ‚* Teller   ---------------------------------------------------------------
+     FTLEDT     IF   E             DISK
+     FTLTEL     IF   E           K DISK
+     FTLTXAV    IF   E           K DISK
+     FTLTX      IF   E           K DISK
+     FTLTXED    IF   E           K DISK
+     FTMFMSG    IF   E           K DISK
+     FTMHANPGM  IF   E           K DISK
+     FTLLG24    IF A E             DISK
+     FTLLGA24   IF A E             DISK
+     FTLLGAD24  IF A E             DISK
+     FTLASDS    IF   E           K DISK
+     FTLASTSPAR IF   E           K DISK
+     FTLTXEXT   IF   E           K DISK
+     FTMFPAR5   IF   E           K DISK
+     FTLCTLU    IF   E           K DISK
+     FICMSGL24  IF A E           K DISK    USROPN
+     ‚* CIF      ---------------------------------------------------------------
+     FCFACCTL1  IF   E           K DISK
+     FCFACCTL4  IF   E           K DISK    RENAME(RCFACCT:RCFACT4)
+     FCFAGRP    IF   E           K DISK
+     FCFMAST    IF   E           K DISK
+     FCFADDR    IF   E           K DISK
+     ‚* Fix Deposit ------------------------------------------------------------
+     FCDMAST    IF   E           K DISK
+     FCDTNW24   IF   E           K DISK    RENAME(RCDMAST:RCDTNEW)
+     FCDMASTLG  IF   E           K DISK    prefix(m_) Rename(RCDMAST:RCDMSLG)
+     FCDTNW24L3 IF   E           K DISK    prefix(m_) Rename(RCDMAST:RCDTNL2)
+     FCDGMST    IF   E           K DISK
+     FCDDISP24  IF   E           K DISK
+     FCDME24    IF   E           K DISK
+     ‚* Loans       ------------------------------------------------------------
+     FLNMAST    IF   E           K DISK
+     FLNTNW24   IF   E           K DISK    RENAME(RLNMAST:RLNTNEW)
+     FSSDATA    IF   E           K DISK
+     FLNME24    IF   E           K DISK
+     FLNASTS    IF   E           K DISK    RENAME(RTLASTS:RLNASTS)
+     FLNSCGC    IF   E           K DISK
+     F****LNAUCT    IF   E           K DISK
+     ‚* SDB         ------------------------------------------------------------
+     FSDMAST    IF   E           K DISK    Prefix(SD_)
+     FSDTNW24   IF   E           K DISK    RENAME(RSDMAST:RSDTNEW) Prefix(SD_)
+     FSDME24    IF   E           K DISK    Prefix(SD_)
+     ‚* Unit Trust  ------------------------------------------------------------
+     FUTMAST    IF   E           K DISK    Prefix(UT_)
+4062 FINIISPPM  IF   E           K DISK    Prefix(IS_)
+     ‚* Systems     ------------------------------------------------------------
+     FSSINDX    IF   E           K DISK
+     FSSINDXL1  IF   E           K DISK    RENAME(RSSINDX:RSSINDXL1)
+     FSSCLDR    IF   E           K DISK    usropn
+     FSSPAR24   IF   E             DISK    Prefix(S24) usropn
+      *
+     ‚* Data structure for all responses
+    ˆD/COPY QTLSCOPY,TMQMSGHD1
+      *
+     š**************************************************************************
+      *‚Data Structures
+     š**************************************************************************
+     ‚* Sub Error Codes work Parm List entries
+     D osErrAr         s              3p 0 Dim(30) Inz
+     D osErrty         s              1    Dim(30) Inz
+     D osErTxt         s             60    Dim(30) Inz
+     D ErrArr          s              3p 0 Dim(15) Inz
+     D EroArr          s              1    Dim(15) Inz
+     ‚* Array For TMQLDEDT
+     D ERD             S             30    DIM(930)
+     D AFO             S              1    DIM(930)
+     D ACO             S              1    DIM(930)
+     ‚* Array for TMQMFTO
+    ˜D CU              S              1    DIM(45)
+     D GCU             S              1    DIM(30)
+     D OTCD            S              1    DIM(30)
+      *
+     D CHGTYP          S                   LIKE(TLBID)
+     D OTCAMT          S                   LIKE(T8CHMIN1)
+     D OTCMMT          S                   LIKE(T8CHMAX1)
+     D OTCONT          S                   LIKE(T8LIMT1)
+     D ERRORC          S                   LIKE(T6TBKORST)
+     D S_OACN          S                   LIKE(SSOACN)
+     D S_OACN1         S                   LIKE(SSOACN)
+     D S_NACN          S                   LIKE(SSNACN)
+     D K_ACCT          S             30
+     D cls_NETSETT     S                   LIKE(CBAL)
+     D cls_PENINT      S                   LIKE(CBAL)
+     D cls_SECACR      S                   LIKE(CBAL)
+     D cls_WHTDY       S                   LIKE(WHTDY)
+     D cls_PAYOFF      S                   LIKE(CBAL)
+     D cls_FeeCod1     S                   LIKE(TLBID)
+     D cls_FeeCod2     S                   LIKE(TLBID)
+     D cls_FeeCod3     S                   LIKE(TLBID)
+     D cls_FeeAmt1     S                   LIKE(CBAL)
+     D cls_FeeAmt2     S                   LIKE(CBAL)
+     D cls_FeeAmt3     S                   LIKE(CBAL)
+     D cls_FEEGLA1     S                   LIKE(ACCTNO)
+     D cls_FEEGLA2     S                   LIKE(ACCTNO)
+     D cls_FEEGLA3     S                   LIKE(ACCTNO)
+     D cls_FEEVAT1     S                   LIKE(CBAL)
+     D cls_FEEVAT2     S                   LIKE(CBAL)
+     D cls_FEEVAT3     S                   LIKE(CBAL)
+     D cls_FEESBT1     S                   LIKE(ACTYPE)
+     D cls_FEESBT2     S                   LIKE(ACTYPE)
+     D cls_FEESBT3     S                   LIKE(ACTYPE)
+     D ACR112          S                   LIKE(CBAL)
+     D ODDLIM          S                   LIKE(CBAL)
+I300 D IN_PGMRATE      S                   LIKE(RATE)
+I300 D IN_PRDRAT       S                   LIKE(RATE)
+I300 D cls_ZAKATI      S                   LIKE(CBAL)
+I300 D cls_FeeCod4     S                   LIKE(TLBID)
+I300 D cls_FeeCod5     S                   LIKE(TLBID)
+I300 D cls_FeeCod6     S                   LIKE(TLBID)
+I300 D cls_FeeCod7     S                   LIKE(TLBID)
+I300 D cls_FeeAmt4     S                   LIKE(CBAL)
+I300 D cls_FeeAmt5     S                   LIKE(CBAL)
+I300 D cls_FeeAmt6     S                   LIKE(CBAL)
+I300 D cls_FeeAmt7     S                   LIKE(CBAL)
+I300 D cls_FEEGLA4     S                   LIKE(ACCTNO)
+I300 D cls_FEEGLA5     S                   LIKE(ACCTNO)
+I300 D cls_FEEGLA6     S                   LIKE(ACCTNO)
+I300 D cls_FEEGLA7     S                   LIKE(ACCTNO)
+I300 D cls_FEEVAT4     S                   LIKE(CBAL)
+I300 D cls_FEEVAT5     S                   LIKE(CBAL)
+I300 D cls_FEEVAT6     S                   LIKE(CBAL)
+I300 D cls_FEEVAT7     S                   LIKE(CBAL)
+I300 D cls_FEESBT4     S                   LIKE(ACTYPE)
+I300 D cls_FEESBT5     S                   LIKE(ACTYPE)
+I300 D cls_FEESBT6     S                   LIKE(ACTYPE)
+I300 D cls_FEESBT7     S                   LIKE(ACTYPE)
+      * Array for TMQT8 and TMQT0
+     D ACTN            S                   DIM(12) LIKE(ACCTNO)
+     D ATYE            S                   DIM(12) LIKE(ACTYPE)
+     D IDX1            S                   DIM(12) LIKE(T8INDX1)
+     D COD1            S                   DIM(12) LIKE(TLBCH1G)
+     D MIN1            S                   DIM(12) LIKE(T8CHMIN1)
+     D MAX1            S                   DIM(12) LIKE(T8CHMAX1)
+     D CUR1            S                   DIM(12) LIKE(DDCTYP)
+     D LMT1            S                   DIM(12) LIKE(T8LIMT1)
+     D FLD1            S                   DIM(12) LIKE(T0FNAME1)
+     D VLE1            S                   DIM(12) LIKE(T0VALUE1)
+     D IDX2            S                   DIM(12) LIKE(T8INDX1)
+     D COD2            S                   DIM(12) LIKE(TLBCH1G)
+     D MIN2            S                   DIM(12) LIKE(T8CHMIN1)
+     D MAX2            S                   DIM(12) LIKE(T8CHMAX1)
+     D CUR2            S                   DIM(12) LIKE(DDCTYP)
+     D LMT2            S                   DIM(12) LIKE(T8LIMT1)
+     D FLD2            S                   DIM(12) LIKE(T0FNAME2)
+     D VLE2            S                   DIM(12) LIKE(T0VALUE2)
+     D IDX3            S                   DIM(12) LIKE(T8INDX1)
+     D COD3            S                   DIM(12) LIKE(TLBCH1G)
+     D MIN3            S                   DIM(12) LIKE(T8CHMIN1)
+     D MAX3            S                   DIM(12) LIKE(T8CHMAX1)
+     D CUR3            S                   DIM(12) LIKE(DDCTYP)
+     D LMT3            S                   DIM(12) LIKE(T8LIMT1)
+     D FLD3            S                   DIM(12) LIKE(T0FNAME3)
+     D VLE3            S                   DIM(12) LIKE(T0VALUE3)
+     D IDX4            S                   DIM(12) LIKE(T8INDX1)
+     D COD4            S                   DIM(12) LIKE(TLBCH1G)
+     D MIN4            S                   DIM(12) LIKE(T8CHMIN1)
+     D MAX4            S                   DIM(12) LIKE(T8CHMAX1)
+     D CUR4            S                   DIM(12) LIKE(DDCTYP)
+     D LMT4            S                   DIM(12) LIKE(T8LIMT1)
+     D FLD4            S                   DIM(12) LIKE(T0FNAME4)
+     D VLE4            S                   DIM(12) LIKE(T0VALUE4)
+     D IDX5            S                   DIM(12) LIKE(T8INDX1)
+     D COD5            S                   DIM(12) LIKE(TLBCH1G)
+     D MIN5            S                   DIM(12) LIKE(T8CHMIN1)
+     D MAX5            S                   DIM(12) LIKE(T8CHMAX1)
+     D CUR5            S                   DIM(12) LIKE(DDCTYP)
+     D LMT5            S                   DIM(12) LIKE(T8LIMT1)
+     D FLD5            S                   DIM(12) LIKE(T0FNAME5)
+     D VLE5            S                   DIM(12) LIKE(T0VALUE5)
+     D IDXn            S                   DIM(5) LIKE(T8INDX1)
+     D CODn            S                   DIM(5) LIKE(TLBCH1G)
+     D MINn            S                   DIM(5) LIKE(T8CHMIN1)
+     D MAXn            S                   DIM(5) LIKE(T8CHMAX1)
+     D CURn            S                   DIM(5) LIKE(DDCTYP)
+     D LMTn            S                   DIM(5) LIKE(T8LIMT1)
+     D FLDn            S                   DIM(5) LIKE(T0FNAME1)
+     D VLEn            S                   DIM(5) LIKE(T0VALUE1)
+     ‚* COUNTER
+     DSNDRCVCNT        S              2  0
+     D skipdayfile     S              1
+     D WK_CROW         S              1
+     D WK_CROM         S              1
+     D WK_CROQ         S              1
+     D WK_CROY         S              1
+     D wk_TRXTYP       S                   LIKE(P3TXTP)
+      *
+    ˜D MSGBRK          S           3990    INZ
+     D  TIMESTMP       DS
+     D    TIMEST               1      8S 0
+     D     WHR                 1      2S 0
+     D     WMN                 3      4S 0
+     D     WSC                 5      6S 0
+     D     WMSC                7      8S 0
+
+     D DSMIL_SEC       DS
+     D    MMSEC                1      6
+     D     WMM1                1      2  0
+     D     WMM2                3      6  0
+     D
+     D  MIL_SECS       S              6S 0
+     D  SYSTIME        S               Z
+     D wkTime          S              8s 0 INZ
+4062 D sSeparator      S             20
+      *
+     ‚* Data Area Containing Master Codes
+      *
+     D TLMAST        E DS                  EXTNAME(TLMAST)
+      *
+     ‚* Data Area Containing ICF Codes
+     D ICMAST        E DS                  EXTNAME(ICMAST)
+      *
+     ‚* Parameter List for TMSGTACTN
+     D TMQDSGTACN    E DS                  EXTNAME(TMQDSGTACN)
+
+     D               EUDS                  EXTNAME(SSAPAR)
+      *
+     D                 DS
+     D  DATE1                  1      4B 0
+     D  DATEB1                 2      4
+     D  DATE2                  5      8B 0
+     D  DATEB2                 6      8
+
+     ‚* Program Status Data Structure
+     D                SDS
+     D  PSPGM                  1     10
+     D  PSSTS                 11     15
+     D  PSSRCSEQ              21     28
+     D  PSMSG                 40     46
+     D  PSJOB                244    253
+     D  PSUSRN               254    263
+     D  PSJOBNUM             264    269S 0
+     D  PSPGMDAT             276    281
+     D  PSPGMTIM             282    287
+     D  XYZ                    1   1000
+      *
+     DICFDS          E DS                  EXTNAME(TMQICFDS)
+     D* ICFDS          E DS                  EXTNAME(TMQICFDS2)
+     D  RSVFLD                66     70
+     D                                     DIM(5)
+      *
+     D TLASTSDS      E DS                  EXTNAME(TLASTS) INZ
+     D AS                     12    110    DIM(99)
+     D               E DS                  EXTNAME(TLASDS)
+     D HDS                   300   3269    DIM(99)
+
+     D/COPY QTLSREFRLE,TMQDS2
+     D/COPY QTLSREFRLE,TMQDS4
+     D/COPY QTLSREFRLE,TMQDS5
+     D/COPY QTLSREFRLE,TMQDS7
+     D/COPY QTLSREFRLE,TMQDS15
+     D/COPY QTLSREFRLE,TMQDS10
+     D/COPY QTLSREFRLE,TMQDS35
+     D/COPY QTLSREFRLE,TMQDS32
+     D/COPY QTLSREFRLE,TMQDS6
+      *
+     ‚* Define Error Display Usage
+     D                 DS
+     D  ED                     1    930
+     D  TLXEDT                 1    930
+      *
+     D TLBUFF        E DS                  EXTNAME(TLLOG ) INZ
+     D/COPY QTLSREFRLE,TMQDSBUFF
+      *
+     D  ACCNDS         DS
+     D   HEADR                 1     10
+     D   ACTY                 11     40    DIM(30)
+      *
+     D  VECHDS         DS
+     D   HEADR2                1     10
+     D   VECHNO               11     35
+      *
+     D  DSCTLUNT       DS
+     D   T1CUD                             LIKE(TLCTL  )
+     D   T1ALCUD                           LIKE(TLALCTL)
+      *
+I300 D DS_CFAGRP     E DS                  EXTNAME(CFAGRP) INZ
+I300 D  G_ACCTNO     E                     EXTFLD(ACCTNO)
+I300 D  G_Actype     E                     EXTFLD(Actype)
+I300 D  G_CFATYP     E                     EXTFLD(CFATYP)
+
+I300 D  DSCFNAM        DS
+I300 D   DSNam                 1    200
+I300 D   DSNam1                1     80
+I300 D   DSNam2                1    120
+
+I300 D DS_DDMAST     E DS                  EXTNAME(DDMAST) INZ
+
+     ‚*Error Code Logging
+     DTLXERRBUF      E DS                  EXTNAME(TLLOGA) INZ
+     D/COPY QTLSREFRLE,TMQDSERBF
+     š*----------------------------------------------------------------------*
+     ‚*Sub Error Code - Holding/work variables
+     D SBAP            S              2    Dim(50) Inz
+     D SBCD            S              3p 0 Dim(50) Inz
+     D SBMSG           S             60    Dim(50) Inz
+     D wERRAPP         S              2    Inz
+     š*----------------------------------------------------------------------*
+      *
+     š**************************************************************************
+      *‚Constant Fields
+     š**************************************************************************
+      * For Account status Rejection
+M200 D ACT_STAT        S              2    Dim(5)
+      * For Looping Purpose
+     D CMAX            S              4  0 INZ(10)
+     D COUNTR          S              4  0 INZ( 0)
+     D CMAX1           S              2  0 INZ(12)
+     D COUNTR1         S              4  0 INZ( 0)
+     D CFLAG           S              1    INZ('N')
+     D C_OTCAMT        S                   LIKE(OTCAMT)
+     D C_OTCMMT        S                   LIKE(OTCMMT)
+     D C_OTCONT        S                   LIKE(OTCONT)
+     D C_OTHTRN        S              3  0
+     D C_OTIFCC        S              3  0
+     D C_ERRORC        S              1
+     D L_ODDLIM        S                   LIKE(CBAL)
+     D L_ODCBAL        S                   LIKE(CBAL)
+     D L_PAYOFF        S                   LIKE(CBAL)
+     D L_AUTLIM        S                   LIKE(CBAL)
+     D C_RUNOPT        S              8
+     D wIntOS          S                   LIKE(BILINT)
+M200 D GrpTYPE         S              1    INZ('T')
+     D wkACUR          S                   LIKE(woACUR)
+      * For CFNAME
+I300 D  RNA1           S            200
+I300 D  RNA2           S            200
+I300 D  RNA3           S            200
+I300 D  RNA4           S            200
+I300 D  RNA5           S            200
+I300 D  RNA6           S            200
+I300 D  RNA7           S            200
+I300 D  RNA8           S            200
+I300 D  RNA9           S            200
+I300 D  INDICATOR      S              1
+I300 D  REQUET         S              8
+
+     D SSRTVCRG        PR                  EXTPGM('SSRTVCRG')
+     D C_TLCBKNO                           LIKE(TLCBKNO)
+     D C_TLSAPP                            LIKE(TLSAPP)
+     D C_CHGTYP                            LIKE(CHGTYP)
+     D C_wkACUR                            LIKE(woACUR)
+     D C_SCTYPE                            LIKE(SCTYPE)
+     D C_ACCTNO                            LIKE(ACCTNO)
+     D C_ACTYPE                            LIKE(ACTYPE)
+     D C_CFUSTF                            LIKE(CFUSTF)
+     D C_CFSEGC                            LIKE(CFSEGC)
+     D C_OTCAMT                            LIKE(OTCAMT)
+     D C_OTCMMT                            LIKE(OTCMMT)
+     D C_OTCONT                            LIKE(OTCONT)
+     D C_OTHTRN                       3  0
+     D C_OTIFCC                       3  0
+     D C_ERRORC                       1
+      *
+     D LL1113          PR                  EXTPGM('LL1113')
+     D L_ACCTNO                            LIKE(ACCTNO)
+     D L_ACTYPE                            LIKE(ACTYPE)
+     D L_ODDLIM                            LIKE(CBAL)
+     D L_ODCBAL                            LIKE(CBAL)
+     D L_PAYOFF                            LIKE(CBAL)
+     D L_AUTLIM                            LIKE(CBAL)
+     D C_RUNOPT                       8
+     D C_ERRORC                       1
+      *
+     D/COPY QTLSREFRLE,TMQDSTIM
+      *
+     IRCFACCT
+     I              acctno                      CFACCN
+     I              actype                      CFATYP
+     I              cfatyp                      CFATYPCD
+     I
+     IRCFACT4
+     I              acctno                      CFACCN
+     I              actype                      CFATYP
+     I              cfatyp                      CFATYPCD
+     I
+     IRCFAGRP
+     I              cfatyp                      CFATYPCD
+     I
+     š**************************************************************************
+      * Like Defines
+     š**************************************************************************
+      *
+    ‚ * For TLBKEY
+     C     *LIKE         DEFINE    ICLEN         LEN
+     C     *LIKE         DEFINE    ICEOM         QEOM
+     C     *LIKE         DEFINE    ICHEAD        QHEAD
+     C     *LIKE         DEFINE    ICIGNORE      QIGNORE
+     C     *LIKE         DEFINE    CFCIFN        CIFNO
+     C     *LIKE         DEFINE    CFCIFN        ZZCIFNO
+     C     *LIKE         DEFINE    T4CFNA2       CFNA2
+     C     *LIKE         DEFINE    T4CFNA3       CFNA3
+     C     *LIKE         DEFINE    T4CFNA4       CFNA4
+     C     *LIKE         DEFINE    T4CFNA5       CFNA5
+     C     *LIKE         DEFINE    T4CFNA6       CFNA6
+     C     *LIKE         DEFINE    T4CFNA7       CFNA7
+     C     *LIKE         DEFINE    T4CFNA8       CFNA8
+     C     *LIKE         DEFINE    CFSNME        wCFSNME
+
+      * For CFNAME
+I300 C     *LIKE         DEFINE    CFADTP        ADDTYP
+I300 C     *LIKE         DEFINE    CFZSEQ        INDSEQ
+I300 C     *LIKE         DEFINE    ACCTNO        INACCTNO
+      *
+     š**************************************************************************
+      *‚Parameter Lists
+     š**************************************************************************
+      *
+     ‚* Parameters for Retrieval of Job Info
+      *
+     C     JOBINF        PLIST
+     C                   PARM                    JOB              10
+     C                   PARM                    USER             10
+     C                   PARM                    JOBNBR            6
+     C                   PARM                    OUTQ             10
+     C                   PARM                    OUTQLB           10
+     C                   PARM                    CURUSR           10
+      *
+     C     NAMPAR        PLIST
+     C                   PARM                    CIFNO
+     C                   PARM                    ACCTNO
+     C                   PARM                    ACTYPE
+     C                   PARM                    NAMREQ            8
+     C                   PARM                    CFNA1
+     C                   PARM                    CFNA2
+     C                   PARM                    CFNA3
+     C                   PARM                    CFNA4
+     C                   PARM                    CFNA5
+     C                   PARM                    CFNA6
+     C                   PARM                    CFNA7
+     C                   PARM                    CFNA8
+     C                   PARM                    NAMERR            1
+      *
+      * Get Account Information Entry List
+      *
+     C     ACTLST        PLIST
+     C                   PARM                    TMQDSGTACN
+      *
+     C     pTMCLOS       Plist
+     C                   Parm                    ACCTNO
+     C                   Parm                    ACTYPE
+I300 C                   Parm                    IN_PRDRAT                      Prd Pen.R
+I300 C                   Parm                    IN_PGMRATE                     Cam Pen.R
+I300 C                   Parm                    DDOBAL
+     C                   Parm                    cls_NETSETT
+     C                   Parm                    ACR112
+     C                   Parm                    cls_PENINT
+     C                   Parm                    cls_SECACR
+     C                   Parm                    cls_WHTDY
+I300 C                   Parm                    cls_ZAKATI
+     C                   Parm                    ODDLIM
+     C                   Parm                    cls_PAYOFF
+     C                   Parm                    cls_FeeCod1
+     C                   Parm                    cls_FeeAmt1
+     C                   Parm                    cls_FEEGLA1
+     C                   Parm                    cls_FEEVAT1
+     C                   Parm                    cls_FEESBT1
+     C                   Parm                    cls_FeeCod2
+     C                   Parm                    cls_FeeAmt2
+     C                   Parm                    cls_FEEGLA2
+     C                   Parm                    cls_FEEVAT2
+     C                   Parm                    cls_FEESBT2
+     C                   Parm                    cls_FeeCod3
+     C                   Parm                    cls_FeeAmt3
+     C                   Parm                    cls_FEEGLA3
+     C                   Parm                    cls_FEEVAT3
+     C                   Parm                    cls_FEESBT3
+     C                   Parm                    cls_PGMOPT        8
+I300 C                   Parm                    cls_FeeCod4
+I300 C                   Parm                    cls_FeeAmt4
+I300 C                   Parm                    cls_FEEGLA4
+I300 C                   Parm                    cls_FEEVAT4
+I300 C                   Parm                    cls_FEESBT4
+I300 C                   Parm                    cls_FeeCod5
+I300 C                   Parm                    cls_FeeAmt5
+I300 C                   Parm                    cls_FEEGLA5
+I300 C                   Parm                    cls_FEEVAT5
+I300 C                   Parm                    cls_FEESBT5
+I300 C                   Parm                    cls_FeeCod6
+I300 C                   Parm                    cls_FeeAmt6
+I300 C                   Parm                    cls_FEEGLA6
+I300 C                   Parm                    cls_FEEVAT6
+I300 C                   Parm                    cls_FEESBT6
+I300 C                   Parm                    cls_FeeCod7
+I300 C                   Parm                    cls_FeeAmt7
+I300 C                   Parm                    cls_FEEGLA7
+I300 C                   Parm                    cls_FEEVAT7
+I300 C                   Parm                    cls_FEESBT7
+     C                   Parm                    cls_ERR           1
+
+M200 C     SErrParm      PLIST
+M200 C                   Parm                    TLBTCD
+M200 C                   Parm                    iMastCd           3 0
+M200 C                   Parm      1             X                 2 0
+M200 C                   Parm                    Acctno
+M200 C                   Parm                    Actype
+M200 C                   Parm                    TLBSVO            1
+M200 C                   Parm                    TLBTLO            1
+M200 C                   Parm                    TLBFRD            1
+M200 C                   Parm                    TLBCOR            1
+M200 C                   Parm                    TLXBED            1
+M200 C                   Parm                    oHOVREQ           1
+M200 C                   Parm                    osErrAr
+M200 C                   Parm                    osErrty
+M200 C                   Parm                    osErTxt
+     C
+M300 C     pl1005        PLIST
+M300 C                   Parm                    Acctno
+M300 C                   Parm                    Actype
+M300 C                   Parm                    DS_DDMAST
+M300 C                   Parm                    DS_CFAGRP
+M300 C                   Parm                    Output1B       1000
+
+M300 C     pCFNAM        PLIST
+M300 C                   Parm                    CFCIFN
+M300 C                   Parm                    INACCTNO
+M300 C                   Parm                    WiACTYPE
+M300 C                   Parm                    REQUET
+M300 C                   Parm                    RNA1
+M300 C                   Parm                    RNA2
+M300 C                   Parm                    RNA3
+M300 C                   Parm                    RNA4
+M300 C                   Parm                    RNA5
+M300 C                   Parm                    RNA6
+M300 C                   Parm                    RNA7
+M300 C                   Parm                    RNA8
+M300 C                   Parm                    RNA9
+M300 C                   Parm                    INDICATOR
+M300 C                   Parm                    INDSEQ
+M300 C                   Parm                    ADDTYP
+      *
+     š**************************************************************************
+      *‚Key Lists
+     š**************************************************************************
+      *
+     ‚*  Key List TLTEL File
+     C     KEYTEL        KLIST
+     C                   KFLD                    TLNUM
+     C
+      *
+     ‚*  Key List TLTXAV File
+     C     KEYTAV        KLIST
+     C                   KFLD                    TLTTYP
+     C                   KFLD                    TLTXCD
+      *
+     ‚*  Key List TLTX File
+     C     KEYTX         KLIST
+     C                   KFLD                    TLTXCD
+      *
+     ‚*  Key List TMFMSG File
+     C     TMMSG         KLIST
+     C                   KFLD                    PSMSG
+     C                   KFLD                    PSPGM
+      *
+     ‚*  Key List TMHANPGM File
+     C     HANKEY        KLIST
+     C                   KFLD                    HANPGM            8
+     C                   KFLD                    ALTROUTE
+
+     ‚*  Key List CFAGRP File
+     C     AgrpKey       KLIST
+     C                   KFLD                    T5ACCTNO
+     C                   KFLD                    T5ACTYPE
+
+     ‚*  Key List CFAGRP File
+     C     AccKey        KLIST
+     C                   KFLD                    WiACCTNO
+     C                   KFLD                    WiACTYPE
+
+     ‚*  Key List Cd Group
+     C     GrpKey        KLIST
+     C                   KFLD                    WiACCTNO
+     C                   KFLD                    GrpTYPE
+
+     C     LNGRPKEY      KLIST
+     C                   KFLD                    LNNUM
+     C                   KFLD                    WiACTYPE
+      *
+     C     TLASTSKY      KLIST
+     C                   KFLD                    TLSAPP
+     C                   KFLD                    TSSYS
+      *
+     C     KEYCTL        KLIST
+     C                   KFLD                    T1CUD
+     C                   KFLD                    T1ALCUD
+      *
+     C     IDXKEY        KLIST
+     C                   KFLD                    S_OACN
+      *
+     C     IDXKEY1       KLIST
+     C                   KFLD                    S_NACN
+      *
+     C     TRXTKY        KLIST
+     C                   KFLD                    WiACCTNO
+     C                   KFLD                    WiACTYPE
+     C                   KFLD                    P3TXTP
+      *
+     C     PAR5KEY       KLIST
+     C                   KFLD                    TMFPAR
+     C                   KFLD                    TMFITM
+      *
+     C     CFADKY        KLIST
+     C                   KFLD                    CFCIFN
+     C                   KFLD                    CFZSEQ
+4062
+4062 ‚*  Key List TMFPAR5
+4062 C     K1_TMFPAR5    KLIST
+4062 C                   KFLD                    TMFPAR
+4062 C                   KFLD                    TMFITM
+4062
+4062 ‚*  Key List TMFPAR5
+4062 C     K2_TMFPAR5    KLIST
+4062 C                   KFLD                    TMFPAR
+4062 C                   KFLD                    TMFITM
+4062 C                   KFLD                    TMFVAL
+      *
+     C     CLDKEY        KLIST
+     C                   KFLD                    CBNKNO
+     C                   KFLD                    CBRNBR
+     C                   KFLD                    S24NEXTD7
+      *
+     C     *ENTRY        PLIST
+     C                   PARM                    ALTROUTE          1
+     š**************************************************************************
+      *‚Data Area
+     š**************************************************************************
+      *
+     C     *DTAARA       DEFINE                  TLMAST
+     C                   IN        TLMAST
+      *
+      * Get ICMAST Data Area
+     C     *DTAARA       DEFINE                  ICMAST
+     C                   IN        ICMAST
+      *
+4062 š**************************************************************************
+4062  *‚Init
+4062 š**************************************************************************
+4062  *** Get Parameter Separator
+4062 C                   Eval      TMFPAR  = 'TMPOIN5'
+4062 C                   Eval      TMFITM  = 'NAME_SEP'
+4062 C     K1_TMFPAR5    Chain     RTMFPAR5
+4062‚C                   If        %Found(TMFPAR5)
+4062 C                   Eval      sSeparator = TMFVAL
+4062‚C                   Else
+4062 C                   Eval      sSeparator = *Blanks
+4062‚C                   EndIf
+4062  *
+     ‚**************************************************************************
+     ‚*               M A I N    P R O C E S S I N G                           *
+     ‚**************************************************************************
+     ‚*  Value QHEAD in Message Log
+     C                   MOVE      '*HAND'       QHEAD
+
+     C                   CLEAR                   TLBUFF
+      * Get DDPAR1
+     C                   READ      DDPAR1                               1010
+      *
+      * Get job name
+     C                   CALL      'SSRUSRC'     JOBINF
+     C                   MOVE      JOB           ICDJOB
+     C                   MOVEL     'TMPNIN5 '    ICDPGM
+      *
+      *  Check for message logging
+      *
+     C     ICLHAN        IFEQ      'Y'
+     C                   OPEN      ICMSGL24                             10
+     C                   ENDIF
+      *
+      *  Load edits
+     C                   EXSR      TMQLDEDT
+      *  Initialize
+     C                   EXSR      PGM_INITS
+      *
+     C                   Z-ADD     512           LENO              5 0
+      *
+     C                   DOW       ICHEAD <> '*DOWN'
+      *
+     C                   CLEAR                   TLBUFF
+     C                   CLEAR                   ICFDS
+     ‚* Get queue name
+     C                   EVAL      HANPGM = 'TMCNIN5 '
+     C     HANKEY        CHAIN     TMHANPGM                           10
+     C                   IF        *IN10 = *OFF
+     C                   MOVEL     TMHQNM        QTO              10
+     C                   ELSE
+     C                   CLEAR                   QTO
+     C                   ENDIF
+     C                   Z-ADD     *ZEROS        QLEN1             5 0
+     C                   Z-SUB     1             QWAIT             5 0
+      *
+     ‚* Receive from handler queue
+     C                   SETON                                        75
+     C                   Z-ADD     0             SNDRCVCNT
+      *
+     C                   DOW       *IN75 = *ON AND SNDRCVCNT < 15
+      *
+     C                   CALL      'QRCVDTAQ'                           75
+     C                   PARM                    QTO
+     C                   PARM                    TLMDTQ
+     C                   PARM                    QLEN1
+     C                   PARM                    ICFDS
+     C                   PARM                    QWAIT
+      *
+     C                   IF        *IN75 = *ON
+     C     TMMSG         CHAIN     TMFMSG                             76
+     C                   IF        *IN76 = *OFF
+     C                   ADD       1             SNDRCVCNT
+     C                   ITER
+     C                   ELSE
+     C                   CALL      'QRCVDTAQ'
+     C                   PARM                    QTO
+     C                   PARM                    TLMDTQ
+     C                   PARM                    QLEN1
+     C                   PARM                    ICFDS
+     C                   PARM                    QWAIT
+     C                   LEAVE
+      *
+     C                   ENDIF
+     C                   ENDIF
+     C                   ENDDO
+      *
+     C     ICLHAN        IFEQ      'Y'
+     C                   MOVE      QTO           ICDDTQ
+     C                   MOVE      '*******'     ICDTMO
+     C                   TIME                    ICDTIX            6 0
+     C                   MOVE      ICDTIX        ICDTIM
+     C                   MOVE      '*RCV'        ICDDIR
+     C                   EXSR      TMQMICML
+     C                   WRITE     RICMSGL
+     C                   ENDIF
+      *
+     ‚* Check for CANCEL request
+     C                   IF        ICHEAD <> '*DOWN'
+      *
+     C                   MOVEL     '0'           DATATP            1
+
+     C                   MOVEL     ICDATA        MSGBRK
+     C                   MOVEL     MSGBRK        TLBUFF
+      *
+     ‚* Entry time stamp
+     C                   TIME                    SYSTIME
+     C
+     C                   EVAL      WHR = %SUBDT(SYSTIME:*H)
+     C                   EVAL      WMN = %SUBDT(SYSTIME:*MN)
+     C                   EVAL      WSC = %SUBDT(SYSTIME:*S)
+     C                   EVAL      MIL_SECS = %SUBDT(SYSTIME:*MS)
+     C                   MOVEL     MIL_SECS      MMSEC
+     C                   MOVE      WMM1          wMSC
+     C                   EVAL      TLBTMI = TIMEST
+
+SNYˆ C                   Time                    TLBSSTMDT
+
+     ‚*   GET TELLER BRANCH
+     C                   MOVEL     TLBCUD        DSCTLUNT
+     C     KEYCTL        CHAIN     RTLCTLU                            11
+     C                   IF        TLCBKNO = *ZEROS
+     C                   Z-ADD     SSBNKN        TLCBKNO
+     C                   ENDIF
+
+     ‚* Get Time for this transaction
+    ˜C                   Exsr      Find_Time
+    ‚C                   Z-Add     wkTime        TLBTMI
+
+     C                   MOVE      *ZEROS        ERN
+     C                   MOVE      *BLANK        ERO
+     C                   MOVE      *BLANK        APT
+     C                   MOVE      *ZEROS        APL
+     C                   MOVE      *BLANKS       TLTXOK
+      *
+     ‚* Move input fields to array
+     C                   EXSR      TMQMFTO
+      *
+     š************************************************************************
+     ‚* Process Non-Transaction Oriented Edits
+     š*----------------------------------------------------------------------*
+     ‚* Validate teller
+      *
+     C                   MOVE      TLBID         TLNUM
+     C     KEYTEL        CHAIN     TLTEL                              10
+     C     *IN10         IFEQ      '1'
+      *
+     C                   MOVEL     TLBTCD        TLTXCD
+     C     KEYTX         CHAIN     TLTX                               10
+     C     *IN10         IFEQ      '1'
+     C                   MOVE      *BLANKS       TLXMNE
+     C                   ENDIF
+      *
+     ‚*  Teller ID is invalid
+     C                   Z-ADD     201           ERN(1)
+     C                   EXSR      TMQ42GN1
+     C                   ELSE
+      *
+     ‚*  Is this transaction valid?
+      *
+M200 C                   Clear                   ACT_STAT
+     C                   MOVEL     TLBTCD        TLTXCD
+      *
+     C     KEYTX         CHAIN     TLTX                               10
+     C     KEYTX         CHAIN     TLTXED                             11
+     C     *IN10         IFEQ      '1'
+     C                   MOVE      *BLANKS       TLBAFT
+     C                   MOVE      *BLANKS       TLBPBT
+     C                   MOVE      *BLANKS       TLXMNE
+     ‚* Transaction is not supported
+     C                   Z-ADD     202           ERN(1)
+     C                   EXSR      TMQ42GN1
+     C                   ELSE
+      *
+     C                   MOVE      TLXAFT        TLBAFT
+     C                   MOVE      TLXPBT        TLBPBT
+M200 C                   MOVEA     TLXC0R1       ACT_STAT
+      *
+     ‚* Can teller execute this transaction?
+      *
+     C     KEYTAV        CHAIN     TLTXAV                             10
+     C     *IN10         IFEQ      '1'
+     ‚* Not authorized to transaction
+     C                   Z-ADD     203           ERN(1)
+     C                   EXSR      TMQ42GN1
+     C                   ELSE
+      *
+     ‚* Perform Inquiry
+     C                   EXSR      $GETINP
+     C                   IF        ERN(1) = *ZEROS
+     C                   EXSR      $DETAIL
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+     C                   ENDIF
+
+     ‚* Exit time stamp
+     C                   TIME                    SYSTIME
+     C                   EVAL      WHR = %SUBDT(SYSTIME:*H)
+     C                   EVAL      WMN = %SUBDT(SYSTIME:*MN)
+     C                   EVAL      WSC = %SUBDT(SYSTIME:*S)
+     C                   EVAL      MIL_SECS = %SUBDT(SYSTIME:*MS)
+     C                   MOVEL     MIL_SECS      MMSEC
+     C                   MOVE      WMM1          wMSC
+     C                   EVAL      TLBTMO = TIMEST
+     š*----------------------------------------------------------------------*
+     ‚* EXIT TIME STAMP
+    ˜C                   Exsr      Find_Time
+    ‚C                   Z-Add     wkTime        TLBTMO
+
+     ‚* Log this transaction whether rejected or not
+     C                   IF        TLXLOG = 'Y' AND TLBTRN <> 'Y' AND
+     C                             TLMRPS <> 'Y'
+
+     c                   IF        ERN(1) <> *ZEROS
+     C                   MOVE      *BLANKS       TLTXOK
+     C                   ELSE
+     C                   MOVE      'Y'           TLTXOK
+     C                   ENDIF
+      *
+     ‚* Move error fields into log record field names
+     C/COPY QTLSREFRLE,TMQMOVER
+      *
+     ‚* Clear branch and dorc fields in log record
+     C                   MOVE      *BLANKS       DC
+     C                   MOVE      *ZEROS        ABK
+     C                   MOVE      *ZEROS        ABR
+      *
+     ‚* Move data to TLLOG fields
+     C/COPY QTLSREFRLE,TMQMOVBR
+      *
+SNYˆ C***                Time                    TLBSSTMDT
+SNYˆ C                   Time                    TLBSSTMDO
+     C                   WRITE     RTLLOG
+     C                   Eval      TLERXREF = TLBTXREF
+     C                   WRITE     RTLLOGa
+M200 C***                CALLB     'TMSWSTAT'
+M200 C***                PARM                    TLBCOR
+M200 C***                PARM                    TLBTLO
+M200 C***                PARM                    TLBSVO
+M200 C***                PARM                    TLTXOK
+M200 C***                PARM      'TMPNIN5 '    TLPGM             8
+      *
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   ENDIF
+     C                   ENDDO
+
+     C                   IF        ICHEAD = '*DOWN'
+     C                   EXSR      TMQ99GEN
+     C                   ENDIF
+
+     C                   MOVE      '1'           *INLR
+     š**************************************************************************
+      *‚$GETINP - Retrieve & Validate Input Data
+     š**************************************************************************
+     C     $GETINP       BEGSR
+      *
+     C                   MOVEL     TLBFIL        ACCNDS
+     C                   IF        HEADR  = *BLANKS
+     C*I300              Z-ADD     204           ERN(1)
+I300 C                   Z-ADD     251           ERN(1)
+     C                   EXSR      TMQ42GN1
+     C                   LEAVESR
+     C                   ENDIF
+      *
+     C                   ENDSR
+     š**************************************************************************
+      *‚$DETAIL - Get Details to Perform Inquiry
+     š**************************************************************************
+     C     $DETAIL       BEGSR
+      *
+     C                   SELECT
+     C                   WHEN      HEADR  = 'TMQT4'
+     C                   EXSR      GET_DTL_INT4
+     C                   WHEN      HEADR  = 'TMQT5'
+     C                   EXSR      GET_DTL_INT5
+     C                   WHEN      HEADR  = 'TMQT6'
+     C                   EXSR      GET_DTL_INT6
+      *LN SEARCH BY VEHICLE NO
+     C                   WHEN      HEADR  = 'TMQVECH'
+     C                   EXSR      GET_VELNACC
+     C                   ENDSL
+      *
+     ‚* Send End of message
+     C
+     C                   CLEAR                   OUTBUFF
+     C                   IF        ERN(1) <> 0
+     C                   ELSE
+     C                   MOVEL     'Y'           QIGNORE
+     C                   MOVEL     '*EOM'        QEOM
+     C                   EXSR      srSend
+     C                   ENDIF
+      *
+     C                   ENDSR
+     š**************************************************************************
+      *‚GET_DTL_INT4 - Get Detail Info
+     š**************************************************************************
+     C     GET_DTL_INT4  BEGSR
+     C
+     C                   Z-ADD     0             COUNTR
+     C
+     C                   DOW       (COUNTR <  CMAX)
+     C                   ADD       1             COUNTR
+     C                   Z-ADD     COUNTR        PP1               2 0
+     C                   If        TLF(PP1) > 0
+     C                   EXSR      srProcessT4
+     C                   Endif
+     C                   ENDDO
+     C
+     C                   ENDSR
+     š**************************************************************************
+      *‚srProcessT4 - Process CIF Details and Send
+     š**************************************************************************
+     C     srProcessT4   BEGSR
+      *
+     C                   Eval      wRSPCOD = T4RSPCOD
+     C                   Eval      wRSPLEN = T4RSPLEN
+     C                   CLEAR                   TMQT4
+     C                   Eval      T4RSPCOD = wRSPCOD
+     C                   Eval      T4RSPLEN = wRSPLEN
+     C                   Z-ADD     0             ZZCIFNO
+      *
+     C                   Z-Add     TLF(PP1)      wiACCTNO
+     C                   Movel (p) ACTY(PP1)     wiACTYPE
+
+
+     C     wiACCTNO      CHAIN     CFACCTL1                           33
+     C     *IN33         DOWEQ     *OFF
+     C                   if        (CFRREL = 'P ' or CFRREL = ' P')
+     C                             and *in33 = '0'
+     C                   Z-ADD     CFCIFN        ZZCIFNO
+     C                   LEAVE
+     C                   ENDIF
+     C     wiACCTNO      READE     RCFACCT                                33
+     C                   ENDDO
+
+      *
+      * Get the Primary CIF
+      *
+     C                   IF        ZZCIFNO <> *ZEROS
+     C                   EVAL      CIFNO  = CFCIFN
+     C                   EVAL      ACCTNO = CFACCN
+     C                   EVAL      ACTYPE = CFATYP
+     C                   EVAL      NAMERR = *blanks
+     C
+     C                   MOVE      '*INQ    '    NAMREQ
+     C                   CALL      'CFNAME'      NAMPAR
+     C                   MOVE      CFNA1         T4CFNA1
+     C                   MOVE      CFNA2         T4CFNA2
+     C                   MOVE      CFNA3         T4CFNA3
+     C                   MOVE      CFNA4         T4CFNA4
+     C                   MOVE      CFNA5         T4CFNA5
+     C                   MOVE      CFNA6         T4CFNA6
+     C                   MOVE      CFNA7         T4CFNA7
+     C                   MOVE      CFNA8         T4CFNA8
+     C                   Z-ADD     ACCTNO        T4ACCTNO
+     C                   MOVE      ACTYPE        T4ACTYPE
+     C     CIFNO         CHAIN     CFMAST
+     C                   IF        %FOUND(CFMAST)
+     C                   MOVEL(P)  CFNA1         T4C1NM1
+     C                   MOVEL(P)  CFNA1A        T4C1NM2
+     C                   ELSE
+     C                   MOVE      *BLANKS       T4C1NM1
+     C                   MOVE      *BLANKS       T4C1NM2
+     C                   ENDIF
+     C                   ENDIF
+     C
+     ˜*Not Group Account Inquiry
+    ‚C                   If        wiACTYPE <> 'G'
+     C
+‚     *To retrieve ledger and available balance
+     C                   EXSR      srInitLst
+     C                   CALLB     'TMSGTACN'    ACTLST
+    ‚C                   ENDIF
+
+     C                   IF        woERR <> 'Y'
+     C
+     C                   MOVEL     'N'           QIGNORE
+     C                   MOVEL(P)  TMQT4         OUTBUFF        1024
+     C                   MOVEL     *BLANKS       QEOM
+     C                   EXSR      srSend
+     C
+     C                   ELSE
+     C                   Z-ADD     woERRN        ERN(1)
+     C                   EXSR      TMQ42GN1
+     C                   ENDIF
+     C
+     C                   ENDSR
+     š**************************************************************************
+      *‚GET_DTL_INT5 - Get Detail Info
+     š**************************************************************************
+     C     GET_DTL_INT5  BEGSR
+      *
+     C                   Z-ADD     0             COUNTR
+     C
+     C                   DOW       (COUNTR <  CMAX)
+     C                   ADD       1             COUNTR
+     C                   Z-ADD     COUNTR        PP1               2 0
+     C                   If        TLF(PP1) > 0
+     C                   Exsr      srProcessT5
+     C                   Endif
+     C                   ENDDO
+      *
+     C                   ENDSR
+     š**************************************************************************
+      *‚srProcessT5 - Process Multi Account Summary Response
+     š**************************************************************************
+     C     srProcessT5   BEGSR
+
+     ˆ* TODO - GET account name from CFAGRP - Sonny
+
+     C                   Z-ADD     0             ZZCIFNO
+      *
+     C                   Eval      wRSPCOD = T5RSPCOD
+     C                   Eval      wRSPLEN = T5RSPLEN
+     C                   CLEAR                   TMQT5
+     C                   Eval      T5RSPCOD = wRSPCOD
+     C                   Eval      T5RSPLEN = wRSPLEN
+      *
+     C                   Z-Add     TLF(PP1)      wiACCTNO
+     C                   Movel (P) ACTY(PP1)     wiACTYPE
+
+     ˜* Special treatment for FD acct due to CFACCT store Group no as Acctno
+     C                   IF        wiACTYPE = 'T'
+     C     Acckey        CHAIN     CDMAST                             32
+     C                   IF        *IN32 = '1'
+     C     Acckey        CHAIN     RCDTNEW                            32
+     C                   ENDIF
+     C                   Z-Add     CDNUM         wiACCTNO
+     C                   ENDIF
+
+     C     wiACCTNO      CHAIN     CFACCTL1                           33
+     C     *IN33         DOWEQ     *OFF
+     C                   if        (CFRREL = 'P ' or CFRREL = ' P')
+     C                             and *in33 = '0'
+     C                   Z-ADD     CFCIFN        ZZCIFNO
+     C                   if        wiACTYPE = *BLANK
+     C                   EVAL      wiACTYPE = CFATYP
+     C                   endif
+     C                   LEAVE
+     C                   ENDIF
+     C     wiACCTNO      READE     RCFACCT                                33
+     C                   ENDDO
+
+     ˜* Move Again to cater for FD acct no
+     C                   Z-Add     TLF(PP1)      wiACCTNO
+     C                   Movel (p) ACTY(PP1)     wiACTYPE
+      *
+      * Get the Primary CIF
+      *
+     C                   IF        ZZCIFNO <> *ZEROS
+      *
+     C                   EVAL      CIFNO  = CFCIFN
+      *
+     C                   Z-ADD     CFACCN        T5ACCTNO
+     C                   MOVE      CFATYP        T5ACTYPE
+     C     CIFNO         CHAIN     CFMAST
+     C                   IF        %FOUND(CFMAST)
+     C                   MOVEL(P)  CFCITZ        T5CFCITZ
+    ˜C                   Move      CFINDI        T5CFINDI
+     C                   ENDIF
+     C                   ENDIF
+     C
+     C                   IF        T5CFINDI = *blanks
+     C                   eval      T5CFINDI = 'N'
+     C                   ENDIF
+      *
+‚     *To retrieve ledger and available balance
+     C                   Exsr      srInitLst
+     C                   CALLB     'TMSGTACN'    ACTLST
+      *
+     C                   IF        wiACTYPE = 'D'
+     C     Acckey        Chain     DDmast
+     C                   If        Not %Found(Ddmast)
+     C     Acckey        Chain     RDDtnew
+     C                   Endif
+     C
+     C                   If        CHKGTY = 'Y'
+     C                   Eval      woPBOK = 'C'
+     C                   Endif
+     C
+     C                   Endif
+     C
+     C                   IF        woErr <> 'Y'
+    ˜C                   Exsr      get_AcctName
+     C                   EVAL      T5DDCTYP = woACUR
+     C                   EVAL      T5CFNA1  = woCFANA1
+     C                   EVAL      T5CFANA2 = woCFANA2
+     C                   EVAL      T5CFANA3 = woCFANA3
+     C                   EVAL      T5CFANA4 = woCFANA4
+     C                   EVAL      T5CFANA5 = woCFANA5
+     C                   EVAL      T5ACBNK  = woACBK
+     C                   EVAL      T5ACBRN  = woACBRN
+     C                   EVAL      T5STAT   = woSTAT
+     C                   EVAL      T5CCTL   = woCCTL
+     C                   EVAL      T5SPTF   = woSPTF
+     C                   EVAL      T5PBOK   = woPBOK
+     C                   EVAL      T5STMT   = woSTMT
+     C                   EVAL      T5STMPAS = woSTMPAS
+     C                   EVAL      T5TPROD  = woPROD
+     C                   EVAL      T5AVLBAL = woAVLBAL
+     C                   EVAL      T5CBAL   = woCBAL
+     C                   EVAL      T5TSTAFF = woSTAFF
+     C                   EVAL      T5TFBENE = woBENE
+     C                   EVAL      T5CFSNME = wCFSNME
+      *
+     C                   MOVEL     'N'           QIGNORE
+     C                   MOVEL(P)  TMQT5         OUTBUFF
+     C                   MOVEL     *BLANKS       QEOM
+     C                   EXSR      srSend
+     C                   ELSE
+     C                   Z-ADD     woERRN        ERN(1)
+     C                   EXSR      TMQ42GN1
+     C                   ENDIF
+     C
+     C                   ENDSR
+     š**************************************************************************
+      *‚GET_DTL_INT6 - Get Detail Info
+     š**************************************************************************
+     C     GET_DTL_INT6  BEGSR
+      *
+     C                   Z-ADD     1             COUNTR
+     C                   Z-ADD     1             COUNTR1
+     C                   EVAL      CFLAG = 'N'
+      *
+     C                   IF        TLAP(COUNTR1) = ' '
+     C                   EXSR      Proc_Mult
+     C                   ELSE
+     C                   EXSR      Proc_Single
+     C                   ENDIF
+      *
+     C                   ENDSR
+     š**************************************************************************
+      *‚Proc_Mult - Multiple T6 Processing
+     š**************************************************************************
+     C     Proc_Mult     BEGSR
+
+     ‚* CFLAG = 'N' to Check at least 1 acct is valid
+     C                   DOW       (COUNTR1 <= CMAX1) AND (CFLAG = 'N')
+     C                   Z-ADD     COUNTR        PP1               2 0
+     C                   Z-ADD     COUNTR1       PP2               2 0
+     C                   If        TLF(PP1) > 0
+    ˜C                   Exsr      Pre_Chk_Sub
+     C                   Endif
+     C                   ADD       2             COUNTR
+     C                   ADD       1             COUNTR1
+     C                   ENDDO
+
+    ˆC                   If        CFLAG = 'Y'
+     C                   Z-ADD     1             COUNTR
+     C                   Z-ADD     1             COUNTR1
+     C                   Exsr      srInit
+     C                   DOW       (COUNTR1 <= CMAX1)
+     C                   Z-ADD     COUNTR        PP1               2 0
+     C                   Z-ADD     COUNTR1       PP2               2 0
+     C                   If        TLF(PP1) > 0
+    ˜C                   Exsr      srProcessT6
+M200 C                   IF        ERN(1) = 251  AND  ERO(1) = 'N'
+M200 C                   LEAVESR
+M200 C                   ENDIF
+    ˜C                   EXsr      srProcessTC
+     C                   Endif
+     C                   ADD       2             COUNTR
+     C                   ADD       1             COUNTR1
+     C                   ENDDO
+
+     C                   EXSR      OTHRESP
+    ˆC                   ELSE
+     C                   Z-ADD     1             ERN(1)
+     C                   EXSR      TMQ42GN1
+    ˆC                   Endif
+
+     C                   ENDSR
+     š**************************************************************************
+      *‚Proc_Single - Single T6 Processing
+     š**************************************************************************
+     C     Proc_Single   BEGSR
+
+     C                   Z-ADD     COUNTR        PP1
+     C                   Z-ADD     COUNTR1       PP2
+     C                   If        TLF(PP1) > 0
+    ˜C                   Exsr      Pre_Chk_Sub
+     C                   Endif
+
+    ˆC                   If        CFLAG = 'Y'
+     C                   Z-ADD     1             COUNTR
+     C                   Z-ADD     1             COUNTR1
+     C                   Exsr      srInit
+     C                   Z-ADD     COUNTR        PP1
+     C                   Z-ADD     COUNTR1       PP2
+     C                   If        TLF(PP1) > 0
+     C                   Z-ADD     COUNTR1       PP2
+    ˜C                   Exsr      srProcessT6
+M200 C                   IF        ERN(1) = 251  AND  ERO(1) = 'N'
+M200 C                   LEAVESR
+M200 C                   ENDIF
+    ˜C                   EXsr      srProcessTC
+     C                   Endif
+     C                   EXSR      OTHRESP
+    ˆC                   ELSE
+      * Avoid Duplicate Error
+M200 C                   If        ERN(1) = *ZERO
+     C                   Z-ADD     1             ERN(1)
+     C                   EXSR      TMQ42GN1
+M200 C                   ENDIF
+    ˆC                   Endif
+
+     C                   ENDSR
+     š**************************************************************************
+      *‚Pre_Chk_Sub- Pre-Check for Account Validity
+     š**************************************************************************
+     C     Pre_Chk_Sub   BEGSR
+
+M200 C                   Clear                   AcctSts           1 0
+     C                   Z-Add     TLF(PP1)      wiACCTNO
+     C                   Movel (P) ACTY(PP2)     wiACTYPE
+
+     ‚* Demand Deposit
+    ˜C                   SELECT
+    ˜C                   WHEN      wiACTYPE = 'D' OR wiACTYPE = 'S'
+    ˜C                              OR wiACTYPE = 'X'
+     C     Acckey        Chain     DDmast                             39
+     C                   If        Not %Found(Ddmast)
+     C     Acckey        Chain     RDDTNEW                            39
+     C                   Endif
+M200 C     Acckey        Chain     DDme24                             99
+     C                   If        *IN39 = '0'
+     C                   Eval      CFLAG = 'Y'
+     C                   Z-Add     Status        AcctSts
+     C                   Endif
+     C
+M200 C                   IF        TLRINQ = 'C'
+     C                   Z-Add     2             AcctSts
+M200 C                   ENDIF
+     ‚* Time Deposit
+    ˜C                   WHEN      wiACTYPE = 'T'
+     C     Acckey        Chain     CDmast                             39
+     C                   If        Not %Found(Cdmast)
+     C     Acckey        Chain     RCDTNEW                            39
+     C                   IF        Not %Found(Cdtnw24)
+     C     Acckey        Chain     CDGMST                             39
+     C                   Endif
+     C                   Endif
+M200 C     Acckey        Chain     CDme24                             99
+     C                   If        *IN39 = '0'
+     C                   Eval      CFLAG = 'Y'
+     C                   Z-Add     Status        AcctSts
+     C                   Endif
+M200 C                   IF        TLRINQ = 'C'
+     C                   Z-Add     2             AcctSts
+M200 C                   ENDIF
+     ‚* Loans
+    ˜C                   WHEN      wiACTYPE = 'L'
+     C     Acckey        Chain     LNmast                             39
+     C                   If        Not %Found(LNmast)
+     C     Acckey        Chain     RLNTNEW                            39
+     C                   Endif
+M200 C     Acckey        Chain     LNme24                             99
+     C                   If        *IN39 = '0'
+     C                   Eval      CFLAG = 'Y'
+     C                   Z-Add     Status        AcctSts
+     C                   Endif
+     ‚* Safe Deposit Box
+    ˜C                   WHEN      wiACTYPE = 'B'
+     C     Acckey        Chain     SDmast                             39
+     C                   If        Not %Found(SDmast)
+     C     Acckey        Chain     RSDTNEW                            39
+     C                   Endif
+M200 C     Acckey        Chain     SDme24                             99
+     C                   If        *IN39 = '0'
+     C                   Eval      CFLAG = 'Y'
+     C                   LEAVESR
+     C                   Endif
+     ‚* Unit Trust
+    ˜C                   WHEN      wiACTYPE = 'U'
+     C     Acckey        Chain     UTmast                             39
+     C                   If        *IN39 = '0'
+     C                   Eval      CFLAG = 'Y'
+     C                   Endif
+
+    ˜C                   ENDSL
+
+     ‚* Account not found..Leave
+
+M200 C                   If        *IN39 = '1'
+M200 C                   leavesr
+M200 C                   Endif
+     š*=========================================================================*
+     ‚* Status Checks - For Single Only
+     š*
+     C                   IF        TLAP(COUNTR1) <> ' ' And TLBSRCSYS <> 'BDS'
+     C                             And TLBSRCSYS <> 'ETP'
+     C                             And (wiACTYPE = 'S' Or wiACTYPE = 'D' Or
+     C                                  wiACTYPE = 'L')
+M200 C                             And TLXC0R1 <> *Blank
+     C                   Exsr      ValidateAcct
+     C                   ENDIF
+     š*=========================================================================*
+M200 C
+
+     C                   ENDSR
+M200 š**************************************************************************
+M200  *‚ValidateAcct - Validate Account Status
+M200 š**************************************************************************
+M200 C     ValidateAcct  BEGSR
+     C
+     C                   MOVE      *All'0'       Cmp_sts           2
+     C                   MOVE      AcctSts       Cmp_sts
+     C                   Z-Add     1             cnx               1 0
+     C     Cmp_sts       Lookup    ACT_STAT(cnx)                          87
+     C                   If        *in87 = '1'
+     C                   Z-ADD     7             ERN(1)
+     C                   EXSR      TMQ42GN1
+     C                   Eval      CFLAG = 'N'
+     C                   LeaveSR
+     C                   ENDIF
+     ‚*
+     ‚*Deposit - DDASTS Check
+     C                   Clear                   osErrAr
+     C                   Clear                   osErrty
+     C                   Clear                   osErTxt
+     C                   Clear                   oHOVREQ           1
+     C                   Move      'DD'          wERRAPP           2
+     C                   Z-ADD     882           iMastCd
+
+SNY  C                   IF        wiACTYPE = 'D' OR
+SNY  C                             wiACTYPE = 'S'
+     C                   CALLB     'TMS882'      SErrParm
+    ˜C                   If        osErrAr(1) <> 0
+     C                   Z-Add     882           ERN(1)
+     C                   Z-Add     osErrAr(1)    SBCD(1)
+     C                   Eval      CFLAG = 'N'
+     C                   EXSR      TMQ42GN1
+     C                   LeaveSR
+    ˜C                   Endif
+    ˜C                   Endif
+     C
+     ‚*Deposit - LNASTS Check
+     C                   Clear                   osErrAr
+     C                   Clear                   osErrty
+     C                   Clear                   osErTxt
+     C                   Clear                   oHOVREQ           1
+     C                   Move      'LN'          wERRAPP           2
+     C                   Z-ADD     892           iMastCd
+
+SNY  C                   IF        wiACTYPE = 'L'
+     C                   CALLB     'TMS892'      SErrParm
+    ˜C                   If        osErrAr(1) <> 0
+     C                   Z-Add     892           ERN(1)
+     C                   Z-Add     osErrAr(1)    SBCD(1)
+     C                   Eval      CFLAG = 'N'
+     C                   EXSR      TMQ42GN1
+     C                   LeaveSR
+    ˜C                   Endif
+    ˜C                   Endif
+     C
+     ‚*Deposit - CFXSTS Check
+     C                   Clear                   osErrAr
+     C                   Clear                   osErrty
+     C                   Clear                   osErTxt
+     C                   Clear                   oHOVREQ           1
+     C                   Move      'DD'          wERRAPP           2
+     C                   Z-ADD     901           iMastCd
+
+     C                   CALLB     'TMS901'      SErrParm
+    ˜C                   If        osErrAr(1) <> 0
+     C                   Z-Add     901           ERN(1)
+     C                   Z-Add     osErrAr(1)    SBCD(1)
+     C                   Eval      CFLAG = 'N'
+     C                   EXSR      TMQ42GN1
+     C                   LeaveSR
+    ˜C                   Endif
+     C
+M200 C                   ENDSR
+     š**************************************************************************
+      *‚GET_VELNACC - Process Loan Account Info - search by vehicle no
+     š**************************************************************************
+     C     GET_VELNACC   BEGSR
+
+     C     *LIKE         DEFINE    ACCTNO        LN_ACCTNO
+     C                   MOVEL     TLBFIL        VECHDS
+     C                   Z-ADD     *ZEROS        LN_ACCTNO
+     C                   MOVEL     VECHNO        LN_VECHNO
+     C                   MONITOR
+     C                   CALL      'LN1022'
+     C                   PARM                    LN_ACCTNO
+     C                   PARM                    LN_VECHNO        25
+     C                   ON-ERROR
+     C                   Z-ADD     *ZEROS        LN_ACCTNO
+     C                   ENDMON
+
+     C                   IF        LN_ACCTNO <> *ZEROS
+     C                   EXSR      srProcT6VEC
+     C                   ELSE
+     C                   Z-ADD     1             ERN(1)
+     C                   EXSR      TMQ42GN1
+     C                   Endif
+
+     C                   ENDSR
+     š**************************************************************************
+      *‚srProcessT6 - Process Multi Account Summary Response
+     š**************************************************************************
+     C     srProcessT6   BEGSR
+
+     C                   Z-ADD     0             ZZCIFNO
+     C                   MOVE      'N'           ZZCDGRP           1
+     C                   Eval      wRSPCOD = T6RSPCOD
+     C                   Eval      wRSPLEN = T6RSPLEN
+     C                   CLEAR                   TMQT6
+     C                   Eval      T6RSPCOD = wRSPCOD
+     C                   Eval      T6RSPLEN = wRSPLEN
+     C
+     C                   Z-Add     TLF(PP1)      wiACCTNO
+     C                   Movel (P) ACTY(PP2)     wiACTYPE
+
+     ˜* Special treatment for FD acct due to CFACCT store Group no as Acctno
+     C                   IF        wiACTYPE = 'T'
+     C     Acckey        CHAIN     CDMAST                             32
+     C                   IF        *IN32 = '1'
+     C     Acckey        CHAIN     RCDTNEW                            32
+     C                   ENDIF
+     C                   IF        *IN32 = '0'
+     C                   Z-Add     CDNUM         wiACCTNO
+     C                   ENDIF
+     C                   ENDIF
+
+M200 ˜* Special treatment for LN TRANCHE Acct
+M200 C                   IF        wiACTYPE = 'L'
+M200 C     Acckey        CHAIN     LNMAST                             32
+M200 C                   IF        *IN32 = '1'
+M200 C     Acckey        CHAIN     RLNTNEW                            32
+M200 C                   ENDIF
+M200 C                   IF        *IN32 = '0' AND MCLNID = 'T'
+M200 C                   Z-Add     LNNUM         wiACCTNO
+M200 C                   ENDIF
+M200 C                   ENDIF
+
+     C                   Z-Add     TLF(PP1)      ACTN(PP2)
+     C                   Movel (P) ACTY(PP2)     ATYE(PP2)
+
+     ‚*To retrieve ledger and available balance
+      *
+     C     wiACCTNO      CHAIN     CFACCTL1                           33
+     C     *IN33         DOWEQ     *OFF
+     C                   if        (CFRREL = 'P ' or CFRREL = ' P')
+     C                             and *in33 = '0'
+     C                   Z-ADD     CFCIFN        ZZCIFNO
+     C                   LEAVE
+     C                   ENDIF
+     C     wiACCTNO      READE     RCFACCT                                33
+     C                   ENDDO
+     C                   EVAL      CIFNO  = CFCIFN
+     C                   Z-ADD     CFACCN        T6TACTNO
+     C                   MOVE      CFATYP        T6TACTYP
+      *
+    ˆC                   IF        ZZCIFNO <> *ZEROS
+     C     ZZCIFNO       CHAIN     CFMAST
+     C                   IF        %FOUND(CFMAST)
+     C                   MOVEL(P)  CFSSNO        T6TIDNO
+     C                   MOVEL(P)  CFSSCD        T6TIDTYP
+     C                   MOVEL(P)  CFSEGC        T6TCSEG
+     C                   MOVEL(P)  CFRESD        T6TBRESD
+     C                   MOVEL(P)  CFINDI        T6TINDI
+      * VIP Flag requirement from Bank
+S2025C                   MOVEL(P)  CFVIPI        T6TXXXFIL
+     C                   ENDIF
+     C                   Eval      T6TEXTRN = 'N'
+     C                   EVAL      T6TCIF   = ZZCIFNO
+      *
+     ‚* Get Name from CFAGRP
+     C     AccKey        Chain     CFagrp
+M200˜C                   IF        %Found(Cfagrp)
+     C                   EVAL      T6TSBU   = CFSBUC
+     C                   EVAL      T6TSGCOD = CFSGNC
+     C                   EVAL      T6TACNM1 = CFANA1 + CFANA2
+     C                   EVAL      T6TACNM2 = CFANA3 + CFANA4 + CFANA5
+     C                   EVAL      T6TCFNM1 = CFSNME
+     C                   IF        wiACTYPE = 'L'
+     C                   EXSR      get_LNAcName
+     C                   ENDIF
+
+I200 C                   EXSR      get_T6AcName
+
+I300 C                   IF        TLMNEX <> 'Y'
+I300 C                   EVAL      T6TACNM1 = CFANA1 + CFANA2
+I300 C                   EVAL      T6TACNM2 = CFANA3 + CFANA4 + CFANA5
+I300 C                   EVAL      T6TCFNM1 = CFSNME
+I300 C                   IF        wiACTYPE = 'L'
+I300 C                   EXSR      get_LNAcName
+I300 C                   ENDIF
+I300 C                   ENDIF
+
+     C
+     C                   EVAL      T6TSTAFF = CFUSTF
+     C                   EVAL      T6TBKORST = 'S'
+     C                   IF        CFBOOK = 'Y' and
+     C                             (wiACTYPE = 'D' OR wiACTYPE = 'S'
+     C                              OR wiACTYPE = 'X')
+     C                   EVAL      T6TBKORST = 'B'
+     C                   ENDIF
+     C
+M201‚C                   IF        CFMACD <> ' '
+M201‚C                   Eval      t6TIPAYROL = 'Y'
+M201‚C                   ELSE
+M201‚C                   Eval      t6TIPAYROL = 'N'
+M201‚C                   ENDIF
+     C
+M200˜C                   Else
+M200 C                   Z-ADD     wiACCTNO      T6TACTNO
+M200 C                   MOVE      wiACTYPE      T6TACTYP
+M200 C                   EVAL      T6TACNM1 = 'INVALID ACCOUNT NO'
+     C                   Goto      Not_Found
+    ˜C                   ENDIF
+      *
+     C                   Exsr      Get_ACCTINFO
+M200 C
+M200 C                   IF        ERN(1) = 251  AND  ERO(1) = 'N'
+M200 C                   LEAVESR
+M200 C                   ENDIF
+     C                   Exsr      Get_ACCTIBG
+     C                   Exsr      Get_TLASTS
+     C                   Exsr      Get_CHGCDS
+    ˆC                   ELSE
+     C                   Z-ADD     wiACCTNO      T6TACTNO
+     C                   MOVE      wiACTYPE      T6TACTYP
+     C                   EVAL      T6TACNM1 = 'INVALID ACCOUNT NO'
+    ˆC                   ENDIF                                                  wiACTYPE G
+
+     C     Not_Found     TAG
+     C                   MOVEL     'N'           QIGNORE
+     C                   MOVEL(P)  TMQT6         OUTBUFF
+     C                   MOVEL     *BLANKS       QEOM
+     C                   EXSR      srSend
+      *
+     C                   ENDSR
+     š**************************************************************************
+      *‚srProcT6VEC - Process loan account info
+     š**************************************************************************
+     C     srProcT6VEC   BEGSR
+
+     C                   Z-ADD     0             ZZCIFNO
+     C                   MOVE      'N'           ZZCDGRP           1
+     C                   Eval      wRSPCOD = T6RSPCOD
+     C                   Eval      wRSPLEN = T6RSPLEN
+     C                   CLEAR                   TMQT6
+     C                   Eval      T6RSPCOD = wRSPCOD
+     C                   Eval      T6RSPLEN = wRSPLEN
+     C                   Z-Add     LN_ACCTNO     wiACCTNO
+     C                   EVAL      wiACTYPE = 'L'
+
+     C     Acckey        Chain     LNmast                             39
+     C                   If        Not %Found(LNmast)
+     C     Acckey        Chain     RLNtnew                            39
+     C                   Endif
+     C     Acckey        Chain     RLNmemo                            38
+     C                   If        *IN39 = '0'
+     C                   EVAL      T6TSTAT  = STATUS
+     C                   EVAL      T6TTRNCH = ACTDDD
+     C                   EVAL      T6TLNSOLD= *BLANKS
+     C                   EVAL      T6TBRN   = BRN
+     C                   EVAL      T6TBNK   = BKN
+     C                   EVAL      T6TAPRD  = TYPE
+     C                   EVAL      T6TNPL   = NPLFLG
+     C                   EVAL      T6TBKTYP = LNSPTF
+     C                   EVAL      T6TACCUR = CURTYP
+     C                   EVAL      T6TCIF   = CIFNO
+     C                   EVAL      T6TACTNO = ACCTNO
+     C                   EVAL      T6TACTYP = ACTYPE
+     C
+     C     NSPDT8        IFEQ      NEXTD7
+     C     NSIPD8        OREQ      NEXTD7
+     C     NSPDT8        OREQ      MATDT8
+     C     NEXTD7        ANDGT     MATDT8
+     C                   Z-ADD     BILINT        wIntOs
+     C                   ELSE
+     C                   Z-ADD     BILINO        wIntOs
+     C                   ENDIF
+     C                   Eval      T6TAVBAL = (CBAL+ASSLC+PAIDLC+MISCD+OTHCHG
+     C                                        +wIntOs-ADVPMT+MEMAMT)
+     C                   Eval      T6TCBAL  = CBAL
+     C                   Eval      T6TWOFF  = 'N'
+     C                   If        PWOFID = '8' OR PWOFID = 'O'
+     C                   EVAL      T6TWOFF  = 'Y'
+     C                   Endif
+     C                   EVAL      TLSAPP      = 'LN'
+      *
+     C     CIFNO         CHAIN     CFMAST
+     C                   IF        %FOUND(CFMAST)
+     C                   MOVEL(P)  CFSSNO        T6TIDNO
+     C                   MOVEL(P)  CFSSCD        T6TIDTYP
+     C                   MOVEL(P)  CFSEGC        T6TCSEG
+     C                   MOVEL(P)  CFRESD        T6TBRESD
+     C                   ENDIF
+     C                   Eval      T6TEXTRN = 'N'
+      *
+     C     AccKey        Chain     CFagrp
+     C                   IF        %Found(Cfagrp)
+     C                   EVAL      T6TSBU   = CFSBUC
+     C                   EVAL      T6TSGCOD = CFSGNC
+     C                   EVAL      T6TACNM1 = CFANA1 + CFANA2
+     C                   EVAL      T6TACNM2 = CFANA3 + CFANA4 + CFANA5
+     C                   EVAL      T6TCFNM1 = CFSNME
+I300 C                   EXSR      get_T6AcName
+M200 C*I300              EXSR      get_LNAcName
+     C                   EVAL      T6TSTAFF = CFUSTF
+     C                   EVAL      T6TBKORST = 'S'
+     C                   ENDIF
+      *
+     C     AccKey        CHAIN     LNASTS                             34
+     C                   CLEAR                   HDS
+     C                   EVAL      TLSAPP      = 'LN'
+     C     TLSAPP        CHAIN     RTLASDS                            30
+
+     C                   IF        *IN34 = '0'
+     C                   Z-ADD     0             STCNT             3 0
+     C                   Z-ADD     0             ST                2 0
+      *
+     C     ST            DOUEQ     98
+     C     STCNT         OREQ      7
+     C                   ADD       1             ST
+     C                   IF        AS(ST) = 'Y'
+     C                   SELECT
+     C                   WHEN      T6THDCD1 = *BLANKS
+     C                   MOVEL(P)  ST            T6THDCD1
+     C                   ADD       1             STCNT
+     C                   MOVEL(P)  HDS(ST)       T6THDDS1
+     C                   WHEN      T6THDCD2 = *BLANKS
+     C                   MOVEL(P)  ST            T6THDCD2
+     C                   ADD       1             STCNT
+     C                   MOVEL(P)  HDS(ST)       T6THDDS2
+     C                   WHEN      T6THDCD3 = *BLANKS
+     C                   MOVEL(P)  ST            T6THDCD3
+     C                   ADD       1             STCNT
+     C                   MOVEL(P)  HDS(ST)       T6THDDS3
+     C                   WHEN      T6THDCD4 = *BLANKS
+     C                   MOVEL(P)  ST            T6THDCD4
+     C                   ADD       1             STCNT
+     C                   MOVEL(P)  HDS(ST)       T6THDDS4
+     C                   WHEN      T6THDCD5 = *BLANKS
+     C                   MOVEL(P)  ST            T6THDCD5
+     C                   ADD       1             STCNT
+     C                   MOVEL(P)  HDS(ST)       T6THDDS5
+     C                   WHEN      T6THDCD6 = *BLANKS
+     C                   MOVEL(P)  ST            T6THDCD6
+     C                   ADD       1             STCNT
+     C                   MOVEL(P)  HDS(ST)       T6THDDS6
+     C                   WHEN      T6THDCD7 = *BLANKS
+     C                   MOVEL(P)  ST            T6THDCD7
+     C                   ADD       1             STCNT
+     C                   MOVEL(P)  HDS(ST)       T6THDDS7
+     C                   ENDSL
+     C                   ENDIF
+     C                   ENDDO
+     C                   ENDIF
+      *
+     C                   MOVEL     'N'           QIGNORE
+     C                   MOVEL(P)  TMQT6         OUTBUFF
+     C                   MOVEL     *BLANKS       QEOM
+     C                   EXSR      srSend
+     C                   ELSE
+     C                   Z-ADD     1             ERN(1)
+     C                   EXSR      TMQ42GN1
+     C                   ENDIF
+      *
+     C                   ENDSR
+     š**************************************************************************
+      *‚srProcessTC - Process GDA Collection Response
+     š**************************************************************************
+     C     srProcessTC   BEGSR
+
+     C                   IF        TLXSWPPR > *Zero
+     C                   MOVE      TLXSWPPR      wrn               2 0
+     C                   Z-ADD     TLF(wrn)      CIWRNO
+     C                   Else
+     C                   Z-ADD     *ZERO         CIWRNO
+     C                   ENDIF
+
+     C                   IF        COMACT <> 'Y' or CIWRNO = *ZERO
+     C                   LEAVESR
+     C                   ENDIF
+
+     C     GCTMKY1       KLIST
+     C                   KFLD                    Acctno
+     C                   KFLD                    Actype
+     C                   KFLD                    CIWRNO
+
+     C     GCTMKY1       CHAIN     DDGC24L1
+     C                   IF        NOT %FOUND(DDGC24L1)
+     C                   LEAVESR
+     C                   ENDIF
+
+     C                   EXSR      TMQTCGEN
+      *
+     C                   ENDSR
+     š**************************************************************************
+      *‚srProcessT8 - Process to get min charge and max charge
+     š**************************************************************************
+     C     srProcessT8   BEGSR
+     C                   IF        TLXUFD <> *BLANKS
+     C                   Z-ADD     1             XX                2 0
+     C
+     C                   If        TLAP(XX) = ' '
+     C                   DOW       XX <= CMAX1
+     C                   EXSR      Get_CHGAMT
+M200 C                   IF        ERN(1) = 251  AND  ERO(1) = 'N'
+M200 C                   LEAVESR
+M200 C                   ENDIF
+     C                   ADD       1             XX
+     C                   ENDDO
+     C                   ELSE
+     C                   EXSR      Get_CHGAMT
+     C                   ENDIF
+     C                   ENDIF
+     C
+     C                   ENDSR
+     š**************************************************************************
+      *‚srProcessV4 - Process to response previous TD placemant int/mat disp
+     š**************************************************************************
+     C     srProcessV4   BEGSR
+     C                   IF        ZZCDGRP  = 'Y'
+     C                   EXSR      TMQV4GEN
+     C                   ENDIF
+     C                   ENDSR
+     š**************************************************************************
+      *‚srProcessTA - Process to response for additional SD Account detail
+     š**************************************************************************
+     C     srProcessTA   BEGSR
+     C                   IF        wiACTYPE  ='B'
+     C                   EXSR      TMQTAGEN
+     C                   ENDIF
+     C                   ENDSR
+     š**************************************************************************
+      *‚srProcessTB - Process to response for additional UT Account detail
+     š**************************************************************************
+     C     srProcessTB   BEGSR
+     C                   IF        wiACTYPE  ='U'
+     C                   EXSR      TMQTBGEN
+     C                   ENDIF
+     C                   ENDSR
+     š**************************************************************************
+      *‚srProcessT7 - Process to response for additional LN Account detail
+     š**************************************************************************
+     C     srProcessT7   BEGSR
+     C                   IF        wiACTYPE  ='L'
+M2001C
+M200 C                   Z-ADD     WiACCTNO      LN_ACCTNO
+M200 C                   MOVEL     *BLANKS       LN_VECHNO
+M200 C                   MONITOR
+M200 C                   CALL      'LN1022'
+M200 C                   PARM                    LN_ACCTNO
+M200 C                   PARM                    LN_VECHNO
+M200 C                   ON-ERROR
+M200 C                   MOVEL     *BLANKS       LN_VECHNO
+M200 C                   ENDMON
+M200
+     C                   EXSR      TMQT7GEN
+     C                   ENDIF
+     C                   ENDSR
+     š**************************************************************************
+      *‚ SEND UP TO 12 RESPONSES
+     š**************************************************************************
+     C     OTHRESP       BEGSR
+     C                   Z-ADD     1             X1                2 0
+     C                   DO        CMAX1         X1
+     C                   SELECT
+     C                   WHEN      RS(X1) = 'T8'
+     C                   IF        Z1GBFL3 <> 'Y'
+     C                   Exsr      srProcessT8
+M200 C                   IF        ERN(1) = 251  AND  ERO(1) = 'N'
+M200 C                   LEAVE
+M200 C                   ENDIF
+     C                   EXSR      TMQT8GEN
+     C                   ENDIF
+     C                   WHEN      RS(X1) = 'V4'
+     C                   EXSR      srProcessV4
+     C                   WHEN      RS(X1) = 'TA'
+     C                   EXSR      srProcessTA
+     C                   WHEN      RS(X1) = 'T7'
+     C                   Exsr      srProcessT7
+     C                   WHEN      RS(X1) = 'TB'
+     C                   Exsr      srProcessTB
+     C                   WHEN      RS(X1) = 'D2'
+     C                   Exsr      srProcessD2
+     C                   WHEN      RS(X1) = 'T0'
+     C                   IF        Z1GBFL3 = 'Y'
+     C                   Exsr      srProcessT0
+M200 C                   IF        ERN(1) = 251  AND  ERO(1) = 'N'
+M200 C                   LEAVE
+M200 C                   ENDIF
+     C                   EXSR      TMQT0GEN
+     C                   ENDIF
+
+      * CIMB Niaga T6 Ext - Single Inquiry
+I300 C                   WHEN      RS(X1) = '1B' AND TLAP(COUNTR1) <> ' '
+I300 C                             AND (Actype = 'D' or Actype = 'S')
+I300 C                   CALLB     'TMS1005'     pl1005
+I300 C                   EXSR      TMQ1BGEN
+     C                   ENDSL
+     C                   ENDDo
+     C                   ENDSR
+      *
+     š**************************************************************************
+M300  *‚T6 get_T6AcName
+     š**************************************************************************
+I300 C     get_T6AcName  BegSR
+I300 C
+I300 C                   IF        TLMNEX = 'Y'
+
+I300 C                   Z-add     WiACCTNO      INACCTNO
+I300 C                   Eval      REQUET = '*CNN'
+
+I300ˆC                   IF        wiACTYPE = 'L'
+I300 C     Acckey        Chain     LNMAST
+I300 C                   IF        NOT %FOUND(LNMAST)
+I300 C     Acckey        Chain     RLNTNEW
+I300 C                   ENDIF
+I300 C                   IF        MCLNID = 'T'
+I300 C                   Z-add     LNNUM         INACCTNO
+I300 C     LNGRPKEY      Chain     CFagrp
+I300 C                   ENDIF
+I300ˆC                   ENDIF
+I300 C
+I300 C                   Clear                   DSNam
+I300 C                   CALLB     'CFNAME'      pCFNAM
+
+I300 C                   EVAL      DSNam    =  RNA1
+I300 C                   EVAL      T6TACNM1 =  DSNam1
+I300 C                   EVAL      DSNam    =  RNA2
+I300 C                   EVAL      T6TACNM2 =  DSNam2
+
+I300 C                   EVAL      T6TCFNM1 = CFSNME
+4062  *
+4062  * This logic only applie for Deposit Product
+4062ˆC                   IF        HEADR  = 'TMQT6'
+4062ˆC                   IF        wiACTYPE = 'S'
+4062ˆC                              or wiACTYPE = 'D'
+4062  * Check if Account is Biller
+4062  *** Check Parameter is Enable or Not
+4062 C                   Eval      TMFPAR  = 'TMPOIN5'
+4062 C                   Eval      TMFITM  = 'NAME_BILL'
+4062 C     K1_TMFPAR5    Chain     rTMFPAR5
+4062‚C                   If        %Found(TMFPAR5) and TMFVAL = 'Y'
+4062 C     INACCTNO      Chain     rISPPM
+4062 C                   If        %Found(INIISPPM)
+4062 C                   If        sSeparator <> *Blanks
+4062 C                   Eval      T6TACNM1 = %trim(T6TACNM1) + ' ' +
+4062 C                               %Trim(sSeparator) + ' ' +
+4062 C                               %Trim(T6TACNM2)
+4062 C                   Else
+4062 C                   Eval      T6TACNM1 = %trim(T6TACNM1) + ' ' +
+4062 C                               %Trim(T6TACNM2)
+4062 C                   EndIf
+4062 C                   EndIf
+4062‚C                   EndIf
+4062
+4062  * Check if Account is ATM Vendor
+4062 C     Acckey        Chain     rDDMAST
+4062 C                   If        Not %Found(DDmast)
+4062 C     Acckey        Chain     rDDTNEW
+4062 C                   Endif
+4062
+4062 C                   Eval      TMFPAR  = 'TMPOIN5'
+4062 C                   Eval      TMFITM  = 'NAME_ATM'
+4062 C                   Eval      TMFVAL  = SCCODE
+4062 C     K2_TMFPAR5    Chain     RTMFPAR5
+4062‚C                   If        %Found(TMFPAR5)
+4062 C                   If        sSeparator <> *Blanks
+4062 C                   Eval      T6TACNM1 = %trim(T6TACNM1) + ' ' +
+4062 C                               %Trim(sSeparator) + ' ' +
+4062 C                               %Trim(T6TACNM2)
+4062 C                   else
+4062 C                   Eval      T6TACNM1 = %trim(T6TACNM1) + ' ' +
+4062 C                               %Trim(T6TACNM2)
+4062 C                   EndIf
+4062‚C                   EndIf
+4062  *
+4062ˆC                   ENDIF
+4062ˆC                   ENDIF
+
+I300 C                   ENDIF
+I300 C
+I300 C                   EndSr
+      *
+     š**************************************************************************
+      *‚T6 get_LNAcName
+     š**************************************************************************
+      *
+     C     get_LNAcName  BEGSR
+      *
+     C                   IF        wiACTYPE = 'L'
+     C     Acckey        Chain     LNMAST
+     C                   IF        NOT %FOUND(LNMAST)
+     C     Acckey        Chain     RLNTNEW
+     C                   ENDIF
+     C
+     C                   IF        MCLNID = 'T'
+     C     LNGRPKEY      Chain     CFagrp
+    ‚C                   IF        %Found(Cfagrp)
+     C                   EVAL      T6TACNM1 = CFANA1 + CFANA2
+     C                   EVAL      T6TACNM2 = CFANA3 + CFANA4 + CFANA5
+     C                   EVAL      T6TCFNM1 = CFSNME
+    ‚C                   Endif
+    ‚C                   Endif
+     C
+     C                   ENDIF
+     C
+     C                   EndSr
+      *
+     š**************************************************************************
+      *‚get_AcctName
+     š**************************************************************************
+      *
+     C     get_AcctName  BEGSR
+      *
+     C     AccKey        Chain     CFagrp
+    ‚C                   IF        %Found(Cfagrp)
+     C                   EVAL      woCFANA1  =  CFANA1
+     C                   EVAL      woCFANA2  =  CFANA2
+     C                   EVAL      woCFANA3  =  CFANA3
+     C                   EVAL      woCFANA4  =  CFANA4
+     C                   EVAL      woCFANA5  =  CFANA5
+     C                   EVAL      wCFSNME   =  CFSNME
+    ‚C                   Endif
+
+     C                   IF        wiACTYPE = 'L'
+     C     Acckey        Chain     LNMAST
+     C                   IF        NOT %FOUND(LNMAST)
+     C     Acckey        Chain     RLNTNEW
+     C                   ENDIF
+     C
+     C                   IF        MCLNID = 'T'
+     C     LNGRPKEY      Chain     CFagrp
+    ‚C                   IF        %Found(Cfagrp)
+     C                   EVAL      woCFANA1  =  CFANA1
+     C                   EVAL      woCFANA2  =  CFANA2
+     C                   EVAL      woCFANA3  =  CFANA3
+     C                   EVAL      woCFANA4  =  CFANA4
+     C                   EVAL      woCFANA5  =  CFANA5
+     C                   EVAL      wCFSNME   =  CFSNME
+    ‚C                   Endif
+    ‚C                   Endif
+     C
+     C                   ENDIF
+     C
+     C                   EndSr
+      *
+     š**************************************************************************
+      *‚Get TLASTS Info
+     š**************************************************************************
+     C     Get_TLASTS    BEGSR
+     C
+     C                   IF        ZZCDGRP  = 'N'
+
+     C                   If        WiACTYPE = 'D' or WiACTYPE = 'S' or
+     C                             WiACTYPE = 'X' or WiACTYPE = 'T'
+     C                             OR WiACTYPE = 'B'
+     C     AccKey        CHAIN     DDASTS                             34
+     C                   ElseIf    WiACTYPE = 'L'
+     C     AccKey        CHAIN     LNASTS                             34
+     C                   ELse
+     C                   Leavesr
+     C                   EndIf
+
+     C                   ELSE
+     C     GrpKey        CHAIN     DDASTS                             34
+     C                   ENDIF
+
+     C                   EVAL      TSSYS ='*EXTERNAL'
+     C     TLASTSKY      CHAIN     RTLASTSPAR                         31
+M200 C*I300              IF        *IN31 = '0'
+I300 C                   IF        *IN31 = '0' and  TSCDE <> *BLANK
+     C                   MOVE      TSCDE         STT               2 0
+     C                   ENDIF
+      *
+     C                   CLEAR                   HDS
+I300 C                   Z-ADD     0             STCNT             3 0
+I300 C                   Z-ADD     0             ST                2 0
+     C     TLSAPP        CHAIN     RTLASDS                            30
+
+     C                   IF        *IN31 = '0' AND STT <> 0
+M200 C*I300              Z-ADD     0             STCNT             3 0
+M200 C*I300              Z-ADD     0             ST                2 0
+     C                   IF        AS(STT) = 'Y'
+     C                   MOVEL(P)  'Y'           T6TEXTRN
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   IF        *IN34 = '0'
+     C     ST            DOUEQ     98
+     C     STCNT         OREQ      7
+     C                   ADD       1             ST
+     C                   IF        AS(ST) = 'Y'
+     C                   SELECT
+     C                   WHEN      T6THDCD1 = *BLANKS
+     C                   MOVEL(P)  ST            T6THDCD1
+     C                   ADD       1             STCNT
+     C                   MOVEL(P)  HDS(ST)       T6THDDS1
+     C                   WHEN      T6THDCD2 = *BLANKS
+     C                   MOVEL(P)  ST            T6THDCD2
+     C                   ADD       1             STCNT
+     C                   MOVEL(P)  HDS(ST)       T6THDDS2
+     C                   WHEN      T6THDCD3 = *BLANKS
+     C                   MOVEL(P)  ST            T6THDCD3
+     C                   ADD       1             STCNT
+     C                   MOVEL(P)  HDS(ST)       T6THDDS3
+     C                   WHEN      T6THDCD4 = *BLANKS
+     C                   MOVEL(P)  ST            T6THDCD4
+     C                   ADD       1             STCNT
+     C                   MOVEL(P)  HDS(ST)       T6THDDS4
+     C                   WHEN      T6THDCD5 = *BLANKS
+     C                   MOVEL(P)  ST            T6THDCD5
+     C                   ADD       1             STCNT
+     C                   MOVEL(P)  HDS(ST)       T6THDDS5
+     C                   WHEN      T6THDCD6 = *BLANKS
+     C                   MOVEL(P)  ST            T6THDCD6
+     C                   ADD       1             STCNT
+     C                   MOVEL(P)  HDS(ST)       T6THDDS6
+     C                   WHEN      T6THDCD7 = *BLANKS
+     C                   MOVEL(P)  ST            T6THDCD7
+     C                   ADD       1             STCNT
+     C                   MOVEL(P)  HDS(ST)       T6THDDS7
+     C                   ENDSL
+     C                   ENDIF
+     C                   ENDDO
+     C                   ENDIF
+      *
+     C                   EndSr
+     š**************************************************************************
+      *‚Get Charge Type Info
+     š**************************************************************************
+     C     Get_CHGCDS    BEGSR
+     C
+     C                   IF        TLXUFD <> *BLANKS
+     C                   MOVEL(P)  TLXUFD        TLTXCD
+     C     KEYTX         CHAIN     TLTXEXT                            13
+     C     KEYTX         CHAIN     TLTX                               13
+     ‚* Common Charges
+     C                   Z-ADD     0             STCNT
+     C                   Z-ADD     0             ST
+     C     ST            DOUEQ     29
+     C     STCNT         OREQ      5
+     C                   ADD       1             ST
+     C                   IF        TXCHCD(ST) <> *BLANKS
+     C                   SELECT
+     C                   WHEN      T6TCHGCD1 = *BLANKS
+     C                   MOVEL(P)  TXCHCD(ST)    T6TCHGCD1
+     C                   ADD       ST            IDX1(PP2)
+     C                   MOVEL(P)  TXCHCD(ST)    COD1(PP2)
+     C                   ADD       1             STCNT
+     C                   MOVEL     'TLTX'        FLD1(PP2)
+     C                   MOVEL     TAMU(ST)      ZZ                2
+     C                   EVAL      VLE1(PP2) = 'TLBF' + ZZ
+     C                   WHEN      T6TCHGCD2 = *BLANKS
+     C                   MOVEL(P)  TXCHCD(ST)    T6TCHGCD2
+     C                   ADD       ST            IDX2(PP2)
+     C                   MOVEL(P)  TXCHCD(ST)    COD2(PP2)
+     C                   ADD       1             STCNT
+     C                   MOVEL     'TLTX'        FLD2(PP2)
+     C                   MOVEL     TAMU(ST)      ZZ
+     C                   EVAL      VLE2(PP2) = 'TLBF' + ZZ
+     C                   WHEN      T6TCHGCD3 = *BLANKS
+     C                   MOVEL(P)  TXCHCD(ST)    T6TCHGCD3
+     C                   ADD       ST            IDX3(PP2)
+     C                   MOVEL(P)  TXCHCD(ST)    COD3(PP2)
+     C                   ADD       1             STCNT
+     C                   MOVEL     'TLTX'        FLD3(PP2)
+     C                   MOVEL     TAMU(ST)      ZZ
+     C                   EVAL      VLE3(PP2) = 'TLBF' + ZZ
+     C                   WHEN      T6TCHGCD4 = *BLANKS
+     C                   MOVEL(P)  TXCHCD(ST)    T6TCHGCD4
+     C                   ADD       ST            IDX4(PP2)
+     C                   MOVEL(P)  TXCHCD(ST)    COD4(PP2)
+     C                   ADD       1             STCNT
+     C                   MOVEL     'TLTX'        FLD4(PP2)
+     C                   MOVEL     TAMU(ST)      ZZ
+     C                   EVAL      VLE4(PP2) = 'TLBF' + ZZ
+     C                   WHEN      T6TCHGCD5 = *BLANKS
+     C                   MOVEL(P)  TXCHCD(ST)    T6TCHGCD5
+     C                   ADD       ST            IDX5(PP2)
+     C                   MOVEL(P)  TXCHCD(ST)    COD5(PP2)
+     C                   ADD       1             STCNT
+     C                   MOVEL     'TLTX'        FLD5(PP2)
+     C                   MOVEL     TAMU(ST)      ZZ
+     C                   EVAL      VLE5(PP2) = 'TLBF' + ZZ
+     C                   ENDSL
+     C                   ENDIF
+     C                   EndDo
+     ‚* Closing Transaction get Charges from TMSCONETA
+     C                   IF        Z1GBFL3 = 'Y'
+    ˜C                   EXSR      Get_ClsChrg
+     C                   ENDIF
+     C                   MOVEL     TLBTCD        TLTXCD
+     C     KEYTX         CHAIN     TLTX                               13
+     C                   ENDIF
+     C                   EndSr
+     š**************************************************************************
+      *‚Get Closing Charge From TMSCONETA
+     š**************************************************************************
+     C     Get_ClsChrg   BEGSR
+
+I300 C                   Z-ADD     *ZERO         IN_PRDRAT
+I300 C                   Z-ADD     *ZERO         IN_PGMRATE
+     C
+      * Product Penalty Recalculation
+I300 C                   IF        Z1GBLC9 > *ZEROS AND TLF(Z1GBLC9) <>0
+I300 C                   Z-ADD     TLF(Z1GBLC9)  IN_PRDRAT
+I300 C                   ENDIF
+      * Product Program Recalculation
+I300 C                   IF        Z1GBLC0 > *ZEROS AND TLF(Z1GBLC0) <>0
+I300 C                   Z-ADD     TLF(Z1GBLC0)  IN_PGMRATE
+I300 C                   ENDIF
+     C
+     C                   CALLB     'TMSCONETA'   pTMCLOS
+
+     C                   Z-ADD     0             Cls1              1 0
+     ‚* Charges 1(Early Closing)
+     C                   IF        cls_FeeCod1 <> ' '
+     C                   ADD       1             Cls1
+     C                   MOVEL(P)  cls_FeeCod1   CODn(Cls1)
+     C                   MOVEL(P)  cls_FeeAmt1   MINn(Cls1)
+     C                   MOVEL(P)  DDCTYP        Curn(Cls1)
+     C                   Z-ADD     1             ECC1              2 0
+     C     'ECC'         LOOKUP    TX3CA(ECC1)                            11
+     C                   IF        *IN11 = '1'
+     C                   Z-ADD     ECC1          IDXn(Cls1)
+     C                   MOVEL     TAMU(ECC1)    ECC1A             2
+     C                   EVAL      VLEn(Cls1) = 'TLBF' + ECC1A
+     C                   ELSE
+     C                   EVAL      VLEn(Cls1) = *BLANK
+     C                   ENDIF
+     C                   ENDIF
+
+     C                   IF        cls_FeeCod2 <> ' '
+     C                   ADD       1             Cls1
+     C                   MOVEL(P)  cls_FeeCod2   CODn(Cls1)
+     C                   MOVEL(P)  cls_FeeAmt2   MINn(Cls1)
+     C                   MOVEL(P)  DDCTYP        Curn(Cls1)
+     C                   Z-ADD     1             ECC1              2 0
+     C     'SV1'         LOOKUP    TX3CA(ECC1)                            11
+     C                   IF        *IN11 = '1'
+     C                   Z-ADD     ECC1          IDXn(Cls1)
+     C                   MOVEL     TAMU(ECC1)    ECC1A             2
+     C                   EVAL      VLEn(Cls1) = 'TLBF' + ECC1A
+     C                   ELSE
+     C                   EVAL      VLEn(Cls1) = *BLANK
+     C                   ENDIF
+     C                   ENDIF
+
+     ‚* Move Back the Charges to existing array
+     C                   Z-ADD     1             Cls1
+     C                   IF        cls_FeeCod1 <> ' ' or cls_FeeCod2 <> ' '
+     C                   Dow       Cls1 <= 5 and CODn(Cls1) <> ' '
+     C                   SELECT
+     C                   WHEN      T6TCHGCD1 = *BLANKS or T6TCHGCD1 = CODn(Cls1)
+     C                   Z-ADD     IDXn(Cls1)    IDX1(PP2)
+     C                   MOVEL(P)  CODn(Cls1)    T6TCHGCD1
+     C                   MOVEL(P)  CODn(Cls1)    COD1(PP2)
+     C                   MOVEL(P)  MINn(Cls1)    MIN1(PP2)
+     C                   MOVEL(P)  VLEn(Cls1)    VLE1(PP2)
+     C                   WHEN      T6TCHGCD2 = *BLANKS or T6TCHGCD2 = CODn(Cls1)
+     C                   Z-ADD     IDXn(Cls1)    IDX2(PP2)
+     C                   MOVEL(P)  CODn(Cls1)    T6TCHGCD2
+     C                   MOVEL(P)  CODn(Cls1)    COD2(PP2)
+     C                   MOVEL(P)  MINn(Cls1)    MIN2(PP2)
+     C                   MOVEL(P)  VLEn(Cls1)    VLE2(PP2)
+     C                   WHEN      T6TCHGCD3 = *BLANKS or T6TCHGCD3 = CODn(Cls1)
+     C                   Z-ADD     IDXn(Cls1)    IDX3(PP2)
+     C                   MOVEL(P)  CODn(Cls1)    T6TCHGCD3
+     C                   MOVEL(P)  CODn(Cls1)    COD3(PP2)
+     C                   MOVEL(P)  MINn(Cls1)    MIN3(PP2)
+     C                   MOVEL(P)  VLEn(Cls1)    VLE3(PP2)
+     C                   WHEN      T6TCHGCD4 = *BLANKS or T6TCHGCD4 = CODn(Cls1)
+     C                   Z-ADD     IDXn(Cls1)    IDX4(PP2)
+     C                   MOVEL(P)  CODn(Cls1)    T6TCHGCD4
+     C                   MOVEL(P)  CODn(Cls1)    COD4(PP2)
+     C                   MOVEL(P)  MINn(Cls1)    MIN4(PP2)
+     C                   MOVEL(P)  VLEn(Cls1)    VLE4(PP2)
+     C                   WHEN      T6TCHGCD5 = *BLANKS or T6TCHGCD5 = CODn(Cls1)
+     C                   Z-ADD     IDXn(Cls1)    IDX5(PP2)
+     C                   MOVEL(P)  CODn(Cls1)    T6TCHGCD5
+     C                   MOVEL(P)  CODn(Cls1)    COD5(PP2)
+     C                   MOVEL(P)  MINn(Cls1)    MIN5(PP2)
+     C                   MOVEL(P)  VLEn(Cls1)    VLE5(PP2)
+     C                   ENDSL
+     C                   ADD       1             Cls1
+     C                   ENDDO
+     C                   ENDIF
+
+     C                   ENDSR
+     š**************************************************************************
+      *‚Get Charge Amount from SSRTVCRG
+     š**************************************************************************
+     C     Get_CHGAMT    BEGSR
+I300 C                   IF        TLAP(1) <> *Blanks and TLAP(1) <> 'DD' and
+I300 C                             TLAP(1) <> 'LN' and TLAP(1) <> 'CD'
+I300 C                   Eval      TLSAPP = TLAP(1)
+I300 C                   ENDIF
+     C
+     C                   IF        COD1(XX) <> *BLANKS
+     C                             AND MIN1(XX) = 0
+     C                   MOVEL(P)  woACUR        wkACUR
+     C                   MOVEL(P)  COD1(XX)      CHGTYP
+M200 C*                  CALLP     SSRTVCRG(
+M200 C                   CALLP(E)  SSRTVCRG(
+     C                             TLCBKNO          :
+     C                             TLSAPP           :
+     C                             CHGTYP           :
+     C                             wkACUR           :
+     C                             SCTYPE           :
+     C                             ACCTNO           :
+     C                             ACTYPE           :
+     C                             CFUSTF           :
+     C                             CFSEGC           :
+     C                             C_OTCAMT         :
+     C                             C_OTCMMT         :
+     C                             C_OTCONT         :
+     C                             C_OTHTRN         :
+     C                             C_OTIFCC         :
+     C                             C_ERRORC         )
+M200‚C                   IF        %ERROR
+M200 C                   Z-ADD     *ZEROS        ERN
+M200 C                   MOVE      *BLANKS       ERO
+M200 C                   Z-ADD     251           ERN(1)
+M200 C                   MOVE      'N'           ERO(1)
+M200 C                   Eval      ADF(1) = 'SSRTVCRG Error'
+M200 C                   EXSR      GENERR
+M200 C                   LEAVESR
+M200‚C                   ENDIF
+     C
+     C                   MOVEL(P)  C_OTCAMT      MIN1(XX)
+     C                   MOVEL(P)  C_OTCMMT      MAX1(XX)
+     C                   MOVEL(P)  C_OTCONT      LMT1(XX)
+     C                   MOVEL(P)  wKACUR        CUR1(XX)
+     C                   ENDIF
+     C
+     C                   IF        COD2(XX) <> *BLANKS
+     C                             AND MIN2(XX) = 0
+     C                   MOVEL(P)  woACUR        wkACUR
+     C                   MOVEL(P)  COD2(XX)      CHGTYP
+M200 C*                  CALLP     SSRTVCRG(TLCBKNO :
+M200 C                   CALLP(E)  SSRTVCRG(TLCBKNO :
+     C                              TLSAPP : CHGTYP : wkACUR :
+     C                              SCTYPE : ACCTNO : ACTYPE :
+     C                              CFUSTF : CFSEGC : C_OTCAMT :
+     C                              C_OTCMMT : C_OTCONT : C_OTHTRN :
+     C                              C_OTIFCC : C_ERRORC)
+M200‚C                   IF        %ERROR
+M200 C                   Z-ADD     *ZEROS        ERN
+M200 C                   MOVE      *BLANKS       ERO
+M200 C                   Z-ADD     251           ERN(1)
+M200 C                   MOVE      'N'           ERO(1)
+M200 C                   Eval      ADF(1) = 'SSRTVCRG Error'
+M200 C                   EXSR      GENERR
+M200 C                   LEAVESR
+M200‚C                   ENDIF
+     C
+     C                   MOVEL(P)  C_OTCAMT      MIN2(XX)
+     C                   MOVEL(P)  C_OTCMMT      MAX2(XX)
+     C                   MOVEL(P)  C_OTCONT      LMT2(XX)
+     C                   MOVEL(P)  wkACUR        CUR2(XX)
+     C                   ENDIF
+     C                   IF        COD3(XX) <> *BLANKS
+     C                             AND MIN3(XX) = 0
+     C                   MOVEL(P)  woACUR        wkACUR
+     C                   MOVEL(P)  COD3(XX)      CHGTYP
+M200 C                   CALLP(E)  SSRTVCRG(TLCBKNO :
+M200 C*M200                         TLSAPP : CHGTYP : woACUR :
+     C                              TLSAPP : CHGTYP : wkACUR :
+     C                              SCTYPE : ACCTNO : ACTYPE :
+     C                              CFUSTF : CFSEGC : C_OTCAMT :
+     C                              C_OTCMMT : C_OTCONT : C_OTHTRN :
+     C                              C_OTIFCC : C_ERRORC)
+M200‚C                   IF        %ERROR
+M200 C                   Z-ADD     *ZEROS        ERN
+M200 C                   MOVE      *BLANKS       ERO
+M200 C                   Z-ADD     251           ERN(1)
+M200 C                   MOVE      'N'           ERO(1)
+M200 C                   Eval      ADF(1) = 'SSRTVCRG Error'
+M200 C                   EXSR      GENERR
+M200 C                   LEAVESR
+M200‚C                   ENDIF
+     C
+     C                   MOVEL(P)  C_OTCAMT      MIN3(XX)
+     C                   MOVEL(P)  C_OTCMMT      MAX3(XX)
+     C                   MOVEL(P)  C_OTCONT      LMT3(XX)
+     C                   MOVEL(P)  wkACUR        CUR3(XX)
+     C                   ENDIF
+     C                   IF        COD4(XX) <> *BLANKS
+     C                             AND MIN4(XX) = 0
+     C                   MOVEL(P)  woACUR        wkACUR
+     C                   MOVEL(P)  COD4(XX)      CHGTYP
+M200 C*                  CALLP     SSRTVCRG(TLCBKNO :
+M200 C                   CALLP(E)  SSRTVCRG(TLCBKNO :
+     C                              TLSAPP : CHGTYP : wkACUR :
+     C                              SCTYPE : ACCTNO : ACTYPE :
+     C                              CFUSTF : CFSEGC : C_OTCAMT :
+     C                              C_OTCMMT : C_OTCONT : C_OTHTRN :
+     C                              C_OTIFCC : C_ERRORC)
+M200‚C                   IF        %ERROR
+M200 C                   Z-ADD     *ZEROS        ERN
+M200 C                   MOVE      *BLANKS       ERO
+M200 C                   Z-ADD     251           ERN(1)
+M200 C                   MOVE      'N'           ERO(1)
+M200 C                   Eval      ADF(1) = 'SSRTVCRG Error'
+M200 C                   EXSR      GENERR
+M200 C                   LEAVESR
+M200‚C                   ENDIF
+     C
+     C                   MOVEL(P)  C_OTCAMT      MIN4(XX)
+     C                   MOVEL(P)  C_OTCMMT      MAX4(XX)
+     C                   MOVEL(P)  C_OTCONT      LMT4(XX)
+     C                   MOVEL(P)  wkACUR        CUR4(XX)
+     C                   ENDIF
+     C                   IF        COD5(XX) <> *BLANKS
+     C                             AND MIN5(XX) = 0
+     C                   MOVEL(P)  woACUR        wkACUR
+     C                   MOVEL(P)  COD5(XX)      CHGTYP
+M200 C*                  CALLP     SSRTVCRG(TLCBKNO :
+M200 C                   CALLP(E)  SSRTVCRG(TLCBKNO :
+     C                              TLSAPP : CHGTYP : wkACUR :
+     C                              SCTYPE : ACCTNO : ACTYPE :
+     C                              CFUSTF : CFSEGC : C_OTCAMT :
+     C                              C_OTCMMT : C_OTCONT : C_OTHTRN :
+     C                              C_OTIFCC : C_ERRORC)
+M200‚C                   IF        %ERROR
+M200 C                   Z-ADD     *ZEROS        ERN
+M200 C                   MOVE      *BLANKS       ERO
+M200 C                   Z-ADD     251           ERN(1)
+M200 C                   MOVE      'N'           ERO(1)
+M200 C                   Eval      ADF(1) = 'SSRTVCRG Error'
+M200 C                   EXSR      GENERR
+M200 C                   LEAVESR
+M200‚C                   ENDIF
+     C
+     C                   MOVEL(P)  C_OTCAMT      MIN5(XX)
+     C                   MOVEL(P)  C_OTCMMT      MAX5(XX)
+     C                   MOVEL(P)  C_OTCONT      LMT5(XX)
+     C                   MOVEL(P)  wkACUR        CUR5(XX)
+     C                   ENDIF
+     C                   EndSr
+     š**************************************************************************
+      *‚Get_ACCTINFO
+     š**************************************************************************
+     C     Get_ACCTINFO  BEGSR
+     C                   SELECT
+     C                   WHEN      wiACTYPE = 'D' OR wiACTYPE = 'S'
+     C                              OR wiACTYPE = 'X'
+     C     Acckey        Chain     DDmast                             39
+     C                   If        Not %Found(Ddmast)
+     C     Acckey        Chain     RDDtnew                            39
+     C                   Endif
+     C     Acckey        Chain     RDDmemo                            38
+     C                   If        *IN39 = '0'
+     C                   Eval      T6TUCLM  = 'N'
+     C                   Eval      T6TODFAC = 'N'
+     C                   EVAL      T6TAFFAC = DDTFAC
+     C                   EVAL      T6TAACTYP= DDTFAT
+     C                   EVAL      T6TBRN   = BRANCH
+     C                   EVAL      T6TBNK   = BANKNO
+     C                   EVAL      T6TAPRD  = SCCODE
+     C                   EVAL      T6TBKTYP = DDSPTF
+     C                   EVAL      T6TACCUR = DDCTYP
+     C                   IF        COMACT = 'Y'
+     C                   EVAL      woACUR   = SSICUR
+     C                   Else
+     C                   EVAL      woACUR   = DDCTYP
+     C                   ENDIF
+     C                   IF        DORSTS = 'U'
+     C                   EVAL      T6TUCLM  = 'Y'
+     C                   ENDIF
+     C                   EVAL      TLSAPP      = 'DD'
+     C                   EVAL      T6TSTAT  = STATUS
+     C                   IF        TLRINQ = 'C'
+     C                   EVAL      T6TSTAT  = 2
+     C                   ENDIF
+     C                   Eval      T6TAVBAL = COLECT - HOLD
+     C                   SUB       OBAL          T6TAVBAL
+     C                   IF        ODPROT = 'Y'
+     C                   EVAL      T6TODFAC = 'Y'
+M200 C*                  CALLP     LL1113(ACCTNO : ACTYPE :
+M200 C                   CALLP(E)  LL1113(ACCTNO : ACTYPE :
+     C                              L_ODDLIM : L_ODCBAL : L_PAYOFF :
+     C                              L_AUTLIM : C_RUNOPT : C_ERRORC)
+M200‚C                   IF        %ERROR
+M200 C                   Z-ADD     *ZEROS        ERN
+M200 C                   MOVE      *BLANKS       ERO
+M200 C                   Z-ADD     251           ERN(1)
+M200 C                   MOVE      'N'           ERO(1)
+M200 C                   Eval      ADF(1) = 'LL1113 Error'
+M200 C                   EXSR      GENERR
+M200 C                   LEAVESR
+M200‚C                   ENDIF
+     C
+     C                   ADD       L_ODDLIM      T6TAVBAL
+     C                   ENDIF
+     C                   Eval      T6TCBAL  = CBAL
+     C                   ENDIF
+      *
+     C                   WHEN      wiACTYPE = 'B'
+     C     Acckey        Chain     SDmast                             39
+     C                   If        Not %Found(SDmast)
+     C     Acckey        Chain     RSDtnew                            39
+     C                   Endif
+     C     Acckey        Chain     RSDmemo                            38
+     C                   If        *IN39 = '0'
+     C                   EVAL      T6TAFFAC = SD_CHGACT
+     C                   EVAL      T6TAACTYP= SD_CHGTYP
+     C                   EVAL      T6TBRN   = SD_BRANCH
+     C                   EVAL      T6TBNK   = SD_BANK
+     C                   EVAL      T6TAPRD  = SD_BOXTYP
+     C                   EVAL      T6TBKTYP = SD_SDSPTF
+     C                   EVAL      T6TACCUR = SD_SDCTYP
+     C                   EVAL      woACUR   = SD_SDCTYP
+     C                   EVAL      TLSAPP      = 'SD'
+     C                   MOVE      SD_LBSTAT     T6TSTAT
+     C                   ENDIF
+      *
+    ˜C                   WHEN      wiACTYPE = 'T'
+     C                   Z-Add     TLF(PP1)      wiACCTNO
+     ‚* Search for CD Group
+     C     Acckey        Chain     CDGMST                             39
+     C                   IF        *IN39 = '0'
+     C                   EVAL      T6TSTAT  = CGUSTS
+     C                   EVAL      T6TBRN   = CGBRAN
+     C                   EVAL      T6TBNK   = CGBANK
+     C                   EVAL      T6TAPRD  = 'TD GROUP'
+     C                   EVAL      T6TBKTYP = CGICTL
+     C                   Eval      T6TAVBAL = *Zeros
+     C                   Eval      T6TCBAL  = CGGBAL
+     C                   EVAL      T6TACCUR = CGCURC
+     C                   EVAL      woACUR   = CGCURC
+     C                   EVAL      ZZCDGRP  = 'Y'
+     C                   EVAL      TLSAPP      = 'CD'
+     C                   Else
+     ‚* Search for CD cert no
+     C     Acckey        Chain     CDmast                             39
+     C                   If        Not %Found(Cdmast)
+     C     Acckey        Chain     RCDtnew                            39
+     C                   Endif
+     C     Acckey        Chain     RCDmemo                            38
+     C                   EVAL      TLSAPP      = 'CD'
+     C                   If        *IN39 = '0'
+     C                   EVAL      T6TSTAT  = STATUS
+     C                   IF        TLRINQ = 'C'
+     C                   EVAL      T6TSTAT  = 2
+     C                   ENDIF
+     C                   EVAL      T6TBRN   = BRN
+     C                   EVAL      T6TBNK   = BANKNO
+     C                   EVAL      T6TAPRD  = TYPE
+     C                   EVAL      T6TBKTYP = CDSPTF
+     C                   Eval      T6TAVBAL = COLECT - HOLD
+     C                   Eval      T6TCBAL  = CBAL
+     C                   EVAL      T6TACCUR = CURTYP
+     C                   EVAL      woACUR   = CURTYP
+     C                   Z-ADD     ACCTNO        T6TACTNO
+     C                   MOVE      ACTYPE        T6TACTYP
+     C                   Endif
+     C                   Endif
+      *
+    ˜C                   WHEN      wiACTYPE = 'L'
+     C     Acckey        Chain     LNmast                             39
+     C                   If        Not %Found(LNmast)
+     C     Acckey        Chain     RLNtnew                            39
+     C                   Endif
+     C     Acckey        Chain     RLNmemo                            38
+     C                   If        *IN39 = '0'
+     C                   EVAL      T6TSTAT  = STATUS
+     C                   EVAL      T6TTRNCH = ACTDDD
+     C                   EVAL      T6TLNSOLD= *BLANKS
+     C                   EVAL      T6TBRN   = BRN
+     C                   EVAL      T6TBNK   = BKN
+     C                   EVAL      T6TAPRD  = TYPE
+     C                   EVAL      T6TNPL   = NPLFLG
+     C                   EVAL      T6TBKTYP = LNSPTF
+     C                   EVAL      T6TACCUR = CURTYP
+     C                   EVAL      woACUR   = CURTYP
+     C
+     C     NSPDT8        IFEQ      NEXTD7
+     C     NSIPD8        OREQ      NEXTD7
+     C     NSPDT8        OREQ      MATDT8
+     C     NEXTD7        ANDGT     MATDT8
+     C                   Z-ADD     BILINT        wIntOs
+     C                   ELSE
+     C                   Z-ADD     BILINO        wIntOs
+     C                   ENDIF
+     C                   Eval      T6TAVBAL = (CBAL+ASSLC+PAIDLC+MISCD+OTHCHG
+     C                                        +wIntOs-ADVPMT+MEMAMT)
+     C                   Eval      T6TCBAL  = CBAL
+     C                   Eval      T6TWOFF  = 'N'
+     C                   If        PWOFID = '8' OR PWOFID = 'O'
+     C                   EVAL      T6TWOFF  = 'Y'
+     C                   Endif
+     C                   EVAL      TLSAPP      = 'LN'
+     C                   Endif
+
+    ˜C                   WHEN      wiACTYPE = 'U'
+     C     Acckey        Chain     UTmast                             39
+     C                   If        *IN39 = '0'
+     C                   EVAL      T6TAFFAC = ut_CRDACN
+     C                   EVAL      T6TAACTYP= ut_CRDATP
+     C                   EVAL      T6TBRN   = ut_BRANCH
+     C                   EVAL      T6TBNK   = ut_BANK
+     C                   EVAL      T6TAPRD  = ut_UTTYPE
+     C                   EVAL      T6TBKTYP = *Blank
+     C                   EVAL      T6TACCUR = ut_CURTYP
+     C                   EVAL      woACUR   = ut_CURTYP
+     C                   EVAL      TLSAPP      = 'UT'
+     C                   EVAL      T6TSTAT  = ut_STATUS
+     C                   ENDIF
+    ˜C                   ENDSL
+
+     C                   EndSr
+     š**************************************************************************
+      *‚Get_ACCTIBG - Get Account IBG
+     š**************************************************************************
+     C     Get_ACCTIBG   BEGSR
+
+     C                   EVAL      P3TXTP = '*IBG'
+     C                   EVAL      *IN60 = '1'
+     C                   IF        SKIPDAYFILE <> 'Y'
+     C     TRXTKY        Chain     RDDTRXT                            60
+     C                   ENDIF
+     C     TRXTKY        Chain     RDDTRXT24                          61
+     C                   IF        *IN60 = '0' or *IN61 = '0'
+     C                   EVAL      T6TIBGCT = TRXCNT
+     C                   ELSEIF    *IN60 = '1' AND *IN61 = '1'
+     C                             AND DDRCO5 <> 'Y'
+     C                   EVAL      T6TIBGCT = 99999
+     C                   ENDIF
+
+     C                   ENDSR
+     š**************************************************************************
+      *‚srProcessD2 - Process to response for D2
+     š**************************************************************************
+     C     srProcessD2   BEGSR
+     C                   Z-ADD     1             COUNTR
+     C                   Z-ADD     1             COUNTR1
+     C                   If        TLAP(COUNTR1) = ' '
+     C                   DOW       (COUNTR1 <= CMAX1)
+     C                   Z-ADD     COUNTR        PP1               2 0
+     C                   Z-ADD     COUNTR1       PP2               2 0
+     C                   If        TLF(PP1) > 0
+     C                   EXSR      TMQD2GEN
+     C                   Endif
+     C                   ADD       2             COUNTR
+     C                   ADD       1             COUNTR1
+     C                   ENDDO
+     C                   ELSE
+     C                   Z-ADD     COUNTR        PP1
+     C                   Z-ADD     COUNTR1       PP2
+     C                   If        TLF(PP1) > 0
+     C                   Z-ADD     COUNTR1       PP2
+     C                   EXSR      TMQD2GEN
+     C                   Endif
+     C                   Endif
+     C                   ENDSR
+     š**************************************************************************
+      *‚srProcessT0 - Process to get charge type for Close acct trx
+     š**************************************************************************
+     C     srProcessT0   BEGSR
+     C                   IF        TLXUFD <> *BLANKS
+     C                   Z-ADD     1             XX                2 0
+     C
+     C                   If        TLAP(XX) = ' '
+     C                   DOW       XX <= CMAX1
+     C                   EXSR      Get_CHGAMT
+M200 C                   IF        ERN(1) = 251  AND  ERO(1) = 'N'
+M200 C                   LEAVESR
+M200 C                   ENDIF
+     C                   ADD       1             XX
+     C                   ENDDO
+     C                   ELSE
+     C                   EXSR      Get_CHGAMT
+     C                   ENDIF
+     C                   ENDIF
+     C
+     C                   ENDSR
+     š**************************************************************************
+      *‚srInitLst - Initialise Output Fields for TMSGTACTN Parameter List
+     š**************************************************************************
+      *
+     C     srInitLst     BEGSR
+      *
+     C                   Eval      woACUR = *Blanks
+     C                   Eval      wkACUR = *Blanks
+     C                   Eval      woCFANA1 = *Blanks
+     C                   Eval      woCFANA2 = *Blanks
+     C                   Eval      woCFANA3 = *Blanks
+     C                   Eval      woCFANA4 = *Blanks
+     C                   Eval      woCFANA5 = *Blanks
+     C                   Eval      woACBK   = 0
+     C                   Eval      woACBRN  = 0
+     C                   Eval      woSTAT   = *Blanks
+     C                   Eval      woCCTL   = *Blanks
+     C                   Eval      woSPTF   = *Blanks
+     C                   Eval      woPBOK   = *Blanks
+     C                   Eval      woSTMT   = *Blanks
+     C                   Eval      woSTMPAS = *Blanks
+     C                   Eval      woPROD   = *Blanks
+     C                   Eval      woAVLBAL = 0
+     C                   Eval      woCBAL   = 0
+     C                   Eval      woSTAFF  = *Blanks
+     C                   Eval      woBENE   = *Blanks
+     C                   Eval      woERR    = *Blanks
+     C                   Eval      woERRN   = 0
+     C                   Eval      wCFSNME  = *BLANKs
+      *
+     C                   ENDSR
+      *
+     š**************************************************************************
+      *‚srInit    - Initialise array for T8
+     š**************************************************************************
+     C     srInit        BEGSR
+     C                   MOVEA     *ZEROS        ACTN
+     C                   MOVEA     *BLANKS       ATYE
+     C                   MOVEA     *ZEROS        IDX1
+     C                   MOVEA     *BLANKS       COD1
+     C                   MOVEA     *ZEROS        MIN1
+     C                   MOVEA     *ZEROS        MAX1
+     C                   MOVEA     *BLANKS       CUR1
+     C                   MOVEA     *ZEROS        LMT1
+     C                   MOVEA     *BLANKS       FLD1
+     C                   MOVEA     *BLANKS       VLE1
+     C                   MOVEA     *ZEROS        IDX2
+     C                   MOVEA     *BLANKS       COD2
+     C                   MOVEA     *ZEROS        MIN2
+     C                   MOVEA     *ZEROS        MAX2
+     C                   MOVEA     *BLANKS       CUR2
+     C                   MOVEA     *ZEROS        LMT2
+     C                   MOVEA     *BLANKS       FLD2
+     C                   MOVEA     *BLANKS       VLE2
+     C                   MOVEA     *ZEROS        IDX3
+     C                   MOVEA     *BLANKS       COD3
+     C                   MOVEA     *ZEROS        MIN3
+     C                   MOVEA     *ZEROS        MAX3
+     C                   MOVEA     *BLANKS       CUR3
+     C                   MOVEA     *ZEROS        LMT3
+     C                   MOVEA     *BLANKS       FLD3
+     C                   MOVEA     *BLANKS       VLE3
+     C                   MOVEA     *ZEROS        IDX4
+     C                   MOVEA     *BLANKS       COD4
+     C                   MOVEA     *ZEROS        MIN4
+     C                   MOVEA     *ZEROS        MAX4
+     C                   MOVEA     *BLANKS       CUR4
+     C                   MOVEA     *ZEROS        LMT4
+     C                   MOVEA     *BLANKS       FLD4
+     C                   MOVEA     *BLANKS       VLE4
+     C                   MOVEA     *ZEROS        IDX5
+     C                   MOVEA     *BLANKS       COD5
+     C                   MOVEA     *ZEROS        MIN5
+     C                   MOVEA     *ZEROS        MAX5
+     C                   MOVEA     *BLANKS       CUR5
+     C                   MOVEA     *ZEROS        LMT5
+     C                   MOVEA     *BLANKS       FLD5
+     C                   MOVEA     *BLANKS       VLE5
+     C                   MOVEA     *ZEROS        IDXn
+     C                   MOVEA     *BLANKS       CODn
+     C                   MOVEA     *ZEROS        MINn
+     C                   MOVEA     *ZEROS        MAXn
+     C                   MOVEA     *ZEROS        LMTn
+     C                   MOVEA     *BLANKS       FLDn
+     C                   MOVEA     *BLANKS       VLEn
+     C                   ENDSR
+     š**************************************************************************
+      *‚srSend - Send Message back to Response Data Queue
+     š**************************************************************************
+     C     srSend        BEGSR
+      *
+     C                   MOVEL     OUTBUFF       ICDATA
+     C                   MOVEL     QHEAD         ICHEAD
+     C                   MOVEL     QEOM          ICEOM
+     C                   MOVEL     QIGNORE       ICIGNORE
+     C                   CALLB     'TMSSEND'
+     C                   PARM                    ICFDS
+     C                   PARM                    ICIGNORE
+     C                   PARM                    ICDPGM
+     C                   PARM                    ICDJOB
+     C                   PARM                    TLBTXREF
+     C                   PARM                    TLBID
+     C                   PARM                    FRWTRX            1
+     C                   PARM                    TLBSEQ
+      *
+     C                   ENDSR
+     š**************************************************************************
+M200  *‚Generr - Generate Error and call TMQ42GEN to avoid Good Response returned
+     š**************************************************************************
+M200 C     Generr        BEGSR
+      *
+M200 C                   MOVEL     'C'           ICIGNORE          1
+M200 C                   MOVEL     QHEAD         ICHEAD
+M200 C                   MOVEL     QEOM          ICEOM
+M200 C                   MOVEL     ICDPGM        PGM_NAME         10
+M200 C                   MOVEL     JOB           JOB_NAME         10
+M200
+M200 C                   CALLB     'TMSSEND'
+M200 C                   PARM                    ICFDS
+M200 C                   PARM                    ICIGNORE
+M200 C                   PARM                    ICDPGM
+M200 C                   PARM                    ICDJOB
+M200 C                   PARM                    TLBTXREF
+M200 C                   PARM                    TLBID
+M200 C                   PARM                    FRWTRX            1
+M200 C                   PARM                    TLBSEQ
+
+M200 C                   MOVE      'N'           HOVREQ            1
+M200 C                   MOVE      'N'           ERO(1)
+M200 C                   CLEAR                   APL
+M200 C                   Z-ADD     1             APL(1)
+M200 C                   CLEAR                   APT
+M200 C                   MOVE      ACTYPE        APT(1)
+M200
+M200 C                   MOVEL     ' '           ICIGNORE          1
+M200 C                   MOVEL     QHEAD         ICHEAD
+M200 C                   MOVEL     QEOM          ICEOM
+M200 C                   MOVEL     ICDPGM        PGM_NAME         10
+M200 C                   MOVEL     JOB           JOB_NAME         10
+
+     C                   EXSR      TMQ42GEN
+M200 C                   ENDSR
+     š**************************************************************************
+      *‚PGM_INITS - Initialise routine
+     š**************************************************************************
+      *
+     C     PGM_INITS     BEGSR
+      *
+     C                   OPEN      SSPAR24
+     C                   OPEN      SSCLDR
+     C                   OPEN      DDPAR32
+     C
+     C     1             CHAIN     SSPAR24                            63
+     C
+     C                   EVAL      CBNKNO = SSBNKN
+     C                   EVAL      CBRNBR = 0
+     C     CLDKEY        CHAIN     RSSCLDR                            63
+     C                   IF        *IN63 = '0'
+     C                   EVAL      WK_CROW = CROW
+     C                   EVAL      WK_CROM = CROM
+     C                   EVAL      WK_CROQ = CROQ
+     C                   EVAL      WK_CROY = CROY
+     C                   ENDIF
+     C
+     C                   EVAL      wk_TRXTYP = '*IBG'
+     C     wk_trxTYP     CHAIN     RDDPAR32                           64
+     C                   IF        *IN64=*ON
+     C                   EVAL      P02PTFREQ = 'D'
+     C                   ENDIF
+     C
+     C                   EVAL      skipdayFile = 'N'
+     C                   SELECT
+     C                   WHEN      P02PTFREQ = 'D'
+     C                   EVAL      skipdayFile = 'Y'
+     C                   WHEN      P02PTFREQ = 'W' AND CROW = 'Y'
+     C                   EVAL      skipdayFile = 'Y'
+     C                   WHEN      P02PTFREQ = 'M' AND CROM = 'Y'
+     C                   EVAL      skipdayFile = 'Y'
+     C                   WHEN      P02PTFREQ = 'Y' AND CROY = 'Y'
+     C                   EVAL      skipdayFile = 'Y'
+     C                   WHEN      P02PTFREQ = 'Q' AND CROQ = 'Y'
+     C                   EVAL      skipdayFile = 'Y'
+     C                   ENDSL
+     C
+     C                   CLOSE     SSPAR24
+     C                   CLOSE     SSCLDR
+     C                   CLOSE     DDPAR32
+      *
+     C                   ENDSR
+      *
+      **************************************************************************
+      *  COPYBOOKS
+      **************************************************************************
+      *
+      * Move input fields to array for handler
+     C/COPY QTLSREFRLE,TMQMFTOa
+
+      * Load TLEDT file
+     C/COPY QTLSREFRLE,TMQLDEDT
+
+      * Move fields to log file names
+     C/COPY QTLSREFRLE,TMQMICML
+
+      * Write 42 error subroutines
+     C/COPY QTLSREFRLE,TMQ42GEN
+     C/COPY QTLSREFRLE,TMQ42GN1
+      *
+     C/COPY QTLSREFRLE,TMQ99GEN
+     C/COPY QTLSREFRLE,TLPSMSCHD1
+     C/COPY QTLSREFRLE,TMQGTTIM
+     C/COPY QTLSCOPY,TMQT8GEN
+     C/COPY QTLSCOPY,TMQV4GEN
+     C/COPY QTLSCOPY,TMQTAGEN
+     C/COPY QTLSCOPY,TMQT7GEN
+     C/COPY QTLSCOPY,TMQTBGEN
+     C/COPY QTLSCOPY,TMQTCGEN
+     C/COPY QTLSREFRLE,TMQD2GEN
+     C/COPY QTLSCOPY,TMQT0GEN
+M300 C/COPY QTLSCOPY,TMQ1BGEN
+      **************************************************************************

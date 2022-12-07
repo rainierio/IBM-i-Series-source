@@ -1,0 +1,286 @@
+     A*%%TS  SD  20150128  201324  S104221X    REL-V7R1M0  5770-WDS
+     A***********************************************************
+     A*                                                         *
+     A*  INI9015FM  is a part of Silverlake System (R)          *
+     A*  (C) Copyright 1993, 1994                              *
+     A*                 By:  Silverlake System Sdn. Bhd.        *
+     A*                      50050 Kuala Lumpur Malaysia        *
+     A*                                                         *
+     A***********************************************************
+     A*LAST  CHANGED
+     A*REFN  DATE      DESCRIPTION OF CHANGE         IR NO/CHG NO
+     A*----  --------  ---------------------------   ------------
+     A*
+     A***********************************************************
+     A*
+     A*%%EC
+     A                                      DSPSIZ(27 132 *DS4)
+     A                                      REF(*LIBL/INPPAR)
+     A                                      PRINT(*LIBL/QSYSPRT)
+     A                                      CF03(03 'F3=Exit')
+     A                                      CF01(01 'Help')
+     A                                      HELP(88)
+     A          R SFLOPT
+     A*%%TS  SD  20141020  165024  S104221X    REL-V7R1M0  5770-WDS
+     A                                      OVERLAY
+     A                                 26  2'F3=Exit'
+     A                                      COLOR(BLU)
+     A                                 26 23'F6=Add'
+     A                                      COLOR(BLU)
+     A                                 26 11'F5=Refresh'
+     A                                      COLOR(BLU)
+     A          R SFEMPTY
+     A*%%TS  SD  20141204  094536  S104221X    REL-V7R1M0  5770-WDS
+     A                                      OVERLAY
+     A                                 16 13'(No record found)'
+     A          R SFL01                     SFL
+     A*%%TS  SD  20150128  192636  S104221X    REL-V7R1M0  5770-WDS
+     A  20                                  SFLNXTCHG
+     A            OPTION         1A  I 11  3VALUES('2' '4' ' ' '3' '6')
+     A            INPDFM    R        H      REFFLD(RINPPRT/INPDFM *LIBL/INPPRT)
+     A            INPAYEE        6A  O 11 31
+     A  41                                  DSPATR(RI)
+     A            INACCTNO      19Y 0O 11  9
+     A            INDESC        30A  O 11 37
+     A  40                                  DSPATR(RI)
+     A          R SFL01C                    SFLCTL(SFL01)
+     A*%%TS  SD  20150128  152402  S104221X    REL-V7R1M0  5770-WDS
+     A                                      SFLSIZ(0100)
+     A                                      SFLPAG(0010)
+     A                                      INDTXT(74 'Subfile end')
+     A                                      INDTXT(75 'Subfile clear')
+     A                                      CF06(06 'F06=Add')
+     A                                      CF04(04 'F4=Add Overide')
+     A                                      CF12(12 'F12=Previous')
+     A                                      SETOF(53 'Close end of search messa-
+     A                                      ge')
+     A                                      CF05(05 'F05=Refresh')
+     A                                      OVERLAY
+     A N75N76                               SFLDSP
+     A N75                                  SFLDSPCTL
+     A  75                                  SFLCLR
+     A N74                                  SFLEND(*MORE)
+     A  53                                  SFLMSGID(INT0009 *LIBL/INTMSG)
+     A            IFFILO    R        O  2  1REFFLD(IFFILO SSFREF)
+     A                                      DSPATR(ND)
+     A            FMLWRT    R        O  2 12REFFLD(IFFMTN SSFREF)
+     A                                      DFTVAL('SFLLC     ')
+     A                                      DSPATR(ND)
+     A            RRNC           4S 0H      SFLRCDNBR(CURSOR)
+     A                                  1  4DATE
+     A                                      EDTCDE(9)
+     A                                      DSPATR(HI)
+     A                                  1123TIME
+     A                                      DSPATR(HI)
+     A            WRKNAM    R        O  1 47REFFLD(RSSFREF/SSBNAM *LIBL/SSFREF)
+     A                                      COLOR(PNK)
+     A                                  4  3'Type option, press Enter.'
+     A                                      COLOR(BLU)
+     A                                  5  3'2=Change'
+     A                                      COLOR(BLU)
+     A                                  5 13'4=Delete'
+     A                                      COLOR(BLU)
+     A            INPAYEELS      6A  B  9 31
+     A                                  7  2'Opt'
+     A                                      COLOR(WHT)
+     A            D9INPUT       30A  O  3 52COLOR(WHT)
+     A                                  7  9'Account Number  '
+     A                                      COLOR(WHT)
+     A                                  2 42'Citynet Bill Payment Transaction P-
+     A                                      arameter Screen'
+     A                                      COLOR(WHT)
+     A                                  7 31'Payee'
+     A                                      COLOR(WHT)
+     A                                  8 31'Code'
+     A                                      COLOR(WHT)
+     A            INDESCLS      30   B  9 37
+     A                                  7 37'Description'
+     A                                      COLOR(WHT)
+     A          R SF01
+     A*%%TS  SD  20150128  194759  S104221X    REL-V7R1M0  5770-WDS
+     A                                      TEXT('Citynet ATM Bersama (ADD NEW -
+     A                                      Screen)')
+     A                                      CF12(12 'F12=Previous')
+     A                                      CF08(08 'F8=Maintenance')
+     A                                      SETOF(50)
+     A                                      SETOF(51)
+     A                                      SETOF(52)
+     A                                      SETOF(66)
+     A                                      SETOF(54)
+     A                                      SETOF(55)
+     A                                      SETOF(56)
+     A                                      SETOF(57)
+     A                                      SETOF(58)
+     A                                      SETOF(59)
+     A                                      SETOF(60)
+     A                                      SETOF(61)
+     A                                      SETOF(62)
+     A                                      SETOF(63)
+     A                                      SETOF(64)
+     A                                      SETOF(65)
+     A                                      SETOF(67)
+     A                                      SETOF(68)
+     A  89                                  CSRLOC(ROW        COL)
+     A                                      OVERLAY
+     A                                  1  4DATE
+     A                                      EDTCDE(9)
+     A                                      DSPATR(HI)
+     A                                  1123TIME
+     A                                      DSPATR(HI)
+     A            ROW       R        H      REFFLD(ROW SSFREF)
+     A            COL       R        H      REFFLD(COL SSFREF)
+     A            IFFILO    R        O  2  1REFFLD(IFFILO SSFREF)
+     A                                      DSPATR(ND)
+     A            FMLWRT    R        O  2 12REFFLD(IFFMTN SSFREF)
+     A                                      DFTVAL('SCREEN01  ')
+     A                                      DSPATR(ND)
+     A            WRKNAM    R        O  1 47REFFLD(RSSFREF/SSBNAM *LIBL/SSFREF)
+     A                                      COLOR(PNK)
+     A                                 26  2'F3=Exit'
+     A                                      COLOR(BLU)
+     A                                 26 11'F12=Previous'
+     A                                      COLOR(BLU)
+     A            D9STAT         7A  O  3 63COLOR(WHT)
+     A                                  7  8'Debit Account Number . . :'
+     A                                      COLOR(WHT)
+     A                                  8  8'Payee Code . . . . . . . :'
+     A                                      COLOR(WHT)
+     A            INACCTNO      19Y 0I  7 36
+     A  68                                  ERRMSG('Duplicate Escrow Account')
+     A  51                                  ERRMSGID(INI0024 *LIBL/INTMSG)
+     A  50                                  ERRMSGID(INT0001 *LIBL/INTMSG)
+     A            INPAYEE        6A  I  8 36
+     A  67                                  ERRMSG('Duplicate Payee Code')
+     A  52                                  ERRMSGID(INT0001 *LIBL/INTMSG)
+     A                                  9  8'Description. . . . . . . :'
+     A                                      COLOR(WHT)
+     A            INDESC        30A  I  9 36
+     A  53                                  ERRMSGID(INT0001 *LIBL/INTMSG)
+     A                                  2 42'Citynet Bill Payment Transaction P-
+     A                                      arameter Screen'
+     A                                      COLOR(WHT)
+     A          R SF02
+     A*%%TS  SD  20150128  201324  S104221X    REL-V7R1M0  5770-WDS
+     A                                      TEXT('Citynet ATM Bersama (Maintena-
+     A                                      nce Screen)')
+     A                                      CF12(12 'F12=Previous')
+     A                                      CF08(08 'F8=Maintenance')
+     A                                      SETOF(50)
+     A                                      SETOF(51)
+     A                                      SETOF(52)
+     A                                      SETOF(66)
+     A                                      SETOF(54)
+     A                                      SETOF(55)
+     A                                      SETOF(56)
+     A                                      SETOF(57)
+     A                                      SETOF(58)
+     A                                      SETOF(59)
+     A                                      SETOF(60)
+     A                                      SETOF(61)
+     A                                      SETOF(62)
+     A                                      SETOF(63)
+     A                                      SETOF(64)
+     A                                      SETOF(65)
+     A                                      SETOF(67)
+     A  89                                  CSRLOC(ROW        COL)
+     A                                      OVERLAY
+     A                                  1  4DATE
+     A                                      EDTCDE(9)
+     A                                      DSPATR(HI)
+     A                                  1123TIME
+     A                                      DSPATR(HI)
+     A            ROW       R        H      REFFLD(ROW SSFREF)
+     A            COL       R        H      REFFLD(COL SSFREF)
+     A            IFFILO    R        O  2  1REFFLD(IFFILO SSFREF)
+     A                                      DSPATR(ND)
+     A            FMLWRT    R        O  2 12REFFLD(IFFMTN SSFREF)
+     A                                      DFTVAL('SCREEN01  ')
+     A                                      DSPATR(ND)
+     A            WRKNAM    R        O  1 47REFFLD(RSSFREF/SSBNAM *LIBL/SSFREF)
+     A                                      COLOR(PNK)
+     A                                 26  2'F3=Exit'
+     A                                      COLOR(BLU)
+     A                                 26 11'F12=Previous'
+     A                                      COLOR(BLU)
+     A            D9STAT         7A  O  3 63COLOR(WHT)
+     A                                  7  8'Debit Account Number . . :'
+     A                                      COLOR(WHT)
+     A                                  8  8'Payee Code . . . . . . . :'
+     A                                      COLOR(WHT)
+     A            INACCTNO      19Y 0O  7 36
+     A  51                                  ERRMSGID(INI0024 *LIBL/INTMSG)
+     A  50                                  ERRMSGID(INT0001 *LIBL/INTMSG)
+     A            INPAYEE        6A  B  8 36
+     A  67                                  ERRMSG('Duplicate Payee Code')
+     A  52                                  ERRMSGID(INT0001 *LIBL/INTMSG)
+     A                                  9  8'Payee Description. . . . :'
+     A                                      COLOR(WHT)
+     A            INDESC        30A  B  9 36
+     A  53                                  ERRMSGID(INT0001 *LIBL/INTMSG)
+     A                                  2 42'Citynet Bill Payment Transaction P-
+     A                                      arameter Screen'
+     A                                      COLOR(WHT)
+     A          R SF03
+     A*%%TS  SD  20150127  203113  S104221X    REL-V7R1M0  5770-WDS
+     A                                      TEXT('Citynet ATM Bersama (Maintena-
+     A                                      nce Screen)')
+     A                                      CF12(12 'F12=Previous')
+     A                                      CF08(08 'F8=Maintenance')
+     A                                      SETOF(50)
+     A                                      SETOF(51)
+     A                                      SETOF(52)
+     A                                      SETOF(66)
+     A                                      SETOF(54)
+     A                                      SETOF(55)
+     A                                      SETOF(56)
+     A                                      SETOF(57)
+     A                                      SETOF(58)
+     A                                      SETOF(59)
+     A                                      SETOF(60)
+     A                                      SETOF(61)
+     A                                      SETOF(62)
+     A                                      SETOF(63)
+     A                                      SETOF(64)
+     A                                      SETOF(65)
+     A  89                                  CSRLOC(ROW        COL)
+     A                                      OVERLAY
+     A                                  1  4DATE
+     A                                      EDTCDE(9)
+     A                                      DSPATR(HI)
+     A                                  1123TIME
+     A                                      DSPATR(HI)
+     A            ROW       R        H      REFFLD(ROW SSFREF)
+     A            COL       R        H      REFFLD(COL SSFREF)
+     A            IFFILO    R        O  2  1REFFLD(IFFILO SSFREF)
+     A                                      DSPATR(ND)
+     A            FMLWRT    R        O  2 12REFFLD(IFFMTN SSFREF)
+     A                                      DFTVAL('SCREEN01  ')
+     A                                      DSPATR(ND)
+     A            WRKNAM    R        O  1 47REFFLD(RSSFREF/SSBNAM *LIBL/SSFREF)
+     A                                      COLOR(PNK)
+     A                                 26  2'F3=Exit'
+     A                                      COLOR(BLU)
+     A                                 26 11'F12=Previous'
+     A                                      COLOR(BLU)
+     A            D9STAT         7A  O  3 63COLOR(WHT)
+     A                                  7  8'Debit Account Number . . :'
+     A                                      COLOR(WHT)
+     A                                  9  8'Payee Description. . . . :'
+     A                                      COLOR(WHT)
+     A                                  8  8'Payee Code . . . . . . . :'
+     A                                      COLOR(WHT)
+     A            INACCTNO      19Y 0O  7 36
+     A  52                                  ERRMSGID(INI0022 *LIBL/INTMSG)
+     A  51                                  ERRMSGID(INI0021 *LIBL/INTMSG)
+     A  50                                  ERRMSGID(INT0001 *LIBL/INTMSG)
+     A            INPAYEE        6   O  8 36
+     A                                  4  8'Press Enter to confirm your choice-
+     A                                       for 4=Delection'
+     A                                      COLOR(BLU)
+     A                                  5  8'Press F12 to return to change you -
+     A                                      choices'
+     A                                      COLOR(BLU)
+     A            INDESC        30   O  9 36
+     A                                  2 42'Citynet Bill Payment Transaction P-
+     A                                      arameter Screen'
+     A                                      COLOR(WHT)
